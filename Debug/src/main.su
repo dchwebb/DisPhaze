@@ -1,0 +1,14 @@
+core_cm4.h:1452:22:void NVIC_EnableIRQ(IRQn_Type)	16	static
+core_cm4.h:1535:22:void NVIC_SetPriority(IRQn_Type, uint32_t)	16	static
+initialisation.h:46:6:void SystemClock_Config()	16	static
+initialisation.h:110:6:void InitSysTick(uint32_t, uint32_t)	16	static
+initialisation.h:127:6:void InitDAC()	4	static
+initialisation.h:149:6:void InitIO()	4	static
+initialisation.h:167:6:void InitTimer()	8	static
+initialisation.h:182:6:void InitADC()	4	static
+cmath:411:3:float std::pow(float, float)	16	static
+main.cpp:58:7:void TIM3_IRQHandler()	4	static
+main.cpp:76:7:float Interpolate(float*, float&)	24	static
+main.cpp:84:7:float GetPhaseDist(const float*, float, float, float)	32	static
+main.cpp:98:7:float PDHardSquare(float, float)	32	static
+main.cpp:113:5:int main()	80	dynamic
