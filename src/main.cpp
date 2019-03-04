@@ -167,7 +167,7 @@ int main(void)
 			DacRead = 0;
 
 			//oldOutput1 = SampleOut1;
-			oldOutput2 = SampleOut2;
+			//oldOutput2 = SampleOut2;
 
 			freq1 = PitchLUT[Pitch / 4];		// divide by four as there are 1024 items in DAC CV Voltage to Pitch Freq LUT and 4096 possible DAC voltage values
 
