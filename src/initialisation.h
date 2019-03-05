@@ -1,7 +1,7 @@
 #include "stm32f4xx.h"
 
 
-#define SAMPLERATE 48000
+#define SAMPLERATE 72000
 
 #define ADC_BUFFER_LENGTH 4
 volatile uint16_t ADC_array[ADC_BUFFER_LENGTH];
