@@ -7,9 +7,9 @@ initialisation.h:149:6:void InitIO()	4	static
 initialisation.h:167:6:void InitTimer()	8	static
 initialisation.h:182:6:void InitADC()	4	static
 cmath:411:3:float std::pow(float, float)	16	static
-main.cpp:59:7:void TIM3_IRQHandler()	4	static
-main.cpp:77:7:float Interpolate(float*, float&)	24	static
-main.cpp:85:7:float GetPhaseDist(const float*, float, float, float)	32	static
-main.cpp:99:7:float GetBlendPhaseDist(float, float, float, float)	56	static
-main.cpp:122:6:void CreateLUTs()	48	static
-main.cpp:158:5:int main()	40	static
+main.cpp:67:7:void TIM3_IRQHandler()	4	static
+main.cpp:85:7:float Interpolate(float*, float&)	24	static
+main.cpp:93:7:float GetPhaseDist(const float*, float, float, float)	32	static
+main.cpp:107:7:float GetBlendPhaseDist(float, float, float, float)	56	static
+main.cpp:130:6:void CreateLUTs()	48	static
+main.cpp:166:5:int main()	40	static
