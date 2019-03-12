@@ -3,7 +3,7 @@
 
 #define SAMPLERATE 72000
 
-#define ADC_BUFFER_LENGTH 5
+#define ADC_BUFFER_LENGTH 6
 volatile uint16_t ADC_array[ADC_BUFFER_LENGTH];
 
 #ifdef STM32F446xx
@@ -151,7 +151,15 @@ void InitIO()
 	// PC6 Button in
 	RCC->AHB1ENR |= RCC_AHB1ENR_GPIOCEN;			// reset and clock control - advanced high performamnce bus - GPIO port C
 	GPIOC->MODER &= ~(GPIO_MODER_MODER6);			// input mode is default
-	GPIOC->PUPDR |= GPIO_PUPDR_PUPDR6_0;			// Set pin to pull up
+	GPIOC->PUPDR |= GPIO_PUPDR_PUPDR6_0;			// Set pin to pull up:  01 Pull-up; 10 Pull-down; 11 Reserved
+
+	// Set up PB12 and PB13 for4 octave up and down switch
+	RCC->AHB1ENR |= RCC_AHB1ENR_GPIOBEN;			// reset and clock control - advanced high performamnce bus - GPIO port B
+	GPIOB->MODER &= ~(GPIO_MODER_MODER12);			// input mode is default
+	GPIOB->MODER &= ~(GPIO_MODER_MODER13);			// input mode is default
+	GPIOB->PUPDR |= GPIO_PUPDR_PUPDR12_1;			// Set pin to pull down:  01 Pull-up; 10 Pull-down; 11 Reserved
+	GPIOB->PUPDR |= GPIO_PUPDR_PUPDR13_1;			// Set pin to pull down:  01 Pull-up; 10 Pull-down; 11 Reserved
+
 
 	/*// configure PC13 button to fire on an interrupt - not using as very bouncy and would need timing data to manage properly
 	RCC->APB2ENR |= RCC_APB2ENR_SYSCFGEN;			// Enable system configuration clock: used to manage  external interrupt line connection to GPIOs
@@ -194,14 +202,17 @@ void InitADC(void)
 	// Enable ADC2 and GPIO clock sources
 	RCC->AHB1ENR |= RCC_AHB1ENR_GPIOAEN;
 	RCC->AHB1ENR |= RCC_AHB1ENR_GPIOBEN;
+	RCC->AHB1ENR |= RCC_AHB1ENR_GPIOCEN;
 	RCC->APB2ENR |= RCC_APB2ENR_ADC2EN;
 
-	// Enable ADC on PB0 mode: ADC12_IN8; PB1 mode: ADC12_IN9; PA1 mode: ADC123_IN1; PA2 mode: ADC123_IN2, PA3 mode: ADC123_IN3
+	// Enable ADC on PB0 mode: ADC12_IN8; PB1 mode: ADC12_IN9; PA1 mode: ADC123_IN1; PA2 mode: ADC123_IN2; PA3 mode: ADC123_IN3; PC0 mode: ADC123_IN10
 	GPIOB->MODER |= GPIO_MODER_MODER1;				// Set PB1 to Analog mode (0b11)
 	GPIOB->MODER |= GPIO_MODER_MODER0;				// Set PB0 to Analog mode (0b11)
 	GPIOA->MODER |= GPIO_MODER_MODER1;				// Set PA1 to Analog mode (0b11)
 	GPIOA->MODER |= GPIO_MODER_MODER2;				// Set PA2 to Analog mode (0b11)
 	GPIOA->MODER |= GPIO_MODER_MODER3;				// Set PA3 to Analog mode (0b11)
+	GPIOC->MODER |= GPIO_MODER_MODER0;				// Set PC0 to Analog mode (0b11)
+
 	ADC2->CR1 |= ADC_CR1_SCAN;						// Activate scan mode
 	ADC2->SQR1 = (ADC_BUFFER_LENGTH - 1) << 20;		// 4 conversions in sequence
 	ADC2->SQR3 |= 8 << 0;							// Set ADC12_IN8 to first conversion in sequence
@@ -209,13 +220,15 @@ void InitADC(void)
 	ADC2->SQR3 |= 1 << 10;							// Set ADC123_IN1 to third conversion in sequence
 	ADC2->SQR3 |= 2 << 15;							// Set ADC123_IN2 to fourth conversion in sequence
 	ADC2->SQR3 |= 3 << 20;							// Set ADC123_IN3 to fifth conversion in sequence
+	ADC2->SQR3 |= 10 << 25;							// Set ADC123_IN10 to sixth conversion in sequence
 
-	//	Set to 56 cycles (0b11) sampling speed (Left shift speed 3 x ADC_INx)
+	//	Set to 56 cycles (0b11) sampling speed (SMPR2 Left shift speed 3 x ADC_INx up to input 9; use SMPR1 from 0 for ADC_IN10+)
 	ADC2->SMPR2 |= 0b11 << 24;						// Set speed of IN8
 	ADC2->SMPR2 |= 0b11 << 27;						// Set speed of IN9
 	ADC2->SMPR2 |= 0b11 << 3;						// Set speed of IN1
 	ADC2->SMPR2 |= 0b11 << 6;						// Set speed of IN2
 	ADC2->SMPR2 |= 0b11 << 9;						// Set speed of IN3
+	ADC2->SMPR1 |= 0b11 << 0;						// Set speed of IN10
 
 	ADC2->CR2 |= ADC_CR2_EOCS;						// Trigger interrupt on end of each individual conversion
 	ADC2->CR2 |= ADC_CR2_EXTEN_0;					// ADC hardware trigger 00: Trigger detection disabled; 01: Trigger detection on the rising edge; 10: Trigger detection on the falling edge; 11: Trigger detection on both the rising and falling edges

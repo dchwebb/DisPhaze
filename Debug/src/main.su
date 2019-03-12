@@ -4,12 +4,12 @@ initialisation.h:46:6:void SystemClock_Config()	16	static
 initialisation.h:110:6:void InitSysTick(uint32_t, uint32_t)	16	static
 initialisation.h:127:6:void InitDAC()	4	static
 initialisation.h:149:6:void InitIO()	4	static
-initialisation.h:167:6:void InitTimer()	8	static
-initialisation.h:182:6:void InitADC()	4	static
+initialisation.h:175:6:void InitTimer()	8	static
+initialisation.h:190:6:void InitADC()	4	static
 cmath:411:3:float std::pow(float, float)	16	static
-main.cpp:67:7:void TIM3_IRQHandler()	4	static
-main.cpp:85:7:float Interpolate(float*, float&)	24	static
-main.cpp:93:7:float GetPhaseDist(const float*, float, float, float)	32	static
-main.cpp:107:7:float GetBlendPhaseDist(float, float, float, float)	56	static
-main.cpp:130:6:void CreateLUTs()	48	static
-main.cpp:166:5:int main()	40	static
+main.cpp:73:7:void TIM3_IRQHandler()	4	static
+main.cpp:91:7:float Interpolate(float*, float&)	24	static
+main.cpp:99:7:float GetPhaseDist(const float*, float, float, float)	32	static
+main.cpp:113:7:float GetBlendPhaseDist(float, float, float, float)	56	static
+main.cpp:136:6:void CreateLUTs()	48	static
+main.cpp:172:5:int main()	32	static
