@@ -3,7 +3,7 @@
 
 #define SAMPLERATE 72000
 
-#define ADC_BUFFER_LENGTH 7
+#define ADC_BUFFER_LENGTH 8
 volatile uint16_t ADC_array[ADC_BUFFER_LENGTH];
 
 #ifdef STM32F446xx
@@ -210,7 +210,7 @@ void InitADC(void)
 	RCC->AHB1ENR |= RCC_AHB1ENR_GPIOCEN;
 	RCC->APB2ENR |= RCC_APB2ENR_ADC2EN;
 
-	// Enable ADC - PB0: ADC12_IN8; PB1: ADC12_IN9; PA1: ADC123_IN1; PA2: ADC123_IN2; PA3: ADC123_IN3; PC0: ADC123_IN10, PC2: ADC123_IN12
+	// Enable ADC - PB0: ADC12_IN8; PB1: ADC12_IN9; PA1: ADC123_IN1; PA2: ADC123_IN2; PA3: ADC123_IN3; PC0: ADC123_IN10, PC2: ADC123_IN12, PC4: ADC12_IN14
 	GPIOB->MODER |= GPIO_MODER_MODER0;				// Set PB0 to Analog mode (0b11)
 	GPIOB->MODER |= GPIO_MODER_MODER1;				// Set PB1 to Analog mode (0b11)
 	GPIOA->MODER |= GPIO_MODER_MODER1;				// Set PA1 to Analog mode (0b11)
@@ -218,16 +218,18 @@ void InitADC(void)
 	GPIOA->MODER |= GPIO_MODER_MODER3;				// Set PA3 to Analog mode (0b11)
 	GPIOC->MODER |= GPIO_MODER_MODER0;				// Set PC0 to Analog mode (0b11)
 	GPIOC->MODER |= GPIO_MODER_MODER2;				// Set PC2 to Analog mode (0b11)
+	GPIOC->MODER |= GPIO_MODER_MODER4;				// Set PC4 to Analog mode (0b11)
 
 	ADC2->CR1 |= ADC_CR1_SCAN;						// Activate scan mode
 	ADC2->SQR1 = (ADC_BUFFER_LENGTH - 1) << 20;		// Number of conversions in sequence
-	ADC2->SQR3 |= 8 << 0;							// Set ADC12_IN8 to first conversion in sequence
-	ADC2->SQR3 |= 9 << 5;							// Set ADC12_IN9 to second conversion in sequence
-	ADC2->SQR3 |= 1 << 10;							// Set ADC123_IN1 to third conversion in sequence
-	ADC2->SQR3 |= 2 << 15;							// Set ADC123_IN2 to fourth conversion in sequence
-	ADC2->SQR3 |= 3 << 20;							// Set ADC123_IN3 to fifth conversion in sequence
-	ADC2->SQR3 |= 10 << 25;							// Set ADC123_IN10 to sixth conversion in sequence
-	ADC2->SQR2 |= 12 << 0;							// Set ADC123_IN13 to seventh conversion in sequence
+	ADC2->SQR3 |= 8 << 0;							// Set ADC12_IN8   to 1st conversion in sequence
+	ADC2->SQR3 |= 9 << 5;							// Set ADC12_IN9   to 2nd conversion in sequence
+	ADC2->SQR3 |= 1 << 10;							// Set ADC123_IN1  to 3rd conversion in sequence
+	ADC2->SQR3 |= 2 << 15;							// Set ADC123_IN2  to 4th conversion in sequence
+	ADC2->SQR3 |= 3 << 20;							// Set ADC123_IN3  to 5th conversion in sequence
+	ADC2->SQR3 |= 10 << 25;							// Set ADC123_IN10 to 6th conversion in sequence
+	ADC2->SQR2 |= 12 << 0;							// Set ADC123_IN12 to 7th conversion in sequence
+	ADC2->SQR2 |= 14 << 5;							// Set ADC123_IN14 to 8th conversion in sequence
 
 	//	Set to 56 cycles (0b11) sampling speed (SMPR2 Left shift speed 3 x ADC_INx up to input 9; use SMPR1 from 0 for ADC_IN10+)
 	ADC2->SMPR2 |= 0b11 << 24;						// Set speed of IN8
@@ -237,6 +239,7 @@ void InitADC(void)
 	ADC2->SMPR2 |= 0b11 << 9;						// Set speed of IN3
 	ADC2->SMPR1 |= 0b11 << 0;						// Set speed of IN10
 	ADC2->SMPR1 |= 0b11 << 6;						// Set speed of IN12
+	ADC2->SMPR1 |= 0b11 << 12;						// Set speed of IN14
 
 	ADC2->CR2 |= ADC_CR2_EOCS;						// Trigger interrupt on end of each individual conversion
 	ADC2->CR2 |= ADC_CR2_EXTEN_0;					// ADC hardware trigger 00: Trigger detection disabled; 01: Trigger detection on the rising edge; 10: Trigger detection on the falling edge; 11: Trigger detection on both the rising and falling edges

@@ -4,6 +4,7 @@
 <stringAttribute key="com.atollic.hardwaredebug.launch.hwinitCommands" value="# Initialize your hardware here&#10;"/>
 <stringAttribute key="com.atollic.hardwaredebug.launch.initCommands" value=""/>
 <stringAttribute key="com.atollic.hardwaredebug.launch.ipAddress" value="localhost"/>
+<stringAttribute key="com.atollic.hardwaredebug.launch.ip_address_local" value="localhost"/>
 <stringAttribute key="com.atollic.hardwaredebug.launch.jtagDevice" value="ST-LINK"/>
 <intAttribute key="com.atollic.hardwaredebug.launch.portNumber" value="61234"/>
 <stringAttribute key="com.atollic.hardwaredebug.launch.remoteCommand" value="target extended-remote"/>
