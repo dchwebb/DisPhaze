@@ -3,7 +3,7 @@
 
 #define SAMPLERATE 72000
 
-#define ADC_BUFFER_LENGTH 6
+#define ADC_BUFFER_LENGTH 7
 volatile uint16_t ADC_array[ADC_BUFFER_LENGTH];
 
 #ifdef STM32F446xx
@@ -153,7 +153,7 @@ void InitIO()
 	GPIOC->MODER &= ~(GPIO_MODER_MODER6);			// input mode is default
 	GPIOC->PUPDR |= GPIO_PUPDR_PUPDR6_0;			// Set pin to pull up:  01 Pull-up; 10 Pull-down; 11 Reserved
 
-	// Set up PB12 and PB13 for4 octave up and down switch
+	// Set up PB12 and PB13 for octave up and down switch
 	RCC->AHB1ENR |= RCC_AHB1ENR_GPIOBEN;			// reset and clock control - advanced high performamnce bus - GPIO port B
 	GPIOB->MODER &= ~(GPIO_MODER_MODER12);			// input mode is default
 	GPIOB->MODER &= ~(GPIO_MODER_MODER13);			// input mode is default
@@ -161,14 +161,19 @@ void InitIO()
 	GPIOB->PUPDR |= GPIO_PUPDR_PUPDR13_1;			// Set pin to pull down:  01 Pull-up; 10 Pull-down; 11 Reserved
 
 
-	/*// configure PC13 button to fire on an interrupt - not using as very bouncy and would need timing data to manage properly
+	// configure PB13 & PB12 switch to fire on an interrupt
 	RCC->APB2ENR |= RCC_APB2ENR_SYSCFGEN;			// Enable system configuration clock: used to manage  external interrupt line connection to GPIOs
-	SYSCFG->EXTICR[3] |= SYSCFG_EXTICR4_EXTI13_PC;	// Select Pin PC13 which uses External interrupt 4
+	SYSCFG->EXTICR[3] |= SYSCFG_EXTICR4_EXTI12_PB;	// Select Pin PC13 which uses External interrupt 4
+	EXTI->RTSR |= EXTI_RTSR_TR12;					// Enable rising edge trigger for line 13
+	EXTI->FTSR |= EXTI_FTSR_TR12;					// Enable falling edge trigger for line 13
+	EXTI->IMR |= EXTI_IMR_MR12;						// Activate interrupt using mask register 13
+	SYSCFG->EXTICR[3] |= SYSCFG_EXTICR4_EXTI13_PB;	// Select Pin PC13 which uses External interrupt 4
 	EXTI->RTSR |= EXTI_RTSR_TR13;					// Enable rising edge trigger for line 13
+	EXTI->FTSR |= EXTI_FTSR_TR13;					// Enable falling edge trigger for line 13
 	EXTI->IMR |= EXTI_IMR_MR13;						// Activate interrupt using mask register 13
 
 	NVIC_SetPriority(EXTI15_10_IRQn, 3);
-	NVIC_EnableIRQ(EXTI15_10_IRQn);*/
+	NVIC_EnableIRQ(EXTI15_10_IRQn);
 }
 
 
@@ -205,22 +210,24 @@ void InitADC(void)
 	RCC->AHB1ENR |= RCC_AHB1ENR_GPIOCEN;
 	RCC->APB2ENR |= RCC_APB2ENR_ADC2EN;
 
-	// Enable ADC on PB0 mode: ADC12_IN8; PB1 mode: ADC12_IN9; PA1 mode: ADC123_IN1; PA2 mode: ADC123_IN2; PA3 mode: ADC123_IN3; PC0 mode: ADC123_IN10
-	GPIOB->MODER |= GPIO_MODER_MODER1;				// Set PB1 to Analog mode (0b11)
+	// Enable ADC - PB0: ADC12_IN8; PB1: ADC12_IN9; PA1: ADC123_IN1; PA2: ADC123_IN2; PA3: ADC123_IN3; PC0: ADC123_IN10, PC2: ADC123_IN12
 	GPIOB->MODER |= GPIO_MODER_MODER0;				// Set PB0 to Analog mode (0b11)
+	GPIOB->MODER |= GPIO_MODER_MODER1;				// Set PB1 to Analog mode (0b11)
 	GPIOA->MODER |= GPIO_MODER_MODER1;				// Set PA1 to Analog mode (0b11)
 	GPIOA->MODER |= GPIO_MODER_MODER2;				// Set PA2 to Analog mode (0b11)
 	GPIOA->MODER |= GPIO_MODER_MODER3;				// Set PA3 to Analog mode (0b11)
 	GPIOC->MODER |= GPIO_MODER_MODER0;				// Set PC0 to Analog mode (0b11)
+	GPIOC->MODER |= GPIO_MODER_MODER2;				// Set PC2 to Analog mode (0b11)
 
 	ADC2->CR1 |= ADC_CR1_SCAN;						// Activate scan mode
-	ADC2->SQR1 = (ADC_BUFFER_LENGTH - 1) << 20;		// 4 conversions in sequence
+	ADC2->SQR1 = (ADC_BUFFER_LENGTH - 1) << 20;		// Number of conversions in sequence
 	ADC2->SQR3 |= 8 << 0;							// Set ADC12_IN8 to first conversion in sequence
 	ADC2->SQR3 |= 9 << 5;							// Set ADC12_IN9 to second conversion in sequence
 	ADC2->SQR3 |= 1 << 10;							// Set ADC123_IN1 to third conversion in sequence
 	ADC2->SQR3 |= 2 << 15;							// Set ADC123_IN2 to fourth conversion in sequence
 	ADC2->SQR3 |= 3 << 20;							// Set ADC123_IN3 to fifth conversion in sequence
 	ADC2->SQR3 |= 10 << 25;							// Set ADC123_IN10 to sixth conversion in sequence
+	ADC2->SQR2 |= 12 << 0;							// Set ADC123_IN13 to seventh conversion in sequence
 
 	//	Set to 56 cycles (0b11) sampling speed (SMPR2 Left shift speed 3 x ADC_INx up to input 9; use SMPR1 from 0 for ADC_IN10+)
 	ADC2->SMPR2 |= 0b11 << 24;						// Set speed of IN8
@@ -229,6 +236,7 @@ void InitADC(void)
 	ADC2->SMPR2 |= 0b11 << 6;						// Set speed of IN2
 	ADC2->SMPR2 |= 0b11 << 9;						// Set speed of IN3
 	ADC2->SMPR1 |= 0b11 << 0;						// Set speed of IN10
+	ADC2->SMPR1 |= 0b11 << 6;						// Set speed of IN12
 
 	ADC2->CR2 |= ADC_CR2_EOCS;						// Trigger interrupt on end of each individual conversion
 	ADC2->CR2 |= ADC_CR2_EXTEN_0;					// ADC hardware trigger 00: Trigger detection disabled; 01: Trigger detection on the rising edge; 10: Trigger detection on the falling edge; 11: Trigger detection on both the rising and falling edges
