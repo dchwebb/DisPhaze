@@ -146,7 +146,7 @@ void InitDAC()
 }
 
 
-void InitIO()
+void InitSwitches()
 {
 	// PC6 Button in
 	RCC->AHB1ENR |= RCC_AHB1ENR_GPIOCEN;			// reset and clock control - advanced high performamnce bus - GPIO port C
