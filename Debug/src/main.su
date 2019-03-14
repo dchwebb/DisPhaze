@@ -7,10 +7,11 @@ initialisation.h:149:6:void InitSwitches()	8	static
 initialisation.h:180:6:void InitTimer()	8	static
 initialisation.h:195:6:void InitADC()	4	static
 cmath:411:3:float std::pow(float, float)	16	static
-main.cpp:68:7:void TIM3_IRQHandler()	4	static
-main.cpp:83:7:void EXTI15_10_IRQHandler()	4	static
-main.cpp:97:7:float Interpolate(float*, float&)	24	static
-main.cpp:105:7:float GetPhaseDist(const float*, float, float, float)	32	static
-main.cpp:119:7:float GetBlendPhaseDist(float, float, float, const float&)	56	static
-main.cpp:142:6:void CreateLUTs()	32	static
-main.cpp:157:5:int main()	32	static
+main.cpp:71:7:void TIM3_IRQHandler()	4	static
+main.cpp:86:7:void EXTI15_10_IRQHandler()	4	static
+main.cpp:100:7:float Interpolate(float*, float&)	24	static
+main.cpp:108:7:float GetPhaseDist(const float*, float, float, float)	32	static
+main.cpp:122:7:float GetBlendPhaseDist(float, float, float, const float&)	56	static
+main.cpp:145:6:void CreateLUTs()	32	static
+main.cpp:160:5:int main()	48	static
+stl_algobase.h:195:5:const _Tp& std::min(const _Tp&, const _Tp&) [with _Tp = int]	16	static
