@@ -30,7 +30,6 @@ volatile uint16_t ADC_array[ADC_BUFFER_LENGTH];
 
 #endif
 
-
 /* AHB Prescaler
 0xxx: system clock not divided
 1000: system clock divided by 2
@@ -47,28 +46,18 @@ void SystemClock_Config(void)
 {
 	uint32_t temp = 0x00000000;
 
-	/* Enable Power Control clock */
-	RCC->APB1ENR |= RCC_APB1ENR_PWREN;   // Enable PWREN bit (page - 183 of RM)
-
-	/* The voltage scaling allows optimizing the power consumption when the device is
-	 clocked below the maximum system frequency, to update the voltage scaling value
-	 regarding system frequency refer to product datasheet.  */
-	PWR->CR |= 0x00004000;    //VOS bit = 01 (page - 145 or RM)
-	/**************************************************************************/
+	RCC->APB1ENR |= RCC_APB1ENR_PWREN;			// Enable Power Control clock
+	PWR->CR |= PWR_CR_VOS_0;					// Enable VOS voltage scaling - allows maximum clock speed
 
 #ifdef USE_HSE
-	//RCC->CR &= ~0x00000001; // HSI OFF, not guaranteed, but does not matter, may be slight increase in current
-	RCC->CR |= 0x00010000;    // HSE ON
-	while((RCC->CR & 0x00020000) == 0);   // Wait till HSE is ready
-
-	// Set PLL
-	temp = 0x00400000;    // PLL source is HSE (PLLSRC bit is set to one)
+	RCC->CR |= RCC_CR_HSEON;					// HSE ON
+	while((RCC->CR & RCC_CR_HSERDY) == 0);		// Wait till HSE is ready
+	temp = RCC_PLLCFGR_PLLSRC_HSE;				// PLL source is HSE
 #endif
 
 #ifdef USE_HSI
-	RCC->CR |= 0x00000001;    // HSI ON
-	//RCC->CR &= ~0x00010000; // HSE OFF, not guaranteed, but does not matter, may be slight increase in current
-	while((RCC->CR & 0x00000002) == 0);   // Wait till HSI is ready
+	RCC->CR |= RCC_CR_HSION;					// HSI ON
+	while((RCC->CR & RCC_CR_HSIRDY) == 0);		// Wait till HSI is ready
 #endif
 
 	//	Set the clock multipliers and dividers
@@ -83,43 +72,34 @@ void SystemClock_Config(void)
 	temp |= ((uint32_t)AHB_PRESCALAR << 4);
 	temp |= ((uint32_t)APB1_PRESCALAR << 10);
 	temp |= ((uint32_t)APB2_PRESCALAR << 13);
-	temp |= RCC_CFGR_SW_1;           // Select PLL as SYSCLK
+	temp |= RCC_CFGR_SW_1;						// Select PLL as SYSCLK
 	RCC->CFGR = temp;
 
-	// The Flash access control register is used to enable/disable the acceleration features and control the Flash memory access time according to CPU frequency
-	FLASH->ACR |= FLASH_ACR_LATENCY_5WS; // FLASH_LATENCY_5
+	FLASH->ACR |= FLASH_ACR_LATENCY_5WS;		// Clock faster than 150MHz requires 5 Wait States for Flash memory access time
 
-	// Switch ON the PLL
-	RCC->CR |= RCC_CR_PLLON;    // PLL ON
-	while((RCC->CR & RCC_CR_PLLRDY) == 0);   // Wait till PLL is ready
+	RCC->CR |= RCC_CR_PLLON;					// Switch ON the PLL
+	while ((RCC->CR & RCC_CR_PLLRDY) == 0);		// Wait till PLL is ready
+	while ((RCC->CFGR & RCC_CFGR_SWS_PLL) == 0); // System clock switch status SWS = 0b10 = PLL is really selected
 
-	// wait till PLL is really used as SYSCLK
-	while((RCC->CFGR & RCC_CFGR_SWS_PLL) == 0); // System clock switch status SWS = 0b10 = PLL is really selected
-
-	// STM32F405x/407x/415x/417x Revision Z devices: prefetch is supported
+	// STM32F405x/407x/415x/417x Revision Z (0x1001) devices: prefetch is supported DW - assume revision Y (0x100F) is OK
 	volatile uint32_t idNumber = DBGMCU->IDCODE;
 	idNumber = idNumber >> 16;
-
-	// Enable the Flash prefetch
-	if(idNumber == 0x1001)
-	{
-	  FLASH->ACR |= FLASH_ACR_PRFTEN;
-	}
+	if (idNumber == 0x1001 || idNumber == 0x100F)
+		FLASH->ACR |= FLASH_ACR_PRFTEN;			// Enable the Flash prefetch
 }
 
 void InitSysTick(uint32_t ticks, uint32_t calib)
 {
 	// Register macros found in core_cm4.h
-
-	SysTick->CTRL = 0;		// Disable SysTick
-	SysTick->LOAD = (ticks - 1) - calib;	// Set reload register - ie number of ticks before interrupt fired
+	SysTick->CTRL = 0;									// Disable SysTick
+	SysTick->LOAD = (ticks - 1) - calib;				// Set reload register - ie number of ticks before interrupt fired
 
 	// Set priority of Systick interrupt to least urgency (ie largest priority value)
 	NVIC_SetPriority (SysTick_IRQn, (1 << __NVIC_PRIO_BITS) - 1);
 
-	SysTick->VAL = 0;			// Reset the SysTick counter value
+	SysTick->VAL = 0;									// Reset the SysTick counter value
 
-//	SysTick->CTRL |= SysTick_CTRL_CLKSOURCE_Msk;		// Select processor clock: 1 = processor clock; 0 =external clock
+//	SysTick->CTRL |= SysTick_CTRL_CLKSOURCE_Msk;		// Select processor clock: 1 = processor clock; 0 = external clock
 	SysTick->CTRL |= SysTick_CTRL_TICKINT_Msk;			// Enable SysTick interrupt
 	SysTick->CTRL |= SysTick_CTRL_ENABLE_Msk;			// Enable SysTick
 }
@@ -130,19 +110,18 @@ void InitDAC()
 	// In order to avoid parasitic consumption, the PA4 or PA5 pin should first be configured to analog (AIN).
 
 	// Enable DAC and GPIO Clock
-	RCC->AHB1ENR |= RCC_AHB1ENR_GPIOAEN;	// Enable GPIO Clock
-	RCC->APB1ENR |= RCC_APB1ENR_DACEN;		// Enable DAC Clock
+	RCC->AHB1ENR |= RCC_AHB1ENR_GPIOAEN;			// Enable GPIO Clock
+	RCC->APB1ENR |= RCC_APB1ENR_DACEN;				// Enable DAC Clock
 
-	DAC->CR |= DAC_CR_EN1;			// Enable DAC using PA4 (DAC_OUT1)
-	DAC->CR |= DAC_CR_BOFF1;		// Enable DAC channel output buffer to reduce the output impedance
-	DAC->CR |= DAC_CR_TEN1;			// DAC 1 enable trigger
-	DAC->CR |= DAC_CR_TSEL1;		// Set trigger to software (0b111: Software trigger)
+	DAC->CR |= DAC_CR_EN1;							// Enable DAC using PA4 (DAC_OUT1)
+	DAC->CR |= DAC_CR_BOFF1;						// Enable DAC channel output buffer to reduce the output impedance
+	DAC->CR |= DAC_CR_TEN1;							// DAC 1 enable trigger
+	DAC->CR |= DAC_CR_TSEL1;						// Set trigger to software (0b111: Software trigger)
 
-	DAC->CR |= DAC_CR_EN2;			// Enable DAC using PA5 (DAC_OUT2)
-	DAC->CR |= DAC_CR_BOFF2;		// Enable DAC channel output buffer
-	DAC->CR |= DAC_CR_TEN2;			// DAC 2 enable trigger
-	DAC->CR |= DAC_CR_TSEL2;		// Set trigger to software (0b111: Software trigger)
-
+	DAC->CR |= DAC_CR_EN2;							// Enable DAC using PA5 (DAC_OUT2)
+	DAC->CR |= DAC_CR_BOFF2;						// Enable DAC channel output buffer
+	DAC->CR |= DAC_CR_TEN2;							// DAC 2 enable trigger
+	DAC->CR |= DAC_CR_TSEL2;						// Set trigger to software (0b111: Software trigger)
 }
 
 
@@ -201,7 +180,7 @@ void InitTimer()
 
 	SET_BIT(TIM3->DIER, TIM_DIER_UIE);				//  DMA/interrupt enable register
 	NVIC_EnableIRQ(TIM3_IRQn);
-	NVIC_SetPriority(TIM3_IRQn, 6);
+	NVIC_SetPriority(TIM3_IRQn, 0);
 
 	SET_BIT(TIM3->CR1, TIM_CR1_CEN);
 	SET_BIT(TIM3->EGR, TIM_EGR_UG);

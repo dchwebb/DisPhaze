@@ -13,34 +13,32 @@ enum RelativePitch {
 	OCTAVEDOWN,
 	OCTAVEUP
 };
-
 RelativePitch RelPitch = NONE;
 
 extern uint32_t SystemCoreClock;
-bool DacRead = false;
+extern volatile uint16_t ADC_array[ADC_BUFFER_LENGTH];
+
+volatile uint32_t overrun;			// For monitoring if samples are not being delivered to the DAC quickly enough
+volatile bool DacRead = false;		// Tells the main loop when to queue up the next samples
 volatile bool RingModOn = false;
 volatile bool MixOn = false;
-bool ButtonDown = false;
+volatile bool ButtonDown = false;
 volatile float freq1 = 440;
 volatile float freq2 = 440;
-volatile uint16_t Pitch;
 volatile float PhaseDist = 0.0f;
 volatile float SamplePos1 = 0;
 volatile float SamplePos2 = 0;
 volatile float PD1Scale = 0.0f;
 volatile float PD2Scale = 0.0f;
-volatile uint32_t overrun;
 volatile float PDLut1 = 0;
 volatile uint8_t PDLut2 = 0;		// Which PD LUT is being used for DAC2
 volatile float VCALevel;
+volatile uint16_t Pitch;
 volatile int16_t FineTune = 0;
 volatile int16_t CoarseTune = 0;
 float SineLUT[LUTSIZE];
 float PitchLUT[LUTSIZE];
 
-
-extern volatile uint16_t ADC_array[ADC_BUFFER_LENGTH];
-uint8_t adcChannel = 0;
 
 // Create aliases for ADC inputs
 volatile uint16_t& ADC_PITCH = ADC_array[0];	// PB0 ADC12_IN8   Pin 27
@@ -63,7 +61,7 @@ const float PDWave5LUT[] = {0.002996,0.005019,0.007045,0.009074,0.011107,0.01314
 
 // Create an array of pointers to the PD LUTs
 const float * LUTArray[] = { PDSquareLUT, PDWave4LUT, PDWave5LUT, PDSawLUT, PDWave3LUT };
-uint8_t NoOfLUTs = sizeof(LUTArray) / sizeof(LUTArray[0]);
+const uint8_t NoOfLUTs = sizeof(LUTArray) / sizeof(LUTArray[0]);
 
 //	Use extern C to allow linker to find ISR
 extern "C"
@@ -98,7 +96,7 @@ extern "C"
 		// Read PB8 - DAC2 Output to Mix mode
 		MixOn = (GPIOB->IDR & GPIO_IDR_IDR_8);
 
-		EXTI->PR |= EXTI_PR_PR8;		// Clear interrupt pending
+		EXTI->PR |= EXTI_PR_PR8;						// Clear interrupt pending
 	}
 }
 
@@ -176,10 +174,8 @@ int main(void)
 	InitTimer();				// Sample output timer 3 - fires interrupt to trigger sample output from DAC
 	InitADC();					// Configure ADC for analog controls
 
-	float oldOutput1 =  0;
-	float oldOutput2 = 0;
-
 	EXTI15_10_IRQHandler();		// Call the Interrupt event handler to set up the octave up/down switch to current position
+	EXTI9_5_IRQHandler();		// Call the Interrupt event handler to set up the mix switch to current position
 
 
 	while (1)
@@ -199,7 +195,7 @@ int main(void)
 			PD2Scale = (float)std::min((4096 - ADC_PD2AMT) + ADC_PD2POT, 5000) / 800;		// Convert PD amount for OSC2
 
 			// Get VCA levels
-			if (ADC_VCA > 4070)	VCALevel = 0;									//	 Filter out very low level VCA signals
+			if (ADC_VCA > 4070)	VCALevel = 0;									// Filter out very low level VCA signals
 			else				VCALevel = (4096.0f - ADC_VCA) / 4096;			// Convert ADC for VCA to float between 0 and 1
 
 			// Calculate output as a float from -1 to +1 checking phase distortion and phase offset as required
@@ -218,10 +214,7 @@ int main(void)
 				DAC->DHR12R2 = (int)((1 + SampleOut2 * VCALevel) * 2047);
 			}
 
-			DacRead = 0;
-
-			oldOutput1 = SampleOut1;
-			oldOutput2 = SampleOut2;
+			DacRead = 0;		// Clear ready for next sample flag
 
 			// adjust frequency according to fine tune knob with some damping
 			FineTune = ((15 * FineTune) + ADC_FTUNE) / 16;
