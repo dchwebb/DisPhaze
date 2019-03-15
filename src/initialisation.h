@@ -148,25 +148,40 @@ void InitDAC()
 
 void InitSwitches()
 {
-	// PC6 Button in
-	RCC->AHB1ENR |= RCC_AHB1ENR_GPIOCEN;			// reset and clock control - advanced high performamnce bus - GPIO port C
+	//	Enable GPIO and external interrupt clocks
+	RCC->AHB1ENR |= RCC_AHB1ENR_GPIOBEN;			// reset and clock control - advanced high performance bus - GPIO port B
+	RCC->AHB1ENR |= RCC_AHB1ENR_GPIOCEN;			// reset and clock control - advanced high performance bus - GPIO port C
+	RCC->APB2ENR |= RCC_APB2ENR_SYSCFGEN;			// Enable system configuration clock: used to manage external interrupt line connection to GPIOs
+
+	// PC6 Ring Mod Button in
 	GPIOC->MODER &= ~(GPIO_MODER_MODER6);			// input mode is default
 	GPIOC->PUPDR |= GPIO_PUPDR_PUPDR6_0;			// Set pin to pull up:  01 Pull-up; 10 Pull-down; 11 Reserved
 
+	// PB8 DAC2 Mix mode switch
+	GPIOB->MODER &= ~(GPIO_MODER_MODER8);			// input mode is default
+	GPIOB->PUPDR |= GPIO_PUPDR_PUPDR8_1;			// Set pin to pull down:  01 Pull-up; 10 Pull-down; 11 Reserved
+
 	// Set up PB12 and PB13 for octave up and down switch
-	RCC->AHB1ENR |= RCC_AHB1ENR_GPIOBEN;			// reset and clock control - advanced high performamnce bus - GPIO port B
 	GPIOB->MODER &= ~(GPIO_MODER_MODER12);			// input mode is default
 	GPIOB->MODER &= ~(GPIO_MODER_MODER13);			// input mode is default
 	GPIOB->PUPDR |= GPIO_PUPDR_PUPDR12_1;			// Set pin to pull down:  01 Pull-up; 10 Pull-down; 11 Reserved
 	GPIOB->PUPDR |= GPIO_PUPDR_PUPDR13_1;			// Set pin to pull down:  01 Pull-up; 10 Pull-down; 11 Reserved
 
+	// configure PB8 switch to fire on an interrupt
+	SYSCFG->EXTICR[2] |= SYSCFG_EXTICR3_EXTI8_PB;	// Select Pin PB8 which uses External interrupt 3
+	EXTI->RTSR |= EXTI_RTSR_TR8;					// Enable rising edge trigger for line 8
+	EXTI->FTSR |= EXTI_FTSR_TR8;					// Enable falling edge trigger for line 8
+	EXTI->IMR |= EXTI_IMR_MR8;						// Activate interrupt using mask register 8
 
-	// configure PB13 & PB12 switch to fire on an interrupt
-	RCC->APB2ENR |= RCC_APB2ENR_SYSCFGEN;			// Enable system configuration clock: used to manage  external interrupt line connection to GPIOs
-	SYSCFG->EXTICR[3] |= SYSCFG_EXTICR4_EXTI12_PB;	// Select Pin PC13 which uses External interrupt 4
-	EXTI->RTSR |= EXTI_RTSR_TR12;					// Enable rising edge trigger for line 13
-	EXTI->FTSR |= EXTI_FTSR_TR12;					// Enable falling edge trigger for line 13
-	EXTI->IMR |= EXTI_IMR_MR12;						// Activate interrupt using mask register 13
+	NVIC_SetPriority(EXTI9_5_IRQn, 3);
+	NVIC_EnableIRQ(EXTI9_5_IRQn);
+
+	// configure PB12 & PB13 switch to fire on an interrupt
+	SYSCFG->EXTICR[3] |= SYSCFG_EXTICR4_EXTI12_PB;	// Select Pin PC12 which uses External interrupt 4
+	EXTI->RTSR |= EXTI_RTSR_TR12;					// Enable rising edge trigger for line 12
+	EXTI->FTSR |= EXTI_FTSR_TR12;					// Enable falling edge trigger for line 12
+	EXTI->IMR |= EXTI_IMR_MR12;						// Activate interrupt using mask register 12
+
 	SYSCFG->EXTICR[3] |= SYSCFG_EXTICR4_EXTI13_PB;	// Select Pin PC13 which uses External interrupt 4
 	EXTI->RTSR |= EXTI_RTSR_TR13;					// Enable rising edge trigger for line 13
 	EXTI->FTSR |= EXTI_FTSR_TR13;					// Enable falling edge trigger for line 13

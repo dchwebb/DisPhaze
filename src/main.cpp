@@ -18,8 +18,8 @@ RelativePitch RelPitch = NONE;
 
 extern uint32_t SystemCoreClock;
 bool DacRead = false;
-bool RingModOn = false;
-bool MixOn = false;
+volatile bool RingModOn = false;
+volatile bool MixOn = false;
 bool ButtonDown = false;
 volatile float freq1 = 440;
 volatile float freq2 = 440;
@@ -43,14 +43,14 @@ extern volatile uint16_t ADC_array[ADC_BUFFER_LENGTH];
 uint8_t adcChannel = 0;
 
 // Create aliases for ADC inputs
-volatile uint16_t& ADC_PITCH = ADC_array[0];		// PB0 ADC12_IN8   Pin 27
-volatile uint16_t& ADC_FTUNE = ADC_array[1];		// PB1 ADC12_IN9   Pin 26
+volatile uint16_t& ADC_PITCH = ADC_array[0];	// PB0 ADC12_IN8   Pin 27
+volatile uint16_t& ADC_FTUNE = ADC_array[1];	// PB1 ADC12_IN9   Pin 26
 volatile uint16_t& ADC_OSC1TYPE = ADC_array[2];	// PA1 ADC123_IN1  Pin 15
 volatile uint16_t& ADC_OSC2TYPE = ADC_array[3];	// PA2 ADC123_IN2  Pin 16
 volatile uint16_t& ADC_PD2AMT = ADC_array[4];	// PA3 ADC123_IN3  Pin 17
 volatile uint16_t& ADC_VCA = ADC_array[5];		// PC0 ADC123_IN10 Pin 8
 volatile uint16_t& ADC_PD1AMT = ADC_array[6];	// PC2 ADC123_IN12 Pin 10
-volatile uint16_t& ADC_CTUNE = ADC_array[7];		// PC4 ADC12_IN14  Pin 24
+volatile uint16_t& ADC_CTUNE = ADC_array[7];	// PC4 ADC12_IN14  Pin 24
 volatile uint16_t& ADC_PD1POT = ADC_array[8];	// PA7 ADC12_IN7   Pin 23
 volatile uint16_t& ADC_PD2POT = ADC_array[9];	// PC1 ADC12_IN11  Pin 9
 
@@ -92,6 +92,13 @@ extern "C"
 		else
 			RelPitch = NONE;
 		EXTI->PR |= EXTI_PR_PR13 | EXTI_PR_PR12;		// Clear interrupt pending
+	}
+
+	void EXTI9_5_IRQHandler(void) {
+		// Read PB8 - DAC2 Output to Mix mode
+		MixOn = (GPIOB->IDR & GPIO_IDR_IDR_8);
+
+		EXTI->PR |= EXTI_PR_PR8;		// Clear interrupt pending
 	}
 }
 
@@ -201,12 +208,12 @@ int main(void)
 
 			// Set DAC output values for when sample interrupt next fires
 			if (RingModOn) {
-				DAC->DHR12R1 = (int)((1 + (SampleOut1 * SampleOut2) * VCALevel) * 2047);	// Ring mod of 1 * 2
+				DAC->DHR12R1 = (int)((1 + (SampleOut1 * SampleOut2) * VCALevel) * 2047);		// Ring mod of 1 * 2
 			} else {
 				DAC->DHR12R1 = (int)((1 + SampleOut1 * VCALevel) * 2047);
 			}
 			if (MixOn) {
-				DAC->DHR12R1 = (int)(((2 + SampleOut1 + SampleOut2) / 2) * 2047);			// Mix of 1 + 2
+				DAC->DHR12R2 = (int)(((2 + (SampleOut1 + SampleOut2) * VCALevel) / 2) * 2047);	// Mix of 1 + 2
 			} else {
 				DAC->DHR12R2 = (int)((1 + SampleOut2 * VCALevel) * 2047);
 			}
