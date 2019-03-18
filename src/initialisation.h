@@ -51,7 +51,7 @@ void SystemClock_Config(void)
 
 #ifdef USE_HSE
 	RCC->CR |= RCC_CR_HSEON;					// HSE ON
-	while((RCC->CR & RCC_CR_HSERDY) == 0);		// Wait till HSE is ready
+	while ((RCC->CR & RCC_CR_HSERDY) == 0);		// Wait till HSE is ready
 	temp = RCC_PLLCFGR_PLLSRC_HSE;				// PLL source is HSE
 #endif
 
