@@ -82,14 +82,14 @@ extern "C"
 	}
 
 	void EXTI15_10_IRQHandler(void) {
-		// Read PB12 and PB13 for octave up and down switch
-		if (GPIOB->IDR & GPIO_IDR_IDR_12)
+		// Read PC10 and PC12 for octave up and down switch
+		if (GPIOC->IDR & GPIO_IDR_IDR_10)
 			RelPitch = OCTAVEUP;
-		else if (GPIOB->IDR & GPIO_IDR_IDR_13)
+		else if (GPIOC->IDR & GPIO_IDR_IDR_12)
 			RelPitch = OCTAVEDOWN;
 		else
 			RelPitch = NONE;
-		EXTI->PR |= EXTI_PR_PR13 | EXTI_PR_PR12;		// Clear interrupt pending
+		EXTI->PR |= EXTI_PR_PR10 | EXTI_PR_PR12;		// Clear interrupt pending
 	}
 
 	void EXTI9_5_IRQHandler(void) {

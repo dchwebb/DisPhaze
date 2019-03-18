@@ -1,11 +1,11 @@
 core_cm4.h:1452:22:void NVIC_EnableIRQ(IRQn_Type)	16	static
 core_cm4.h:1535:22:void NVIC_SetPriority(IRQn_Type, uint32_t)	16	static
 initialisation.h:45:6:void SystemClock_Config()	16	static
-initialisation.h:92:6:void InitSysTick(uint32_t, uint32_t)	16	static
-initialisation.h:109:6:void InitDAC()	4	static
-initialisation.h:131:6:void InitSwitches()	8	static
-initialisation.h:177:6:void InitTimer()	8	static
-initialisation.h:192:6:void InitADC()	4	static
+initialisation.h:91:6:void InitSysTick(uint32_t, uint32_t)	16	static
+initialisation.h:107:6:void InitDAC()	4	static
+initialisation.h:128:6:void InitSwitches()	8	static
+initialisation.h:174:6:void InitTimer()	8	static
+initialisation.h:189:6:void InitADC()	4	static
 cmath:411:3:float std::pow(float, float)	16	static
 main.cpp:69:7:void TIM3_IRQHandler()	4	static
 main.cpp:84:7:void EXTI15_10_IRQHandler()	4	static
