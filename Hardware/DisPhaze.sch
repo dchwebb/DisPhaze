@@ -1170,14 +1170,10 @@ Wire Wire Line
 	8950 5400 9150 5400
 Wire Wire Line
 	8950 5600 9150 5600
-Text GLabel 3400 4400 2    50   Input ~ 0
+Text GLabel 1650 4700 0    50   Input ~ 0
 OCTAVE_UP
-Text GLabel 3400 4200 2    50   Input ~ 0
+Text GLabel 1650 4900 0    50   Input ~ 0
 OCTAVE_DN
-Wire Wire Line
-	3250 5000 3400 5000
-Wire Wire Line
-	3250 4900 3400 4900
 $Comp
 L Amplifier_Operational:TL072 U3
 U 1 1 5C90A10F
@@ -2281,9 +2277,7 @@ NoConn ~ 1850 4200
 NoConn ~ 1850 4400
 NoConn ~ 1850 4500
 NoConn ~ 1850 4600
-NoConn ~ 1850 4700
 NoConn ~ 1850 4800
-NoConn ~ 1850 4900
 NoConn ~ 1850 5000
 NoConn ~ 1850 5100
 NoConn ~ 1850 5200
@@ -2360,4 +2354,10 @@ F 3 "~" H 9850 1200 50  0001 C CNN
 $EndComp
 Wire Wire Line
 	9850 1200 9850 1250
+Wire Wire Line
+	1650 4900 1850 4900
+Wire Wire Line
+	1650 4700 1850 4700
+NoConn ~ 3250 5000
+NoConn ~ 3250 4900
 $EndSCHEMATC
