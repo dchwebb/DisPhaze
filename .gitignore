@@ -1,2 +1,5 @@
 /Debug/
 /Hardware/gerbers/
+*.bu
+*.kicad_pcb-bak
+*.bak
