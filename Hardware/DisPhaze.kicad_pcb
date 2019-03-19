@@ -2,7 +2,7 @@
 
   (general
     (thickness 1.6)
-    (drawings 4)
+    (drawings 5)
     (tracks 512)
     (zones 0)
     (modules 76)
@@ -3325,6 +3325,9 @@
     )
   )
 
+  (gr_text "DisPhaze v2" (at 148.75 52.5) (layer F.Cu)
+    (effects (font (size 1.5 1.5) (thickness 0.3)))
+  )
   (gr_line (start 160 50) (end 160 160) (layer Edge.Cuts) (width 0.2) (tstamp 5C8E1743))
   (gr_line (start 100 160) (end 160 160) (layer Edge.Cuts) (width 0.2) (tstamp 5C8E1733))
   (gr_line (start 100 50) (end 100 160) (layer Edge.Cuts) (width 0.2))
