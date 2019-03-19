@@ -1,7 +1,7 @@
 (export (version D)
   (design
     (source D:\docs\ARM\DisPhaze\Hardware\DisPhaze.sch)
-    (date "18/03/2019 16:19:03")
+    (date "19/03/2019 22:22:52")
     (tool "Eeschema (5.0.1)-4")
     (sheet (number 1) (name /) (tstamps /)
       (title_block
@@ -38,7 +38,7 @@
       (tstamp 5C1666B6))
     (comp (ref J1)
       (value SWD_Header)
-      (footprint Custom_Footprints:4pin_header)
+      (footprint Custom_Footprints:SWD_header)
       (datasheet ~)
       (libsource (lib Connector) (part Conn_01x04_Male) (description "Generic connector, single row, 01x04, script generated (kicad-library-utils/schlib/autogen/connector/)"))
       (sheetpath (names /) (tstamps /))
@@ -94,7 +94,7 @@
       (tstamp 5C1699C4))
     (comp (ref U4)
       (value LM1117-3.3)
-      (footprint TO_SOT_Packages_SMD:SOT-223)
+      (footprint TO_SOT_Packages_SMD:TO-252-3_TabPin2)
       (datasheet http://www.ti.com/lit/ds/symlink/lm1117.pdf)
       (libsource (lib Regulator_Linear) (part LM1117-3.3) (description "800mA Low-Dropout Linear Regulator, 3.3V fixed output, TO-220/TO-252/TO-263/SOT-223"))
       (sheetpath (names /) (tstamps /))
