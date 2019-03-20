@@ -70,7 +70,7 @@ U 1 1 5C1668B3
 P 3400 1050
 F 0 "J1" H 3600 600 50  0000 C CNN
 F 1 "SWD_Header" H 3650 700 50  0000 C CNN
-F 2 "Custom_Footprints:4pin_header" H 3400 1050 50  0001 C CNN
+F 2 "Custom_Footprints:SWD_header" H 3400 1050 50  0001 C CNN
 F 3 "~" H 3400 1050 50  0001 C CNN
 	1    3400 1050
 	1    0    0    -1  
@@ -319,7 +319,7 @@ U 1 1 5C61B890
 P 11450 3450
 F 0 "U4" H 11450 3692 50  0000 C CNN
 F 1 "LM1117-3.3" H 11450 3601 50  0000 C CNN
-F 2 "TO_SOT_Packages_SMD:SOT-223" H 11450 3450 50  0001 C CNN
+F 2 "TO_SOT_Packages_SMD:TO-252-3_TabPin2" H 11450 3450 50  0001 C CNN
 F 3 "http://www.ti.com/lit/ds/symlink/lm1117.pdf" H 11450 3450 50  0001 C CNN
 	1    11450 3450
 	1    0    0    -1  

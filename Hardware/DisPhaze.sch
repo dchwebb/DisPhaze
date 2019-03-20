@@ -1162,9 +1162,9 @@ Wire Wire Line
 	7950 5350 7950 5500
 Wire Wire Line
 	7950 5500 8100 5500
-Text GLabel 9150 5400 2    50   Input ~ 0
-OCTAVE_UP
 Text GLabel 9150 5600 2    50   Input ~ 0
+OCTAVE_UP
+Text GLabel 9150 5400 2    50   Input ~ 0
 OCTAVE_DN
 Wire Wire Line
 	8950 5400 9150 5400
