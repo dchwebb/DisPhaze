@@ -23,6 +23,8 @@ volatile bool DacRead = false;		// Tells the main loop when to queue up the next
 volatile bool RingModOn = false;
 volatile bool MixOn = false;
 volatile bool ButtonDown = false;
+volatile int Calibration = 0;
+volatile int CalibBtn = 0;
 volatile float freq1 = 440;
 volatile float freq2 = 440;
 volatile float PhaseDist = 0.0f;
@@ -180,8 +182,38 @@ int main(void)
 
 	while (1)
 	{
+		// Toggle Calibration mode when button pressed using simple debouncer
+		if (!READ_BIT(GPIOB->IDR, GPIO_IDR_IDR_5)) {
+			CalibBtn++;
+
+			if (CalibBtn == 200) {
+				Calibration = !Calibration;
+				//CalibBtn = true;
+			}
+		} else {
+			CalibBtn = 0;
+		}
+
 		// Get Pitch from ADC and smooth
 		Pitch = (Pitch + ADC_PITCH) / 2;
+
+		if (Calibration) {
+
+			// Generate square wave
+			if (DacRead)
+			{
+				// Calculate pitch directly
+				//freq1 = 2299.0f * std::pow(2.0f, (float)Pitch / -583.0f);	// Increase 2299 to increase pitch
+				//freq1 = PitchLUT[Pitch / 4];
+				DAC->DHR12R1 = SamplePos1 > SAMPLERATE / 2 ? 4095: 0;
+				DacRead = 0;
+				SamplePos1 += 2299.0f * std::pow(2.0f, (float)Pitch / -583.0f);	// Increase 2299 to increase pitch
+				while (SamplePos1 >= SAMPLERATE)
+					SamplePos1-= SAMPLERATE;
+			}
+			continue;
+		}
+
 
 		// Analog selection of PD LUT table allows a smooth transition between LUTs for DAC1 and a stepped transition for DAC2
 		PDLut1 = (float)ADC_OSC1TYPE * (NoOfLUTs - 1) / 4096;
@@ -261,6 +293,7 @@ int main(void)
 		} else {
 			ButtonDown = false;
 		}
+
 
 
 

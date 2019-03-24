@@ -4,15 +4,15 @@ initialisation.h:45:6:void SystemClock_Config()	16	static
 initialisation.h:91:6:void InitSysTick(uint32_t, uint32_t)	16	static
 initialisation.h:107:6:void InitDAC()	4	static
 initialisation.h:128:6:void InitSwitches()	8	static
-initialisation.h:174:6:void InitTimer()	8	static
-initialisation.h:189:6:void InitADC()	4	static
+initialisation.h:178:6:void InitTimer()	8	static
+initialisation.h:193:6:void InitADC()	4	static
 cmath:411:3:float std::pow(float, float)	16	static
-main.cpp:69:7:void TIM3_IRQHandler()	4	static
-main.cpp:84:7:void EXTI15_10_IRQHandler()	4	static
-main.cpp:95:7:void EXTI9_5_IRQHandler()	4	static
-main.cpp:105:7:float Interpolate(float*, float&)	24	static
-main.cpp:113:7:float GetPhaseDist(const float*, float, float, float)	32	static
-main.cpp:127:7:float GetBlendPhaseDist(float, float, float, const float&)	56	static
-main.cpp:150:6:void CreateLUTs()	32	static
-main.cpp:165:5:int main()	40	static
+main.cpp:71:7:void TIM3_IRQHandler()	4	static
+main.cpp:86:7:void EXTI15_10_IRQHandler()	4	static
+main.cpp:97:7:void EXTI9_5_IRQHandler()	4	static
+main.cpp:107:7:float Interpolate(float*, float&)	24	static
+main.cpp:115:7:float GetPhaseDist(const float*, float, float, float)	32	static
+main.cpp:129:7:float GetBlendPhaseDist(float, float, float, const float&)	56	static
+main.cpp:152:6:void CreateLUTs()	32	static
+main.cpp:167:5:int main()	40	static
 stl_algobase.h:195:5:const _Tp& std::min(const _Tp&, const _Tp&) [with _Tp = int]	16	static

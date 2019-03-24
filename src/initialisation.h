@@ -140,6 +140,10 @@ void InitSwitches()
 	GPIOB->MODER &= ~(GPIO_MODER_MODER8);			// input mode is default
 	GPIOB->PUPDR |= GPIO_PUPDR_PUPDR8_1;			// Set pin to pull down:  01 Pull-up; 10 Pull-down; 11 Reserved
 
+	// PB5 Calibration button
+	GPIOB->MODER &= ~(GPIO_MODER_MODER5);			// input mode is default
+	GPIOB->PUPDR |= GPIO_PUPDR_PUPDR5_0;			// Set pin to pull up:  01 Pull-up; 10 Pull-down; 11 Reserved
+
 	// Set up PC10 and PC12 for octave up and down switch
 	GPIOC->MODER &= ~(GPIO_MODER_MODER10);			// input mode is default
 	GPIOC->MODER &= ~(GPIO_MODER_MODER12);			// input mode is default
