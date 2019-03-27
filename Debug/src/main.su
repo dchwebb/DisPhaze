@@ -1,18 +1,20 @@
 core_cm4.h:1452:22:void NVIC_EnableIRQ(IRQn_Type)	16	static
 core_cm4.h:1535:22:void NVIC_SetPriority(IRQn_Type, uint32_t)	16	static
-initialisation.h:45:6:void SystemClock_Config()	16	static
-initialisation.h:91:6:void InitSysTick(uint32_t, uint32_t)	16	static
-initialisation.h:107:6:void InitDAC()	4	static
-initialisation.h:128:6:void InitSwitches()	8	static
-initialisation.h:178:6:void InitTimer()	8	static
-initialisation.h:193:6:void InitADC()	4	static
-cmath:411:3:float std::pow(float, float)	16	static
-main.cpp:71:7:void TIM3_IRQHandler()	4	static
-main.cpp:86:7:void EXTI15_10_IRQHandler()	4	static
-main.cpp:97:7:void EXTI9_5_IRQHandler()	4	static
-main.cpp:107:7:float Interpolate(float*, float&)	24	static
-main.cpp:115:7:float GetPhaseDist(const float*, float, float, float)	32	static
-main.cpp:129:7:float GetBlendPhaseDist(float, float, float, const float&)	56	static
-main.cpp:152:6:void CreateLUTs()	32	static
-main.cpp:167:5:int main()	40	static
+initialisation.h:47:6:void SystemClock_Config()	16	static
+initialisation.h:95:6:void InitSysTick(uint32_t, uint32_t)	16	static
+initialisation.h:111:6:void InitDAC()	4	static
+initialisation.h:132:6:void InitSwitches()	8	static
+initialisation.h:182:6:void InitTimer()	8	static
+initialisation.h:197:6:void InitADC()	4	static
+initialisation.h:373:6:void WriteToFlash(CalibSettings&)	32	static
+initialisation.h:400:6:void CalibRestore(CalibSettings&)	40	static
+cmath:411:3:constexpr float std::pow(float, float)	16	static
+main.cpp:76:7:void TIM3_IRQHandler()	4	static
+main.cpp:91:7:void EXTI15_10_IRQHandler()	4	static
+main.cpp:102:7:void EXTI9_5_IRQHandler()	4	static
+main.cpp:112:7:float Interpolate(float*, float&)	24	static
+main.cpp:120:7:float GetPhaseDist(const float*, float, float, float)	32	static
+main.cpp:134:7:float GetBlendPhaseDist(float, float, float, const float&)	56	static
+main.cpp:157:6:void CreateLUTs()	32	static
+main.cpp:172:5:int main()	40	static
 stl_algobase.h:195:5:const _Tp& std::min(const _Tp&, const _Tp&) [with _Tp = int]	16	static

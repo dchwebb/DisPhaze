@@ -3488,6 +3488,7 @@ typedef struct
 #define FLASH_OPTCR_BOR_LEV_0               ((uint32_t)0x00000004)
 #define FLASH_OPTCR_BOR_LEV_1               ((uint32_t)0x00000008)
 #define FLASH_OPTCR_BOR_LEV                 ((uint32_t)0x0000000C)
+#define FLASH_OPTCR_BFB2                    ((uint32_t)0x00000010)
 #define FLASH_OPTCR_WDG_SW                  ((uint32_t)0x00000020)
 #define FLASH_OPTCR_nRST_STOP               ((uint32_t)0x00000040)
 #define FLASH_OPTCR_nRST_STDBY              ((uint32_t)0x00000080)

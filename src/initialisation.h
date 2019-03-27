@@ -1,4 +1,6 @@
 #include "stm32f4xx.h"
+#include "stm32f4xx_flash.h"
+#include <cstring>
 
 
 #define SAMPLERATE 72000
@@ -86,6 +88,8 @@ void SystemClock_Config(void)
 	idNumber = idNumber >> 16;
 	if (idNumber == 0x1001 || idNumber == 0x100F)
 		FLASH->ACR |= FLASH_ACR_PRFTEN;			// Enable the Flash prefetch
+
+	// See page 83 of manual for other possibly performance boost options: instruction cache enable (ICEN) and data cache enable (DCEN)
 }
 
 void InitSysTick(uint32_t ticks, uint32_t calib)
@@ -355,3 +359,59 @@ void InitADC(void)
 
 
 }
+
+// Create a struct to store calibration settings - note this uses the Standard Periphal Driver code
+struct CalibSettings {
+	char OffsetMarker[4] = "TOF";		// calibration tuning offset
+	uint32_t Offset = 0;
+	char ScaleMarker[4] = "TSC";		// calibration tuning scale
+	float Scale = 0;
+};
+#define ADDR_FLASH_SECTOR_10    ((uint32_t)0x080C0000) // Base address of Sector 10, 128 Kbytes
+
+// Write calibration settings to Flash memory
+void WriteToFlash(CalibSettings& c) {
+
+	uint32_t address = ADDR_FLASH_SECTOR_10;		// Store data in Sector 10 (second last sector in F405 - sector 11 appears to be write only) to allow maximum space for program code
+	FLASH_Status flash_status = FLASH_COMPLETE;
+
+	__disable_irq();		// Disable Interrupts
+	FLASH_Unlock();			// Unlock Flash memory for writing
+
+	// Clear error flags in Status Register
+	FLASH_ClearFlag(FLASH_FLAG_EOP | FLASH_FLAG_OPERR |FLASH_FLAG_WRPERR | FLASH_FLAG_PGAERR |FLASH_FLAG_PGPERR | FLASH_FLAG_PGSERR);
+
+	// Erase sector 10 (has to be erased before write)
+	flash_status = FLASH_EraseSector(FLASH_Sector_10, VoltageRange_3);
+
+	// If erase worked, program the Flash memory with the calibration settings byte by byte
+	if (flash_status == FLASH_COMPLETE) {
+		for (unsigned int f = 0; f < sizeof(c); f++) {
+			char byte = *((char*)(&c) + f);
+			flash_status = FLASH_ProgramByte((uint32_t)address + f, byte);
+		}
+	}
+
+	FLASH_Lock();			// Lock the Flash memory
+	__enable_irq(); 		// Enable Interrupts
+}
+
+// Restore calibration settings from flash memory
+void CalibRestore(CalibSettings& c)
+{
+	// create temporary copy of Calibration settings from memory to check if they are valid
+	CalibSettings cs;
+	memcpy(&cs, (uint32_t*)ADDR_FLASH_SECTOR_10, sizeof(cs));
+
+	// Check that the settings are valid
+	if (strncmp(cs.OffsetMarker, "TOF", 3) == 0)
+	{
+		c.Offset = cs.Offset;
+	}
+	// Check that the settings are valid
+	if (strncmp(cs.ScaleMarker, "TSC", 3) == 0)
+	{
+		c.Scale = cs.Scale;
+	}
+}
+

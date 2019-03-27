@@ -39,4 +39,5 @@
 </listAttribute>
 <stringAttribute key="org.eclipse.dsf.launch.MEMORY_BLOCKS" value="&lt;?xml version=&quot;1.0&quot; encoding=&quot;UTF-8&quot; standalone=&quot;no&quot;?&gt;&#13;&#10;&lt;memoryBlockExpressionList context=&quot;reserved-for-future-use&quot;/&gt;&#13;&#10;"/>
 <stringAttribute key="process_factory_id" value="org.eclipse.cdt.dsf.gdb.GdbProcessFactory"/>
+<stringAttribute key="saved_expressions&lt;seperator&gt;Unknown" value="0x08009000,0x0800c000,0x10000000,0x08008f78,address,Address,OPTCR_BYTE2_ADDRESS,0x40023C16,0x080C0000,c,&amp;c,ADDR_FLASH_SECTOR_10,0x2001ffa8,addr,0x080C0001"/>
 </launchConfiguration>

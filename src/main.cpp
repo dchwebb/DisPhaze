@@ -14,6 +14,7 @@ enum RelativePitch {
 	OCTAVEUP
 };
 RelativePitch RelPitch = NONE;
+CalibSettings calibration;
 
 extern uint32_t SystemCoreClock;
 extern volatile uint16_t ADC_array[ADC_BUFFER_LENGTH];
@@ -38,9 +39,10 @@ volatile float VCALevel;
 volatile uint16_t Pitch;
 volatile int16_t FineTune = 0;
 volatile int16_t CoarseTune = 0;
+volatile float TuningOffset = 0.0f;
+volatile float TuningScale = 0.0f;
 float SineLUT[LUTSIZE];
 float PitchLUT[LUTSIZE];
-
 
 // Create aliases for ADC inputs
 volatile uint16_t& ADC_PITCH = ADC_array[0];	// PB0 ADC12_IN8   Pin 27
@@ -64,6 +66,9 @@ const float PDWave5LUT[] = {0.002996,0.005019,0.007045,0.009074,0.011107,0.01314
 // Create an array of pointers to the PD LUTs
 const float * LUTArray[] = { PDSquareLUT, PDWave4LUT, PDWave5LUT, PDSawLUT, PDWave3LUT };
 const uint8_t NoOfLUTs = sizeof(LUTArray) / sizeof(LUTArray[0]);
+
+
+
 
 //	Use extern C to allow linker to find ISR
 extern "C"
@@ -170,6 +175,7 @@ int main(void)
 	SystemClock_Config();		// Configure the clock and PLL
 	SystemCoreClockUpdate();	// Update SystemCoreClock (system clock frequency) derived from settings of oscillators, prescalers and PLL
 
+	CalibRestore(calibration);	// Restore calibration settings from flash memory
 	CreateLUTs();				// Create pitch and sine wave look up tables
 	InitSwitches();				// Configure switches for Ring mod, mix and octave selection
 	InitDAC();					// DAC1 Output on PA4 (Pin 20); DAC2 Output on PA5 (Pin 21)
@@ -179,7 +185,6 @@ int main(void)
 	EXTI15_10_IRQHandler();		// Call the Interrupt event handler to set up the octave up/down switch to current position
 	EXTI9_5_IRQHandler();		// Call the Interrupt event handler to set up the mix switch to current position
 
-
 	while (1)
 	{
 		// Toggle Calibration mode when button pressed using simple debouncer
@@ -188,7 +193,12 @@ int main(void)
 
 			if (CalibBtn == 200) {
 				Calibration = !Calibration;
-				//CalibBtn = true;
+
+				// write calibration settings to flash
+				if (!Calibration) {
+					calibration.Scale = 0.5f;
+					//WriteToFlash(calibration);
+				}
 			}
 		} else {
 			CalibBtn = 0;
@@ -196,6 +206,10 @@ int main(void)
 
 		// Get Pitch from ADC and smooth
 		Pitch = (Pitch + ADC_PITCH) / 2;
+
+		// adjust frequency according to fine tune knob with some damping
+		FineTune = ((15 * FineTune) + ADC_FTUNE) / 16;
+
 
 		if (Calibration) {
 
@@ -207,7 +221,8 @@ int main(void)
 				//freq1 = PitchLUT[Pitch / 4];
 				DAC->DHR12R1 = SamplePos1 > SAMPLERATE / 2 ? 4095: 0;
 				DacRead = 0;
-				SamplePos1 += 2299.0f * std::pow(2.0f, (float)Pitch / -583.0f);	// Increase 2299 to increase pitch
+				float adjPitch = (float)Pitch + (2048 - FineTune) / 32;
+				SamplePos1 += (2299.0f * std::pow(2.0f, adjPitch / -583.0f));	// Increase 2299 to increase pitch
 				while (SamplePos1 >= SAMPLERATE)
 					SamplePos1-= SAMPLERATE;
 			}
@@ -299,3 +314,4 @@ int main(void)
 
 	}
 }
+
