@@ -3,7 +3,7 @@
 #include <cstring>
 
 
-#define SAMPLERATE 72000
+#define SAMPLERATE 48000
 
 #define ADC_BUFFER_LENGTH 10
 volatile uint16_t ADC_array[ADC_BUFFER_LENGTH];

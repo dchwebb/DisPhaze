@@ -9,12 +9,12 @@ initialisation.h:197:6:void InitADC()	4	static
 initialisation.h:373:6:void WriteToFlash(CalibSettings&)	32	static
 initialisation.h:400:6:void CalibRestore(CalibSettings&)	40	static
 cmath:411:3:constexpr float std::pow(float, float)	16	static
-main.cpp:76:7:void TIM3_IRQHandler()	4	static
-main.cpp:91:7:void EXTI15_10_IRQHandler()	4	static
-main.cpp:102:7:void EXTI9_5_IRQHandler()	4	static
-main.cpp:112:7:float Interpolate(float*, float&)	24	static
-main.cpp:120:7:float GetPhaseDist(const float*, float, float, float)	32	static
-main.cpp:134:7:float GetBlendPhaseDist(float, float, float, const float&)	56	static
-main.cpp:157:6:void CreateLUTs()	32	static
-main.cpp:172:5:int main()	40	static
+main.cpp:78:7:void TIM3_IRQHandler()	4	static
+main.cpp:93:7:void EXTI15_10_IRQHandler()	4	static
+main.cpp:104:7:void EXTI9_5_IRQHandler()	4	static
+main.cpp:114:7:float Interpolate(float*, float&)	24	static
+main.cpp:122:7:float GetPhaseDist(const float*, float, float, float)	32	static
+main.cpp:136:7:float GetBlendPhaseDist(float, float, float, const float&)	56	static
+main.cpp:159:6:void CreateLUTs()	32	static
+main.cpp:174:5:int main()	40	static
 stl_algobase.h:195:5:const _Tp& std::min(const _Tp&, const _Tp&) [with _Tp = int]	16	static

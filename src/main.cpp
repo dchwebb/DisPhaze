@@ -19,6 +19,7 @@ CalibSettings calibration;
 extern uint32_t SystemCoreClock;
 extern volatile uint16_t ADC_array[ADC_BUFFER_LENGTH];
 
+volatile uint32_t cyclecounter = 0;
 volatile uint32_t overrun;			// For monitoring if samples are not being delivered to the DAC quickly enough
 volatile bool DacRead = false;		// Tells the main loop when to queue up the next samples
 volatile bool RingModOn = false;
@@ -35,6 +36,7 @@ volatile float PD1Scale = 0.0f;
 volatile float PD2Scale = 0.0f;
 volatile float PDLut1 = 0;
 volatile uint8_t PDLut2 = 0;		// Which PD LUT is being used for DAC2
+volatile uint16_t PD2Type = 0;		// Temporary value to use with hysterisis
 volatile float VCALevel;
 volatile uint16_t Pitch;
 volatile int16_t FineTune = 0;
@@ -46,13 +48,13 @@ float PitchLUT[LUTSIZE];
 
 // Create aliases for ADC inputs
 volatile uint16_t& ADC_PITCH = ADC_array[0];	// PB0 ADC12_IN8   Pin 27
-volatile uint16_t& ADC_FTUNE = ADC_array[1];	// PB1 ADC12_IN9   Pin 26
+volatile uint16_t& ADC_FTUNE = ADC_array[7];	// PB1 ADC12_IN9   Pin 26
 volatile uint16_t& ADC_OSC1TYPE = ADC_array[2];	// PA1 ADC123_IN1  Pin 15
 volatile uint16_t& ADC_OSC2TYPE = ADC_array[3];	// PA2 ADC123_IN2  Pin 16
 volatile uint16_t& ADC_PD2AMT = ADC_array[4];	// PA3 ADC123_IN3  Pin 17
 volatile uint16_t& ADC_VCA = ADC_array[5];		// PC0 ADC123_IN10 Pin 8
 volatile uint16_t& ADC_PD1AMT = ADC_array[6];	// PC2 ADC123_IN12 Pin 10
-volatile uint16_t& ADC_CTUNE = ADC_array[7];	// PC4 ADC12_IN14  Pin 24
+volatile uint16_t& ADC_CTUNE = ADC_array[1];	// PC4 ADC12_IN14  Pin 24
 volatile uint16_t& ADC_PD1POT = ADC_array[8];	// PA7 ADC12_IN7   Pin 23
 volatile uint16_t& ADC_PD2POT = ADC_array[9];	// PC1 ADC12_IN11  Pin 9
 
@@ -187,6 +189,8 @@ int main(void)
 
 	while (1)
 	{
+		cyclecounter++;
+
 		// Toggle Calibration mode when button pressed using simple debouncer
 		if (!READ_BIT(GPIOB->IDR, GPIO_IDR_IDR_5)) {
 			CalibBtn++;
@@ -229,10 +233,13 @@ int main(void)
 			continue;
 		}
 
+		// Apply hysteresis on PD 2 discrete LT selector
+		if (PD2Type > ADC_OSC2TYPE + 128 || PD2Type < ADC_OSC2TYPE - 128)
+			PD2Type = ADC_OSC2TYPE;
 
 		// Analog selection of PD LUT table allows a smooth transition between LUTs for DAC1 and a stepped transition for DAC2
 		PDLut1 = (float)ADC_OSC1TYPE * (NoOfLUTs - 1) / 4096;
-		PDLut2 = ADC_OSC2TYPE * NoOfLUTs / 4096;
+		PDLut2 = PD2Type * NoOfLUTs / 4096;
 
 		// Ready for next sample
 		if (DacRead)
@@ -300,7 +307,7 @@ int main(void)
 		}
 
 		// Toggle Ring mod when button pressed
-		if (!READ_BIT(GPIOC->IDR, GPIO_IDR_IDR_6)) {
+		if (READ_BIT(GPIOC->IDR, GPIO_IDR_IDR_6)) {
 			if (!ButtonDown) {
 				RingModOn = !RingModOn;
 				ButtonDown = true;
