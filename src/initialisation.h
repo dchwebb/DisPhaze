@@ -3,7 +3,7 @@
 #include <cstring>
 
 
-#define SAMPLERATE 48000
+#define SAMPLERATE 72000
 
 #define ADC_BUFFER_LENGTH 10
 volatile uint16_t ADC_array[ADC_BUFFER_LENGTH];
@@ -23,7 +23,7 @@ volatile uint16_t ADC_array[ADC_BUFFER_LENGTH];
 
 #define USE_HSE
 #define PLL_M 4
-#define PLL_N 168
+#define PLL_N 168	//	Max is 168
 #define PLL_P 0		//  Main PLL (PLL) division factor for main system clock can be 2 (PLL_P = 0), 4 (PLL_P = 1), 6 (PLL_P = 2), 8 (PLL_P = 3)
 #define PLL_Q 0
 #define AHB_PRESCALAR 0b0000
@@ -146,7 +146,7 @@ void InitSwitches()
 
 	// PB5 Calibration button
 	GPIOB->MODER &= ~(GPIO_MODER_MODER5);			// input mode is default
-	GPIOB->PUPDR |= GPIO_PUPDR_PUPDR5_0;			// Set pin to pull up:  01 Pull-up; 10 Pull-down; 11 Reserved
+	GPIOB->PUPDR |= GPIO_PUPDR_PUPDR5_1;			// Set pin to pull up:  01 Pull-up; 10 Pull-down; 11 Reserved
 
 	// Set up PC10 and PC12 for octave up and down switch
 	GPIOC->MODER &= ~(GPIO_MODER_MODER10);			// input mode is default
@@ -154,11 +154,17 @@ void InitSwitches()
 	GPIOC->PUPDR |= GPIO_PUPDR_PUPDR10_1;			// Set pin to pull down:  01 Pull-up; 10 Pull-down; 11 Reserved
 	GPIOC->PUPDR |= GPIO_PUPDR_PUPDR12_1;			// Set pin to pull down:  01 Pull-up; 10 Pull-down; 11 Reserved
 
-	// configure PB8 switch to fire on an interrupt
+	// configure PB8 switch to fire on an interrupt (mix)
 	SYSCFG->EXTICR[2] |= SYSCFG_EXTICR3_EXTI8_PB;	// Select Pin PB8 which uses External interrupt 3
 	EXTI->RTSR |= EXTI_RTSR_TR8;					// Enable rising edge trigger for line 8
 	EXTI->FTSR |= EXTI_FTSR_TR8;					// Enable falling edge trigger for line 8
 	EXTI->IMR |= EXTI_IMR_MR8;						// Activate interrupt using mask register 8
+
+	// configure PC6 switch to fire on an interrupt (ring mod)
+	SYSCFG->EXTICR[1] |= SYSCFG_EXTICR2_EXTI6_PC;	// Select Pin PC6 which uses External interrupt 2
+	EXTI->RTSR |= EXTI_RTSR_TR6;					// Enable rising edge trigger for line 6
+	EXTI->FTSR |= EXTI_FTSR_TR6;					// Enable falling edge trigger for line 6
+	EXTI->IMR |= EXTI_IMR_MR6;						// Activate interrupt using mask register 6
 
 	NVIC_SetPriority(EXTI9_5_IRQn, 3);
 	NVIC_EnableIRQ(EXTI9_5_IRQn);
@@ -182,7 +188,7 @@ void InitSwitches()
 void InitTimer()
 {
 	//	Setup Timer 3 on an interrupt to trigger sample loading
-	RCC->APB1ENR |= RCC_APB1ENR_TIM3EN;		// Enable Timer 3
+	RCC->APB1ENR |= RCC_APB1ENR_TIM3EN;				// Enable Timer 3
 	TIM3->PSC = (SystemCoreClock / SAMPLERATE) / 4;	// Set prescaler to fire at sample rate - this is divided by 4 to match the APB2 prescaler
 	TIM3->ARR = 1; //SystemCoreClock / 48000 - 1;	// Set maximum count value (auto reload register) - set to system clock / sampling rate
 
@@ -238,16 +244,17 @@ void InitADC(void)
 	ADC2->SQR2 |= 11 << 15;							// Set IN11 10th conversion in sequence
 
 	//	Set to 56 cycles (0b11) sampling speed (SMPR2 Left shift speed 3 x ADC_INx up to input 9; use SMPR1 from 0 for ADC_IN10+)
-	ADC2->SMPR2 |= 0b11 << 24;						// Set speed of IN8
-	ADC2->SMPR2 |= 0b11 << 27;						// Set speed of IN9
-	ADC2->SMPR2 |= 0b11 << 3;						// Set speed of IN1
-	ADC2->SMPR2 |= 0b11 << 6;						// Set speed of IN2
-	ADC2->SMPR2 |= 0b11 << 9;						// Set speed of IN3
-	ADC2->SMPR1 |= 0b11 << 0;						// Set speed of IN10
-	ADC2->SMPR1 |= 0b11 << 6;						// Set speed of IN12
-	ADC2->SMPR1 |= 0b11 << 12;						// Set speed of IN14
-	ADC2->SMPR2 |= 0b11 << 21;						// Set speed of IN7
-	ADC2->SMPR1 |= 0b11 << 3;						// Set speed of IN11
+	// 000: 3 cycles; 001: 15 cycles; 010: 28 cycles; 011: 56 cycles; 100: 84 cycles; 101: 112 cycles; 110: 144 cycles; 111: 480 cycles
+	ADC2->SMPR2 |= 0b110 << 24;						// Set speed of IN8
+	ADC2->SMPR2 |= 0b110 << 27;						// Set speed of IN9
+	ADC2->SMPR2 |= 0b110 << 3;						// Set speed of IN1
+	ADC2->SMPR2 |= 0b110 << 6;						// Set speed of IN2
+	ADC2->SMPR2 |= 0b110 << 9;						// Set speed of IN3
+	ADC2->SMPR1 |= 0b110 << 0;						// Set speed of IN10
+	ADC2->SMPR1 |= 0b110 << 6;						// Set speed of IN12
+	ADC2->SMPR1 |= 0b110 << 12;						// Set speed of IN14
+	ADC2->SMPR2 |= 0b110 << 21;						// Set speed of IN7
+	ADC2->SMPR1 |= 0b110 << 3;						// Set speed of IN11
 
 	ADC2->CR2 |= ADC_CR2_EOCS;						// Trigger interrupt on end of each individual conversion
 	ADC2->CR2 |= ADC_CR2_EXTEN_0;					// ADC hardware trigger 00: Trigger detection disabled; 01: Trigger detection on the rising edge; 10: Trigger detection on the falling edge; 11: Trigger detection on both the rising and falling edges

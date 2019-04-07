@@ -36,6 +36,7 @@ volatile float PD1Scale = 0.0f;
 volatile float PD2Scale = 0.0f;
 volatile float PDLut1 = 0;
 volatile uint8_t PDLut2 = 0;		// Which PD LUT is being used for DAC2
+volatile uint16_t PD1Type = 0;			// Temporary value to use with smoothing
 volatile uint16_t PD2Type = 0;		// Temporary value to use with hysterisis
 volatile float VCALevel;
 volatile uint16_t Pitch;
@@ -105,7 +106,10 @@ extern "C"
 		// Read PB8 - DAC2 Output to Mix mode
 		MixOn = (GPIOB->IDR & GPIO_IDR_IDR_8);
 
-		EXTI->PR |= EXTI_PR_PR8;						// Clear interrupt pending
+		// Read PC6 - DAC1 Output to Ring Mod mode
+		RingModOn = (GPIOC->IDR & GPIO_IDR_IDR_6);
+
+		EXTI->PR |= EXTI_PR_PR8 | EXTI_PR_PR6;						// Clear interrupt pending
 	}
 }
 
@@ -170,6 +174,10 @@ void CreateLUTs(void)
 	}
 }
 
+inline uint16_t Damping(const uint16_t old, const uint16_t current, uint8_t&& amt)
+{
+	return (((amt - 1) * old) + current) / amt;
+}
 
 int main(void)
 {
@@ -189,10 +197,10 @@ int main(void)
 
 	while (1)
 	{
-		cyclecounter++;
+		//cyclecounter++;
 
 		// Toggle Calibration mode when button pressed using simple debouncer
-		if (!READ_BIT(GPIOB->IDR, GPIO_IDR_IDR_5)) {
+		if (READ_BIT(GPIOB->IDR, GPIO_IDR_IDR_5)) {
 			CalibBtn++;
 
 			if (CalibBtn == 200) {
@@ -209,11 +217,10 @@ int main(void)
 		}
 
 		// Get Pitch from ADC and smooth
-		Pitch = (Pitch + ADC_PITCH) / 2;
+		Pitch = ((3 * Pitch) + ADC_PITCH) / 4;
 
 		// adjust frequency according to fine tune knob with some damping
 		FineTune = ((15 * FineTune) + ADC_FTUNE) / 16;
-
 
 		if (Calibration) {
 
@@ -233,24 +240,36 @@ int main(void)
 			continue;
 		}
 
-		// Apply hysteresis on PD 2 discrete LT selector
-		if (PD2Type > ADC_OSC2TYPE + 128 || PD2Type < ADC_OSC2TYPE - 128)
-			PD2Type = ADC_OSC2TYPE;
-
-		// Analog selection of PD LUT table allows a smooth transition between LUTs for DAC1 and a stepped transition for DAC2
-		PDLut1 = (float)ADC_OSC1TYPE * (NoOfLUTs - 1) / 4096;
-		PDLut2 = PD2Type * NoOfLUTs / 4096;
 
 		// Ready for next sample
 		if (DacRead)
 		{
+
+			// Analog selection of PD LUT table allows a smooth transition between LUTs for DAC1 and a stepped transition for DAC2
+			PD1Type = ((31 * PD1Type) + ADC_OSC1TYPE) / 32;
+			PDLut1 = (float)PD1Type * (NoOfLUTs - 1) / 4096;
+
+			// Apply hysteresis on PD 2 discrete LUT selector
+			if (PD2Type > ADC_OSC2TYPE + 128 || PD2Type < ADC_OSC2TYPE - 128)	PD2Type = ADC_OSC2TYPE;
+			PDLut2 = PD2Type * NoOfLUTs / 4096;
+
 			// Get modulation from ADC; Currently seeing 0v as ~3000 and 5V as ~960
-			PD1Scale = (float)std::min((3800 - ADC_PD1AMT) + ADC_PD1POT, 5000) / 800;		// Convert PD amount for OSC1
-			PD2Scale = (float)std::min((4096 - ADC_PD2AMT) + ADC_PD2POT, 5000) / 800;		// Convert PD amount for OSC2
+			float tmpPD1Scale = (float)std::min((3800 - ADC_PD1AMT) + ADC_PD1POT, 5000) / 800;		// Convert PD amount for OSC1
+			PD1Scale = std::max(((PD1Scale * 31) + tmpPD1Scale) / 32, 0.0f);
+
+			float tmpPD2Scale = (float)std::min((4096 - ADC_PD2AMT) + ADC_PD2POT, 5000) / 800;		// Convert PD amount for OSC2
+			PD2Scale = ((PD2Scale * 31) + tmpPD2Scale) / 32;
 
 			// Get VCA levels
-			if (ADC_VCA > 4070)	VCALevel = 0;									// Filter out very low level VCA signals
-			else				VCALevel = (4096.0f - ADC_VCA) / 4096;			// Convert ADC for VCA to float between 0 and 1
+			if (ADC_VCA > 4070) {
+				VCALevel = 0;									// Filter out very low level VCA signals
+			}
+			else if (ADC_VCA < 30) {
+				VCALevel = 1;
+			}
+			else {
+				VCALevel = ((VCALevel * 31) + (4096.0f - ADC_VCA) / 4096) / 32;			// Convert ADC for VCA to float between 0 and 1 with damping
+			}
 
 			// Calculate output as a float from -1 to +1 checking phase distortion and phase offset as required
 			float SampleOut1 = GetBlendPhaseDist(PDLut1, SamplePos1 / SAMPLERATE, PD1Scale, 0);
@@ -269,9 +288,6 @@ int main(void)
 			}
 
 			DacRead = 0;		// Clear ready for next sample flag
-
-			// adjust frequency according to fine tune knob with some damping
-			FineTune = ((15 * FineTune) + ADC_FTUNE) / 16;
 
 			freq1 = PitchLUT[(Pitch + ((2048 - FineTune) / 32)) / 4];		// divide by four as there are 1024 items in DAC CV Voltage to Pitch Freq LUT and 4096 possible DAC voltage values
 
@@ -305,19 +321,6 @@ int main(void)
 			while (SamplePos2 >= SAMPLERATE)
 				SamplePos2-= SAMPLERATE;
 		}
-
-		// Toggle Ring mod when button pressed
-		if (READ_BIT(GPIOC->IDR, GPIO_IDR_IDR_6)) {
-			if (!ButtonDown) {
-				RingModOn = !RingModOn;
-				ButtonDown = true;
-			}
-		} else {
-			ButtonDown = false;
-		}
-
-
-
 
 	}
 }
