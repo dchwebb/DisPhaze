@@ -254,10 +254,10 @@ int main(void)
 			PDLut2 = PD2Type * NoOfLUTs / 4096;
 
 			// Get modulation from ADC; Currently seeing 0v as ~3000 and 5V as ~960
-			float tmpPD1Scale = (float)std::min((3800 - ADC_PD1AMT) + ADC_PD1POT, 5000) / 800;		// Convert PD amount for OSC1
+			float tmpPD1Scale = (float)std::min((3800 - ADC_PD1AMT) + ADC_PD1POT, 5000) / 1000;		// Convert PD amount for OSC1
 			PD1Scale = std::max(((PD1Scale * 31) + tmpPD1Scale) / 32, 0.0f);
 
-			float tmpPD2Scale = (float)std::min((4096 - ADC_PD2AMT) + ADC_PD2POT, 5000) / 800;		// Convert PD amount for OSC2
+			float tmpPD2Scale = (float)std::min((4096 - ADC_PD2AMT) + ADC_PD2POT, 5000) / 1000;		// Convert PD amount for OSC2
 			PD2Scale = ((PD2Scale * 31) + tmpPD2Scale) / 32;
 
 			// Get VCA levels

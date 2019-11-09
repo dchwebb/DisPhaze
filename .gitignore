@@ -1,7 +1,43 @@
-/Debug/
-/Hardware/gerbers/
-*.bu
-*.kicad_pcb-bak
-*.bak
+# Prerequisites
+*.d
 
-/Release/
+# Compiled Object files
+*.slo
+*.lo
+*.o
+*.obj
+
+# Precompiled Headers
+*.gch
+*.pch
+
+# Compiled Dynamic libraries
+*.so
+*.dylib
+*.dll
+
+# Fortran module files
+*.mod
+*.smod
+
+# Compiled Static libraries
+*.lai
+*.la
+*.a
+*.lib
+
+# Executables
+*.exe
+*.out
+*.app
+*.elf
+*.hex
+*.list
+*.map
+*.su
+*.launch
+/Debug/
+*.sch-bak
+*.gbr
+*.drl
+Libraries/CMSIS/CMSIS END USER LICENCE AGREEMENT.pdf
