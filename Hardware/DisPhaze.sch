@@ -1,6 +1,5 @@
 EESchema Schematic File Version 4
-LIBS:DisPhaze-cache
-EELAYER 29 0
+EELAYER 30 0
 EELAYER END
 $Descr User 13780 9843
 encoding utf-8

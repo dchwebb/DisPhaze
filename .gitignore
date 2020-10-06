@@ -36,8 +36,9 @@
 *.map
 *.su
 *.launch
-/Debug/
+DisPhaze/Debug/
 *.sch-bak
 *.gbr
 *.drl
 Libraries/CMSIS/CMSIS END USER LICENCE AGREEMENT.pdf
+*.kicad_pcb-bak

@@ -1,1 +1,288 @@
+64741653965909
+Custom_Footprints
+2mm_Connector
+
+
 0
+1
+1
+Custom_Footprints
+4pin_header
+http://www.farnell.com/datasheets/1520732.pdf
+connector multicomp MC9A MC9A12
+0
+4
+4
+Custom_Footprints
+18x0.8mmLCDConnector
+
+
+0
+18
+18
+Custom_Footprints
+ARM-UQFN-48-7x7mm_Pitch0.5mm
+UK Package; 48-Lead Plastic QFN (7mm x 7mm); (see Linear Technology QFN_48_05-08-1704.pdf)
+UQFN48
+0
+49
+49
+Custom_Footprints
+Alpha_9mm_Potentiometer
+Potentiometer, horizontally mounted, Omeg PC16PU, Omeg PC16PU, Omeg PC16PU, Vishay/Spectrol 248GJ/249GJ Single, Vishay/Spectrol 248GJ/249GJ Single, Vishay/Spectrol 248GJ/249GJ Single, Vishay/Spectrol 248GH/249GH Single, Vishay/Spectrol 148/149 Single, Vishay/Spectrol 148/149 Single, Vishay/Spectrol 148/149 Single, Vishay/Spectrol 148A/149A Single with mounting plates, Vishay/Spectrol 148/149 Double, Vishay/Spectrol 148A/149A Double with mounting plates, Piher PC-16 Single, Piher PC-16 Single, Piher PC-16 Single, Piher PC-16SV Single, Piher PC-16 Double, Piher PC-16 Triple, Piher T16H Single, Piher T16L Single, Piher T16H Double, Alps RK163 Single, Alps RK163 Double, Alps RK097 Single, Alps RK097 Double, Bourns PTV09A-2 Single with mounting sleve Single, Bourns PTV09A-1 with mounting sleve Single, Bourns PRS11S Single, Alps RK09K Single with mounting sleve Single, Alps RK09K with mounting sleve Single, http://www.alps.com/prod/info/E/HTML/Potentiometer/RotaryPotentiometers/RK09K/RK09D1130C1B.html
+Potentiometer horizontal  Omeg PC16PU  Omeg PC16PU  Omeg PC16PU  Vishay/Spectrol 248GJ/249GJ Single  Vishay/Spectrol 248GJ/249GJ Single  Vishay/Spectrol 248GJ/249GJ Single  Vishay/Spectrol 248GH/249GH Single  Vishay/Spectrol 148/149 Single  Vishay/Spectrol 148/149 Single  Vishay/Spectrol 148/149 Single  Vishay/Spectrol 148A/149A Single with mounting plates  Vishay/Spectrol 148/149 Double  Vishay/Spectrol 148A/149A Double with mounting plates  Piher PC-16 Single  Piher PC-16 Single  Piher PC-16 Single  Piher PC-16SV Single  Piher PC-16 Double  Piher PC-16 Triple  Piher T16H Single  Piher T16L Single  Piher T16H Double  Alps RK163 Single  Alps RK163 Double  Alps RK097 Single  Alps RK097 Double  Bourns PTV09A-2 Single with mounting sleve Single  Bourns PTV09A-1 with mounting sleve Single  Bourns PRS11S Single  Alps RK09K Single with mounting sleve Single  Alps RK09K with mounting sleve Single
+0
+3
+3
+Custom_Footprints
+Alpha_9mm_pot_hole
+Mounting Hole 7mm
+mounting hole 7mm
+0
+0
+0
+Custom_Footprints
+CP_Elec_4x5.8_Big_pad
+SMT capacitor, aluminium electrolytic, 4x5.8
+
+0
+2
+2
+Custom_Footprints
+Cliff_3.5mm_Stereo_Jack
+
+
+0
+4
+3
+Custom_Footprints
+Cliff_8mm_Jack_Hole
+Mounting Hole 8mm
+mounting hole 8mm
+0
+0
+0
+Custom_Footprints
+Connector_27x2.54mm
+http://www.farnell.com/datasheets/1520732.pdf
+connector multicomp MC9A MC9A12
+0
+27
+27
+Custom_Footprints
+Crystal_SMD
+SMD Crystal HC-49-SD http://cdn-reichelt.de/documents/datenblatt/B400/xxx-HC49-SMD.pdf, 11.4x4.7mm^2 package
+SMD SMT crystal
+0
+2
+2
+Custom_Footprints
+Crystal_SMD_2pin_6.0x3.5mm
+SMD Crystal SERIES SMD0603/2 http://www.petermann-technik.de/fileadmin/petermann/pdf/SMD0603-2.pdf, hand-soldering, 6.0x3.5mm^2 package
+SMD SMT crystal hand-soldering
+0
+2
+2
+Custom_Footprints
+D_SOD-123_custom
+SOD-123
+SOD-123
+0
+2
+2
+Custom_Footprints
+Encoder
+
+rotary, encoder, ALPS
+0
+7
+6
+Custom_Footprints
+Eurorack_10_pin_header
+http://www.farnell.com/datasheets/1520732.pdf
+connector multicomp MC9A MC9A12
+0
+10
+10
+Custom_Footprints
+Eurorack_16_pin_header
+http://www.farnell.com/datasheets/1520732.pdf
+connector multicomp MC9A MC9A12
+0
+16
+16
+Custom_Footprints
+ICE40_QFN-48-1EP_7x7mm_Pitch0.5mm
+UK Package; 48-Lead Plastic QFN (7mm x 7mm); (see Linear Technology QFN_48_05-08-1704.pdf)
+QFN 0.5
+0
+73
+49
+Custom_Footprints
+ICE40_QFN-48-stencil
+UK Package; 48-Lead Plastic QFN (7mm x 7mm); (see Linear Technology QFN_48_05-08-1704.pdf)
+QFN 0.5
+0
+64
+49
+Custom_Footprints
+ILI9341_SPI
+ILI9341 LCD
+ILI9341 LCD SPI
+0
+18
+14
+Custom_Footprints
+ILI9341_SPI_daughterboard
+ILI9341 LCD
+ILI9341 LCD SPI
+0
+24
+24
+Custom_Footprints
+JLC_SMT_Tooling_Hole
+Mounting Hole 2.2mm, no annular, M2
+mounting hole 2.2mm no annular m2
+0
+0
+0
+Custom_Footprints
+LED_Hole_3mm
+Mounting Hole 6mm, no annular
+mounting hole 6mm no annular
+0
+0
+0
+Custom_Footprints
+MIDISocket_Hole_15mm
+Mounting Hole 15mm
+mounting hole 15mm
+0
+0
+0
+Custom_Footprints
+MIDI_DIN
+MIDI_DIN, standard DIN connector, 5 pins, midi
+MIDI_DIN DIN 5-pins connector midi
+0
+6
+6
+Custom_Footprints
+MountingHole_6.1mm
+Mounting Hole 6mm, no annular
+mounting hole 6mm no annular
+0
+0
+0
+Custom_Footprints
+Oval_Mounting_Hole
+Mounting Hole 6mm, no annular
+mounting hole 6mm no annular
+0
+0
+0
+Custom_Footprints
+SPDTSubMiniature
+SPDT Sub Miniature Switch
+Switch SPDT
+0
+3
+3
+Custom_Footprints
+SSOP-20_4.4x6.5mm_Pitch0.65mm_Round_Pads
+SSOP20: plastic shrink small outline package; 20 leads; body width 4.4 mm; (see NXP SSOP-TSSOP-VSO-REFLOW.pdf and sot266-1_po.pdf)
+SSOP 0.65
+0
+20
+20
+Custom_Footprints
+SWD_header
+
+SWD ARM Header Programmer
+0
+4
+4
+Custom_Footprints
+SW_Rotary_2x5
+
+
+0
+12
+12
+Custom_Footprints
+SW_SPST_EVQQ2
+Light Touch Switch, https://industrial.panasonic.com/cdbs/www-data/pdf/ATK0000/ATK0000CE28.pdf
+
+0
+4
+2
+Custom_Footprints
+Small_Pushbutton_Hole_3.5mm
+Button Hole 3.5mm
+
+0
+0
+0
+Custom_Footprints
+Sub_Miniature_Switch_MountingHole_3.5mm
+Mounting Hole 6mm, no annular
+mounting hole 6mm no annular
+0
+0
+0
+Custom_Footprints
+Sub_Miniature_Switch_MountingHole_3mm
+Mounting Hole 6mm, no annular
+mounting hole 6mm no annular
+0
+0
+0
+Custom_Footprints
+Sub_Miniature_Switch_MountingHole_5mm
+Mounting Hole 6mm, no annular
+mounting hole 6mm no annular
+0
+0
+0
+Custom_Footprints
+THONKICONN_hole
+
+
+0
+3
+3
+Custom_Footprints
+TSOP-II-54_22.2x10.16mm_P0.8mm
+54-lead TSOP typ II package
+TSOPII TSOP2
+0
+54
+54
+Custom_Footprints
+Thonkiconn_Socket_MountingHole_6mm
+Mounting Hole 6mm, no annular
+mounting hole 6mm no annular
+0
+0
+0
+Custom_Footprints
+USB_B_Molex
+USB B female connector, straight, rugged
+USB_B_MUSB_Straight female connector straight rugged MUSB D511
+0
+6
+4
+Custom_Footprints
+USB_B_Wurth
+USB B female connector, straight, rugged
+USB_B_MUSB_Straight female connector straight rugged MUSB D511
+0
+6
+5
+Custom_Footprints
+USB_Micro-B_Amphenol
+Micro USB Type B Receptacle
+USB USB_B USB_micro USB_OTG
+0
+9
+6
