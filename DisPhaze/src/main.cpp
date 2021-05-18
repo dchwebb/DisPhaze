@@ -17,7 +17,7 @@ RelativePitch RelPitch = NONE;
 CalibSettings calibration;
 
 extern uint32_t SystemCoreClock;
-extern volatile uint16_t ADC_array[ADC_BUFFER_LENGTH];
+volatile uint16_t ADC_array[ADC_BUFFER_LENGTH];
 
 volatile uint32_t cyclecounter = 0;
 volatile uint32_t overrun;			// For monitoring if samples are not being delivered to the DAC quickly enough
@@ -225,8 +225,7 @@ int main(void)
 		if (Calibration) {
 
 			// Generate square wave
-			if (DacRead)
-			{
+			if (DacRead) {
 				// Calculate pitch directly
 				//freq1 = 2299.0f * std::pow(2.0f, (float)Pitch / -583.0f);	// Increase 2299 to increase pitch
 				//freq1 = PitchLUT[Pitch / 4];
