@@ -14,36 +14,34 @@ enum RelativePitch {
 	OCTAVEUP
 };
 RelativePitch RelPitch = NONE;
-CalibSettings calibration;
+CalibSettings calibSettings;
 
 extern uint32_t SystemCoreClock;
 volatile uint16_t ADC_array[ADC_BUFFER_LENGTH];
 
-volatile uint32_t cyclecounter = 0;
 volatile uint32_t overrun;			// For monitoring if samples are not being delivered to the DAC quickly enough
-volatile bool DacRead = false;		// Tells the main loop when to queue up the next samples
-volatile bool RingModOn = false;
-volatile bool MixOn = false;
-volatile bool ButtonDown = false;
-volatile int Calibration = 0;
-volatile int CalibBtn = 0;
-volatile float freq1 = 440;
-volatile float freq2 = 440;
-volatile float PhaseDist = 0.0f;
-volatile float SamplePos1 = 0;
-volatile float SamplePos2 = 0;
-volatile float PD1Scale = 0.0f;
-volatile float PD2Scale = 0.0f;
-volatile float PDLut1 = 0;
-volatile uint8_t PDLut2 = 0;		// Which PD LUT is being used for DAC2
-volatile uint16_t PD1Type = 0;			// Temporary value to use with smoothing
-volatile uint16_t PD2Type = 0;		// Temporary value to use with hysterisis
-volatile float VCALevel;
-volatile uint16_t Pitch;
-volatile int16_t FineTune = 0;
-volatile int16_t CoarseTune = 0;
-volatile float TuningOffset = 0.0f;
-volatile float TuningScale = 0.0f;
+bool dacRead = false;				// Tells the main loop when to queue up the next samples
+bool ringModOn = false;
+bool mixOn = false;
+bool buttonDown = false;
+int calibration = 0;
+int calibBtn = 0;
+float freq1 = 440;
+float freq2 = 440;
+float samplePos1 = 0;
+float samplePos2 = 0;
+float pd1Scale = 0.0f;
+float pd2Scale = 0.0f;
+float pdLut1 = 0;
+uint8_t pdLut2 = 0;		// Which PD LUT is being used for DAC2
+uint16_t PD1Type = 0;			// Temporary value to use with smoothing
+uint16_t PD2Type = 0;		// Temporary value to use with hysterisis
+float VCALevel;
+uint16_t pitch;
+int16_t fineTune = 0;
+int16_t coarseTune = 0;
+float TuningOffset = 0.0f;
+float TuningScale = 0.0f;
 float SineLUT[LUTSIZE];
 float PitchLUT[LUTSIZE];
 
@@ -67,50 +65,14 @@ const float PDWave4LUT[] = {0.000594,0.000171,-0.000253,-0.000676,-0.001016,-0.0
 const float PDWave5LUT[] = {0.002996,0.005019,0.007045,0.009074,0.011107,0.013145,0.015191,0.020278,0.022350,0.024432,0.026528,0.028637,0.030761,0.032902,0.035061,0.037239,0.039439,0.041662,0.043910,0.046184,0.048488,0.050822,0.053190,0.059010,0.061495,0.064025,0.066603,0.069234,0.071922,0.074671,0.077488,0.080377,0.083347,0.086405,0.089559,0.092821,0.096201,0.099715,0.103378,0.112215,0.116474,0.121001,0.125851,0.131099,0.136849,0.143264,0.150217,0.149538,0.155373,0.159080,0.156494,0.152900,0.149978,0.147383,0.144327,0.138182,0.135051,0.131985,0.129052,0.126016,0.122975,0.119990,0.117197,0.114451,0.111810,0.109067,0.106428,0.103880,0.101310,0.098820,0.094885,0.092415,0.090016,0.087637,0.085281,0.083001,0.080680,0.078424,0.076134,0.073913,0.071711,0.069515,0.067336,0.065215,0.063066,0.060965,0.057732,0.055661,0.053563,0.051515,0.049474,0.047443,0.045435,0.043508,0.041503,0.039545,0.037555,0.035621,0.033687,0.031759,0.029837,0.027922,0.025135,0.023235,0.021345,0.019502,0.017663,0.015792,0.013997,0.012135,0.010353,0.008545,0.006770,0.004964,0.003196,0.001393,-0.000396,-0.002149,-0.004711,-0.006454,-0.008194,-0.009926,-0.011655,-0.013350,-0.015074,-0.016758,-0.018440,-0.020155,-0.021833,-0.023513,-0.025221,-0.026890,-0.028553,-0.030941,-0.032567,-0.034226,-0.035878,-0.037488,-0.039107,-0.040754,-0.042369,-0.044012,-0.045623,-0.047252,-0.048821,-0.050423,-0.052018,-0.053583,-0.055180,-0.057350,-0.058937,-0.060495,-0.062080,-0.063630,-0.065174,-0.066722,-0.068275,-0.069847,-0.071359,-0.072902,-0.074438,-0.075942,-0.077482,-0.079021,-0.080559,-0.082610,-0.084103,-0.085606,-0.087132,-0.088627,-0.090121,-0.091614,-0.093105,-0.094592,-0.096083,-0.097572,-0.099048,-0.100476,-0.101957,-0.103412,-0.104894,-0.106844,-0.108297,-0.109774,-0.111213,-0.112629,-0.114073,-0.115520,-0.116986,-0.118400,-0.119842,-0.121284,-0.122718,-0.124122,-0.125522,-0.126940,-0.128834,-0.130265,-0.131667,-0.133075,-0.134503,-0.135893,-0.137265,-0.138664,-0.140064,-0.141462,-0.142868,-0.144287,-0.145655,-0.147041,-0.148410,-0.149806,-0.151586,-0.152974,-0.154333,-0.155693,-0.157051,-0.158413,-0.159799,-0.161158,-0.162516,-0.163873,-0.165231,-0.166580,-0.167917,-0.169292,-0.170617,-0.171966,-0.173673,-0.175020,-0.176340,-0.177668,-0.179015,-0.180341,-0.181675,-0.182976,-0.184321,-0.185640,-0.186958,-0.188277,-0.189595,-0.190913,-0.192238,-0.193573,-0.195208,-0.196543,-0.197826,-0.199116,-0.200424,-0.201715,-0.203022,-0.204313,-0.205610,-0.206871,-0.208186,-0.209501,0.210808,0.210127,0.209429,0.209060,0.208387,0.207714,0.207040,0.206363,0.205690,0.205016,0.204343,0.203669,0.202986,0.202288,0.201605,0.200906,0.200222,0.199522,0.198835,0.198403,0.197728,0.197044,0.196336,0.195627,0.194927,0.194233,0.193509,0.192824,0.192105,0.191377,0.190692,0.189982,0.189273,0.188554,0.187820,0.187343,0.186624,0.185900,0.185204,0.184468,0.183745,0.183011,0.182291,0.181547,0.180813,0.180093,0.179349,0.178615,0.177894,0.177150,0.176416,0.175927,0.175171,0.174411,0.173679,0.172922,0.172200,0.171456,0.170711,0.169967,0.169212,0.168444,0.167689,0.166932,0.166199,0.165432,0.164880,0.164125,0.163357,0.162601,0.161823,0.161056,0.160300,0.159532,0.158776,0.158008,0.157252,0.156474,0.155695,0.154917,0.154148,0.153388,0.152807,0.152029,0.151250,0.150471,0.149681,0.148881,0.148102,0.147334,0.146555,0.145733,0.144965,0.144197,0.143396,0.142617,0.141825,0.141022,0.140407,0.139617,0.138816,0.138026,0.137225,0.136434,0.135622,0.134822,0.134043,0.133240,0.132419,0.131628,0.130827,0.130036,0.129236,0.128432,0.127760,0.126959,0.126168,0.125356,0.124544,0.123731,0.122919,0.122107,0.121295,0.120482,0.119670,0.118846,0.118013,0.117188,0.116355,0.115707,0.114895,0.114068,0.113232,0.112408,0.111575,0.110750,0.109917,0.109105,0.108280,0.107447,0.106622,0.105790,0.104964,0.104119,0.103287,0.102593,0.101760,0.100935,0.100089,0.099257,0.098432,0.097586,0.096739,0.095904,0.095065,0.094200,0.093355,0.092523,0.091697,0.090852,0.089993,0.089292,0.088447,0.087602,0.086743,0.085878,0.085033,0.084188,0.083329,0.082478,0.081651,0.080792,0.079928,0.079083,0.078237,0.077378,0.076512,0.075762,0.074903,0.074053,0.073212,0.072334,0.071470,0.070610,0.069732,0.068868,0.068009,0.067145,0.066285,0.065421,0.064561,0.063683,0.062936,0.062058,0.061180,0.060316,0.059456,0.058578,0.057715,0.056840,0.055958,0.055098,0.054235,0.053358,0.052459,0.051581,0.050703,0.049839,0.049045,0.048182,0.047321,0.046443,0.045565,0.044687,0.043809,0.042915,0.042020,0.041141,0.040263,0.039385,0.038492,0.037611,0.036751,0.035857,0.035043,0.034182,0.033288,0.032393,0.031515,0.030637,0.029743,0.028832,0.027937,0.027058,0.026165,0.025267,0.024387,0.023493,0.022598,0.021720,0.020907,0.020013,0.019118,0.018224,0.017313,0.016418,0.015524,0.014629,0.013735,0.012824,0.011913,0.011002,0.010107,0.009229,0.008335,0.007506,0.006497,0.005635,0.004724,0.003813,0.002902,0.001991,0.001064,0.000202,-0.000709,-0.001619,-0.002530,-0.003441,-0.004368,-0.005246,-0.006108,-0.006921,-0.007832,-0.008772,-0.009608,-0.010502,-0.011347,-0.012193,-0.013006,-0.013933,-0.014826,-0.015656,-0.016550,-0.017379,-0.018273,-0.019102,-0.019996,-0.020710,-0.021570,-0.022352,-0.023260,-0.024073,-0.024885,-0.025697,-0.026509,-0.027306,-0.028167,-0.028977,-0.029796,-0.030623,-0.031387,-0.032199,-0.032996,-0.033659,-0.034486,-0.035265,-0.036029,-0.036856,-0.037635,-0.038400,-0.039226,-0.040035,-0.040719,-0.041481,-0.042314,-0.043093,-0.043887,-0.044633,-0.045379,-0.045927,-0.046658,-0.047452,-0.048197,-0.048943,-0.049689,-0.050434,-0.051180,-0.051924,-0.052690,-0.053389,-0.054148,-0.054847,-0.055606,-0.056304,-0.056772,-0.057578,-0.058276,-0.059049,-0.059700,-0.060471,-0.061143,-0.061841,-0.062613,-0.063278,-0.063976,-0.064734,-0.065446,-0.066158,-0.066869,-0.067594,-0.067958,-0.068690,-0.069368,-0.070045,-0.070723,-0.071401,-0.072078,-0.072729,-0.073500,-0.074177,-0.074854,-0.075516,-0.076246,-0.076923,-0.077587,-0.078310,-0.078687,-0.079364,-0.080027,-0.080762,-0.081392,-0.082079,-0.082716,-0.083391,-0.084067,-0.084743,-0.085418,-0.086093,-0.086769,-0.087456,-0.088098,-0.088726,-0.089138,-0.089825,-0.090466,-0.091106,-0.091759,-0.092353,-0.092981,-0.093655,-0.094341,-0.094979,-0.095625,-0.096264,-0.096891,-0.097551,-0.098282,-0.098583,-0.099221,-0.099860,-0.100471,-0.101208,-0.101833,-0.102517,-0.103154,-0.103803,-0.104382,-0.105065,-0.105701,-0.106325,-0.107006,-0.107648,-0.108272,-0.108635,-0.109316,-0.109951,-0.110597,-0.111197,-0.111786,-0.112395,-0.113127,-0.113749,-0.114393,-0.115130,-0.115877,-0.116590,-0.117269,-0.117901,-0.118545,-0.118819,-0.119446,-0.120123,-0.120754,-0.121374,-0.122039,-0.122715,-0.123334,-0.124009,-0.124650,-0.125232,-0.125856,-0.126531,-0.127137,-0.127857,-0.128463,-0.128858,-0.129542,-0.130112,-0.130783,-0.131406,-0.132067,-0.132749,-0.133329,-0.133954,-0.134569,-0.135218,-0.135913,-0.136629,-0.137242,-0.137910,-0.138201,-0.138916,-0.139528,-0.140196,-0.140797,-0.141489,-0.142181,-0.142874,-0.143566,-0.144266,-0.144929,-0.145584,-0.146229,-0.146930,-0.147575,-0.148275,-0.148561,-0.149251,-0.149940,-0.150629,-0.151317,-0.152012,-0.152710,-0.153352,-0.154050,-0.154692,-0.155379,-0.156076,-0.156707,-0.157430,-0.158162,-0.158848,-0.159249,-0.159934,-0.160609,-0.161331,-0.162062,-0.162746,-0.163411,-0.164187,-0.164861,-0.165591,-0.166255,-0.167030,-0.167702,-0.168419,-0.169174,-0.169939,-0.170474,-0.171183,-0.171938,-0.172702,0.173420,0.172184,0.170957,0.169666,0.168485,0.167193,0.166001,0.164761,0.163561,0.162361,0.161161,0.159774,0.158573,0.157372,0.156162,0.154998,0.153843,0.152641,0.151431,0.150275,0.149064,0.147899,0.146733,0.145575,0.144410,0.143253,0.142033,0.140671,0.139597,0.138423,0.137312,0.136091,0.134971,0.133797,0.132676,0.131510,0.130335,0.129214,0.128039,0.126910,0.125765,0.124729,0.123591,0.122353,0.121278,0.120087,0.119041,0.117958,0.116828,0.115691,0.114599,0.113507,0.112416,0.111317,0.110271,0.109186,0.108049,0.106949,0.105888,0.104804,0.103758,0.102658,0.101605,0.100551,0.099490,0.098475,0.097467,0.096421,0.095328,0.094229,0.093175,0.092115,0.091099,0.090091,0.088992,0.087976,0.086954,0.085985,0.084969,0.083948,0.082978,0.081956,0.080979,0.080009,0.078994,0.077972,0.076996,0.076013,0.075075,0.074143,0.073173,0.072145,0.071214,0.070237,0.069248,0.068355,0.067417,0.066485,0.065503,0.064565,0.063621,0.062733,0.061751,0.060819,0.059837,0.058893,0.058071,0.057177,0.056234,0.055334,0.054429,0.053568,0.052713,0.051819,0.050875,0.049976,0.049071,0.048205,0.047392,0.046482,0.045665,0.044803,0.044018,0.043162,0.042252,0.041429,0.040611,0.039744,0.038925,0.038064,0.037197,0.036374,0.035544,0.034720,0.033892,0.033110,0.032286,0.031609,0.030823,0.030037,0.029250,0.028467,0.027634,0.026893,0.026068,0.025239,0.024448,0.023702,0.022914,0.022127,0.021335,0.020585,0.019825,0.019303,0.018552,0.017805,0.017012,0.016257,0.015546,0.014794,0.014045,0.013249,0.012537,0.011781,0.011069,0.010309,0.009638,0.008872,0.008196,0.007739,0.007028,0.006230,0.005510,0.004829,0.004148,0.003464,0.002825,0.002103,0.001424,0.000696,0.000014,-0.000669,-0.001352,-0.002036,-0.002720,-0.003114,-0.003760,-0.004447,-0.005096,-0.005742,-0.006436,-0.007088,-0.007701,-0.008313,-0.008964,-0.009615,-0.010264,-0.010951,-0.011641,-0.012295,-0.012558,-0.013173,-0.013826,-0.014482,-0.015100,-0.015716,-0.016373,-0.016994,-0.017576,-0.018194,-0.018858,-0.019442,-0.020064,-0.020650,-0.021234,-0.021856,-0.022090,-0.022714,-0.023307,-0.023895,-0.024484,-0.025072,-0.025699,-0.026252,-0.026843,-0.027398,-0.027989,-0.028550,-0.029140,-0.029769,-0.030325,-0.030953,-0.031200,-0.031722,-0.032317,-0.032881,-0.033475,-0.034113,-0.034319,-0.032140,-0.029981,-0.027840,-0.025716,-0.023607,-0.021512,-0.019429,-0.017357,-0.015296,-0.010225,-0.008186,-0.006153,-0.004124,-0.002099,-0.000075,0.001953,0.000977};
 
 // Create an array of pointers to the PD LUTs
-const float * LUTArray[] = { PDSquareLUT, PDWave4LUT, PDWave5LUT, PDSawLUT, PDWave3LUT };
+const float* LUTArray[] = { PDSquareLUT, PDWave4LUT, PDWave5LUT, PDSawLUT, PDWave3LUT };
 const uint8_t NoOfLUTs = sizeof(LUTArray) / sizeof(LUTArray[0]);
 
 
 
-
 //	Use extern C to allow linker to find ISR
-extern "C"
-{
-	void TIM3_IRQHandler(void) {
-		// Send next samples to DAC
-		if (TIM3->SR & TIM_SR_UIF) 						// if UIF flag is set
-		{
-			TIM3->SR &= ~TIM_SR_UIF;					// clear UIF flag
-			DAC->SWTRIGR |= DAC_SWTRIGR_SWTRIG1;		// Tell the DAC to output the next value
-			DAC->SWTRIGR |= DAC_SWTRIGR_SWTRIG2;		// Tell the DAC to output the next value
-
-			if (DacRead == 1)							// If the buffer has not been refilled increment overrun warning
-				overrun++;
-
-			DacRead = 1;
-		}
-	}
-
-	void EXTI15_10_IRQHandler(void) {
-		// Read PC10 and PC12 for octave up and down switch
-		if (GPIOC->IDR & GPIO_IDR_IDR_10)
-			RelPitch = OCTAVEUP;
-		else if (GPIOC->IDR & GPIO_IDR_IDR_12)
-			RelPitch = OCTAVEDOWN;
-		else
-			RelPitch = NONE;
-		EXTI->PR |= EXTI_PR_PR10 | EXTI_PR_PR12;		// Clear interrupt pending
-	}
-
-	void EXTI9_5_IRQHandler(void) {
-		// Read PB8 - DAC2 Output to Mix mode
-		MixOn = (GPIOB->IDR & GPIO_IDR_IDR_8);
-
-		// Read PC6 - DAC1 Output to Ring Mod mode
-		RingModOn = (GPIOC->IDR & GPIO_IDR_IDR_6);
-
-		EXTI->PR |= EXTI_PR_PR8 | EXTI_PR_PR6;						// Clear interrupt pending
-	}
+extern "C" {
+#include "interrupts.h"
 }
 
 
@@ -119,25 +81,29 @@ float Interpolate(float* LUT, float& LUTPosition)
 {
 	float s1 = LUT[(int) LUTPosition];
 	float s2 = LUT[((int) LUTPosition + 1) % LUTSIZE];
-	return s1 + ((s2 - s1) * (LUTPosition - (int)LUTPosition));
+	return s1 + ((s2 - s1) * (LUTPosition - std::round(LUTPosition)));
 }
 
 // Generate a phase distorted sine wave - pass LUT containing PD offsets, LUT position as a fraction of the wave cycle and a scaling factor
-float GetPhaseDist(const float* PdLUT, const float LUTPosition, const float scale = 1, const float offset = 0){
-	PhaseDist = PdLUT[(int)(LUTPosition * LUTSIZE)] * LUTSIZE * scale;
+float GetPhaseDist(const float* PdLUT, const float LUTPosition, const float scale = 1, const float offset = 0)
+{
+	float phaseDist = PdLUT[static_cast<int32_t>(LUTPosition * LUTSIZE)] * LUTSIZE * scale;
 
 	// Add main wave position to phase distortion position and ensure in bounds
-	float Pos = ((LUTPosition + offset) * LUTSIZE) + PhaseDist;
-	while (Pos > LUTSIZE)
+	float Pos = ((LUTPosition + offset) * LUTSIZE) + phaseDist;
+	while (Pos > LUTSIZE) {
 		Pos -= LUTSIZE;
-	while (Pos < 0)
+	}
+	while (Pos < 0) {
 		Pos =  LUTSIZE + Pos;
+	}
 
 	return Interpolate(SineLUT, Pos); 	//	interpolate samples
 }
 
 // Generate a phase distorted sine wave - pass LUT containing PD offsets, LUT position as a fraction of the wave cycle and a scaling factor
-float GetBlendPhaseDist(const float PDBlend, const float LUTPosition, const float scale, const float& offset){
+float GetBlendPhaseDist(const float PDBlend, const float LUTPosition, const float scale, const float& offset)
+{
 	// get the two PD LUTs that will be blended
 	const float* PdLUTBlendA = LUTArray[(uint8_t)PDBlend];
 	const float* PdLUTBlendB = LUTArray[(uint8_t)(PDBlend + 1) % NoOfLUTs];
@@ -148,28 +114,31 @@ float GetBlendPhaseDist(const float PDBlend, const float LUTPosition, const floa
 
 	// Get the weighted blend of the two PD amounts
 	float blend = PDBlend - (uint8_t)PDBlend;
-	PhaseDist = ((1 - blend) * PhaseDistA) + (blend * PhaseDistB);
+	float phaseDist = ((1 - blend) * PhaseDistA) + (blend * PhaseDistB);
 
 	// Add main wave position to phase distortion position and ensure in bounds
-	float Pos = ((LUTPosition + offset) * LUTSIZE) + PhaseDist;
-	while (Pos > LUTSIZE)
+	float Pos = ((LUTPosition + offset) * LUTSIZE) + phaseDist;
+	while (Pos > LUTSIZE) {
 		Pos -= LUTSIZE;
-	while (Pos < 0)
+	}
+	while (Pos < 0) {
 		Pos =  LUTSIZE + Pos;
+	}
 
 	return Interpolate(SineLUT, Pos); 	//	interpolate samples
 }
 
-void CreateLUTs(void)
+
+void CreateLUTs()
 {
 	// Generate pitch lookup table
-	for (int p = 0; p < LUTSIZE; p++){
+	for (int p = 0; p < LUTSIZE; p++) {
 		float power = (float)(p * 4.0f) / -583.0f;			// Reduce 583 to decrease spread
 		PitchLUT[p] = 2299 * (float)std::pow(2.0f, power);	// Increase 2299 to increase pitch
 	}
 
 	// Generate Sine LUT
-	for (int s = 0; s < LUTSIZE; s++){
+	for (int s = 0; s < LUTSIZE; s++) {
 		SineLUT[s] = sin(s * 2.0f * M_PI / LUTSIZE);
 	}
 }
@@ -185,7 +154,7 @@ int main(void)
 	SystemClock_Config();		// Configure the clock and PLL
 	SystemCoreClockUpdate();	// Update SystemCoreClock (system clock frequency) derived from settings of oscillators, prescalers and PLL
 
-	CalibRestore(calibration);	// Restore calibration settings from flash memory
+	CalibRestore(calibSettings);	// Restore calibration settings from flash memory
 	CreateLUTs();				// Create pitch and sine wave look up tables
 	InitSwitches();				// Configure switches for Ring mod, mix and octave selection
 	InitDAC();					// DAC1 Output on PA4 (Pin 20); DAC2 Output on PA5 (Pin 21)
@@ -195,69 +164,65 @@ int main(void)
 	EXTI15_10_IRQHandler();		// Call the Interrupt event handler to set up the octave up/down switch to current position
 	EXTI9_5_IRQHandler();		// Call the Interrupt event handler to set up the mix switch to current position
 
-	while (1)
-	{
-		//cyclecounter++;
+	while (1) {
 
-		// Toggle Calibration mode when button pressed using simple debouncer
+		// Toggle calibration mode when button pressed using simple debouncer
 		if (READ_BIT(GPIOB->IDR, GPIO_IDR_IDR_5)) {
-			CalibBtn++;
+			calibBtn++;
 
-			if (CalibBtn == 200) {
-				Calibration = !Calibration;
+			if (calibBtn == 200) {
+				calibration = !calibration;
 
 				// write calibration settings to flash
-				if (!Calibration) {
-					calibration.Scale = 0.5f;
+				if (!calibration) {
+					calibSettings.Scale = 0.5f;
 					//WriteToFlash(calibration);
 				}
 			}
 		} else {
-			CalibBtn = 0;
+			calibBtn = 0;
 		}
 
 		// Get Pitch from ADC and smooth
-		Pitch = ((3 * Pitch) + ADC_PITCH) / 4;
+		pitch = ((3 * pitch) + ADC_PITCH) / 4;
 
 		// adjust frequency according to fine tune knob with some damping
-		FineTune = ((15 * FineTune) + ADC_FTUNE) / 16;
+		fineTune = ((15 * fineTune) + ADC_FTUNE) / 16;
 
-		if (Calibration) {
+		if (calibration) {
 
 			// Generate square wave
-			if (DacRead) {
+			if (dacRead) {
 				// Calculate pitch directly
 				//freq1 = 2299.0f * std::pow(2.0f, (float)Pitch / -583.0f);	// Increase 2299 to increase pitch
 				//freq1 = PitchLUT[Pitch / 4];
-				DAC->DHR12R1 = SamplePos1 > SAMPLERATE / 2 ? 4095: 0;
-				DacRead = 0;
-				float adjPitch = (float)Pitch + (2048 - FineTune) / 32;
-				SamplePos1 += (2299.0f * std::pow(2.0f, adjPitch / -583.0f));	// Increase 2299 to increase pitch
-				while (SamplePos1 >= SAMPLERATE)
-					SamplePos1-= SAMPLERATE;
+				DAC->DHR12R1 = (samplePos1 > SAMPLERATE / 2) ? 4095: 0;
+				dacRead = 0;
+				float adjPitch = static_cast<float>(pitch) + static_cast<float>(2048 - fineTune) / 32.0f;
+				samplePos1 += (2299.0f * std::pow(2.0f, adjPitch / -583.0f));	// Increase 2299 to increase pitch
+				while (samplePos1 >= SAMPLERATE)
+					samplePos1-= SAMPLERATE;
 			}
 			continue;
 		}
 
 
 		// Ready for next sample
-		if (DacRead)
-		{
-
+		if (dacRead) {
 			// Analog selection of PD LUT table allows a smooth transition between LUTs for DAC1 and a stepped transition for DAC2
 			PD1Type = ((31 * PD1Type) + ADC_OSC1TYPE) / 32;
-			PDLut1 = (float)PD1Type * (NoOfLUTs - 1) / 4096;
+			pdLut1 = (float)PD1Type * (NoOfLUTs - 1) / 4096;
 
 			// Apply hysteresis on PD 2 discrete LUT selector
 			if (PD2Type > ADC_OSC2TYPE + 128 || PD2Type < ADC_OSC2TYPE - 128)	PD2Type = ADC_OSC2TYPE;
-			PDLut2 = PD2Type * NoOfLUTs / 4096;
+			pdLut2 = PD2Type * NoOfLUTs / 4096;
 
 			// Get modulation from ADC; Currently seeing 0v as ~3000 and 5V as ~960
 			float tmpPD1Scale = (float)std::min((3800 - ADC_PD1AMT) + ADC_PD1POT, 5000) / 1000;		// Convert PD amount for OSC1
-			PD1Scale = std::max(((PD1Scale * 31) + tmpPD1Scale) / 32, 0.0f);
+			pd1Scale = std::max(((pd1Scale * 31) + tmpPD1Scale) / 32, 0.0f);
 
 			float tmpPD2Scale = (float)std::min((4096 - ADC_PD2AMT) + ADC_PD2POT, 5000) / 1000;		// Convert PD amount for OSC2
-			PD2Scale = ((PD2Scale * 31) + tmpPD2Scale) / 32;
+			pd2Scale = ((pd2Scale * 31) + tmpPD2Scale) / 32;
 
 			// Get VCA levels
 			if (ADC_VCA > 4070) {
@@ -271,37 +236,39 @@ int main(void)
 			}
 
 			// Calculate output as a float from -1 to +1 checking phase distortion and phase offset as required
-			float SampleOut1 = GetBlendPhaseDist(PDLut1, SamplePos1 / SAMPLERATE, PD1Scale, 0);
-			float SampleOut2 = GetPhaseDist(LUTArray[PDLut2], SamplePos2 / SAMPLERATE, PD2Scale, 0);
+			float SampleOut1 = GetBlendPhaseDist(pdLut1, samplePos1 / SAMPLERATE, pd1Scale, 0);
+			float SampleOut2 = GetPhaseDist(LUTArray[pdLut2], samplePos2 / SAMPLERATE, pd2Scale, 0);
 
 			// Set DAC output values for when sample interrupt next fires
-			if (RingModOn) {
+			if (ringModOn) {
 				DAC->DHR12R1 = (int)((1 + (SampleOut1 * SampleOut2) * VCALevel) * 2047);		// Ring mod of 1 * 2
 			} else {
 				DAC->DHR12R1 = (int)((1 + SampleOut1 * VCALevel) * 2047);
 			}
-			if (MixOn) {
+			if (mixOn) {
 				DAC->DHR12R2 = (int)(((2 + (SampleOut1 + SampleOut2) * VCALevel) / 2) * 2047);	// Mix of 1 + 2
 			} else {
 				DAC->DHR12R2 = (int)((1 + SampleOut2 * VCALevel) * 2047);
 			}
 
-			DacRead = 0;		// Clear ready for next sample flag
+			dacRead = 0;		// Clear ready for next sample flag
 
-			freq1 = PitchLUT[(Pitch + ((2048 - FineTune) / 32)) / 4];		// divide by four as there are 1024 items in DAC CV Voltage to Pitch Freq LUT and 4096 possible DAC voltage values
+			freq1 = PitchLUT[(pitch + ((2048 - fineTune) / 32)) / 4];		// divide by four as there are 1024 items in DAC CV Voltage to Pitch Freq LUT and 4096 possible DAC voltage values
 
 			//	Coarse tuning - add some hysteresis to prevent jumping
-			if (CoarseTune > ADC_CTUNE + 128 || CoarseTune < ADC_CTUNE - 128)
-				CoarseTune = ADC_CTUNE;
+			if (coarseTune > ADC_CTUNE + 128 || coarseTune < ADC_CTUNE - 128) {
+				coarseTune = ADC_CTUNE;
+			}
 
-			if (CoarseTune > 3412)
+			if (coarseTune > 3412) {
 				freq1 *= 4;
-			else if (CoarseTune > 2728)
+			} else if (coarseTune > 2728) {
 				freq1 *= 2;
-			else if (CoarseTune < 682)
+			} else if (coarseTune < 682) {
 				freq1 /= 4;
-			else if (CoarseTune < 1364)
+			} else if (coarseTune < 1364) {
 				freq1 /= 2;
+			}
 
 
 			// octave down
@@ -312,13 +279,15 @@ int main(void)
 			}
 
 			// jump forward to the next sample position
-			SamplePos1 += freq1;
-			while (SamplePos1 >= SAMPLERATE)
-				SamplePos1-= SAMPLERATE;
+			samplePos1 += freq1;
+			while (samplePos1 >= SAMPLERATE) {
+				samplePos1-= SAMPLERATE;
+			}
 
-			SamplePos2 += freq2;
-			while (SamplePos2 >= SAMPLERATE)
-				SamplePos2-= SAMPLERATE;
+			samplePos2 += freq2;
+			while (samplePos2 >= SAMPLERATE) {
+				samplePos2-= SAMPLERATE;
+			}
 		}
 
 	}
