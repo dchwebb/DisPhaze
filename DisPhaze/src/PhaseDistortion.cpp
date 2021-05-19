@@ -1,6 +1,5 @@
 #include "PhaseDistortion.h"
 
-//extern const uint8_t noOfLUTs;
 extern 	bool dacRead;
 
 

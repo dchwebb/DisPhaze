@@ -42,7 +42,7 @@ void SystemClock_Config(void)
 	uint32_t temp = 0x00000000;
 
 	RCC->APB1ENR |= RCC_APB1ENR_PWREN;			// Enable Power Control clock
-	PWR->CR |= PWR_CR_VOS_0;					// Enable VOS voltage scaling - allows maximum clock speed
+	PWR->CR |= PWR_CR_VOS;					// Enable VOS voltage scaling - allows maximum clock speed
 
 #ifdef USE_HSE
 	RCC->CR |= RCC_CR_HSEON;					// HSE ON
