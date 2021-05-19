@@ -1,16 +1,17 @@
 #include "PhaseDistortion.h"
 
-extern const uint8_t noOfLUTs;
+//extern const uint8_t noOfLUTs;
 extern 	bool dacRead;
 
 
 //	Interpolate between two positions (derived from a float and its rounded value) in a LUT
 float PhaseDistortion::Interpolate(float* LUT, float& LUTPosition)
 {
-	float s1 = LUT[(int) LUTPosition];
-	float s2 = LUT[((int) LUTPosition + 1) % LUTSIZE];
+	float s1 = LUT[static_cast<int32_t>(LUTPosition)];
+	float s2 = LUT[static_cast<int32_t>(LUTPosition + 1) % LUTSIZE];
 	return s1 + ((s2 - s1) * (LUTPosition - std::round(LUTPosition)));
 }
+
 
 // Generate a phase distorted sine wave - pass LUT containing PD offsets, LUT position as a fraction of the wave cycle and a scaling factor
 float PhaseDistortion::GetPhaseDist(const float* PdLUT, const float LUTPosition, const float scale = 1, const float offset = 0)
@@ -28,7 +29,6 @@ float PhaseDistortion::GetPhaseDist(const float* PdLUT, const float LUTPosition,
 
 	return Interpolate(SineLUT, pos); 	//	interpolate samples
 }
-
 
 
 
@@ -104,18 +104,21 @@ void PhaseDistortion::CalcNextSamples()
 
 	// Analog selection of PD LUT table allows a smooth transition between LUTs for DAC1 and a stepped transition for DAC2
 	pd1Type = ((31 * pd1Type) + ADC_array[ADC_Osc1Type]) / 32;
-	pdLut1 = (float)pd1Type * (noOfLUTs - 1) / 4096;
+	pdLut1 = static_cast<float>(pd1Type * (noOfLUTs - 1)) / 4096.0f;
 
 	// Apply hysteresis on PD 2 discrete LUT selector
-	if (pd2Type > ADC_array[ADC_Osc2Type] + 128 || pd2Type < ADC_array[ADC_Osc2Type] - 128)	pd2Type = ADC_array[ADC_Osc2Type];
+	if (pd2Type > ADC_array[ADC_Osc2Type] + 128 || pd2Type < ADC_array[ADC_Osc2Type] - 128) {
+		pd2Type = ADC_array[ADC_Osc2Type];
+	}
 	pdLut2 = pd2Type * noOfLUTs / 4096;
 
 	// Get modulation from ADC; Currently seeing 0v as ~3000 and 5V as ~960
-	float tmpPD1Scale = (float)std::min((3800 - ADC_array[ADC_PD1CV]) + ADC_array[ADC_PD1Pot], 5000) / 1000;		// Convert PD amount for OSC1
+	float tmpPD1Scale = static_cast<float>(std::min((3800 - ADC_array[ADC_PD1CV]) + ADC_array[ADC_PD1Pot], 5000)) / 1000.0f;	// Convert PD amount for OSC1
 	pd1Scale = std::max(((pd1Scale * 31) + tmpPD1Scale) / 32, 0.0f);
 
-	float tmpPD2Scale = (float)std::min((4096 - ADC_array[ADC_PD2CV]) + ADC_array[ADC_PD2Pot], 5000) / 1000;		// Convert PD amount for OSC2
+	float tmpPD2Scale = static_cast<float>(std::min((4096 - ADC_array[ADC_PD2CV]) + ADC_array[ADC_PD2Pot], 5000)) / 1000.0f;	// Convert PD amount for OSC2
 	pd2Scale = ((pd2Scale * 31) + tmpPD2Scale) / 32;
+
 
 	// Get VCA levels
 	if (ADC_array[ADC_VCA] > 4070) {
@@ -134,12 +137,12 @@ void PhaseDistortion::CalcNextSamples()
 	if (ringModOn) {
 		DAC->DHR12R1 = static_cast<int32_t>((1 + (sampleOut1 * sampleOut2) * VCALevel) * 2047);		// Ring mod of 1 * 2
 	} else {
-		DAC->DHR12R1 = (int)((1 + sampleOut1 * VCALevel) * 2047);
+		DAC->DHR12R1 = static_cast<int32_t>((1 + sampleOut1 * VCALevel) * 2047);
 	}
 	if (mixOn) {
-		DAC->DHR12R2 = (int)(((2 + (sampleOut1 + sampleOut2) * VCALevel) / 2) * 2047);	// Mix of 1 + 2
+		DAC->DHR12R2 = static_cast<int32_t>(((2 + (sampleOut1 + sampleOut2) * VCALevel) / 2) * 2047);	// Mix of 1 + 2
 	} else {
-		DAC->DHR12R2 = (int)((1 + sampleOut2 * VCALevel) * 2047);
+		DAC->DHR12R2 = static_cast<int32_t>((1 + sampleOut2 * VCALevel) * 2047);
 	}
 
 	dacRead = 0;		// Clear ready for next sample flag

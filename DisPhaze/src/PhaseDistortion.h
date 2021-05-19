@@ -8,7 +8,11 @@ class PhaseDistortion {
 public:
 	bool ringModOn = false;
 	bool mixOn = false;
+	enum RelativePitch { NONE, OCTAVEDOWN, OCTAVEUP	} relativePitch;		// used to adjust pitch of oscillator 2 relative to oscillator 2
 
+	void CalcNextSamples();
+
+private:
 	float pd1Scale = 0.0f;			// Amount of phase distortion
 	float pd2Scale = 0.0f;
 	uint16_t pd1Type = 0;			// Phase distortion type knob position with smoothing
@@ -28,11 +32,8 @@ public:
 	float tuningOffset = 0.0f;
 	float tuningScale = 0.0f;
 
-	// used to adjust pitch of oscillator two relative to oscillator one
-	enum RelativePitch { NONE, OCTAVEDOWN, OCTAVEUP	} relativePitch;
-
 	float Interpolate(float* LUT, float& LUTPosition);
 	float GetPhaseDist(const float* PdLUT, const float LUTPosition, const float scale, const float offset);
 	float GetBlendPhaseDist(const float PDBlend, const float LUTPosition, const float scale, const float& offset);
-	void CalcNextSamples();
+
 };

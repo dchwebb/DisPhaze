@@ -42,3 +42,5 @@ DisPhaze/Debug/
 *.drl
 Libraries/CMSIS/CMSIS END USER LICENCE AGREEMENT.pdf
 *.kicad_pcb-bak
+pictures/disphaze_back.jpg
+pictures/disphaze_front.jpg
