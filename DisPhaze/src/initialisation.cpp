@@ -42,7 +42,7 @@ void SystemClock_Config(void)
 	uint32_t temp = 0x00000000;
 
 	RCC->APB1ENR |= RCC_APB1ENR_PWREN;			// Enable Power Control clock
-	PWR->CR |= PWR_CR_VOS;					// Enable VOS voltage scaling - allows maximum clock speed
+	PWR->CR |= PWR_CR_VOS;						// Enable VOS voltage scaling - allows maximum clock speed
 
 #ifdef USE_HSE
 	RCC->CR |= RCC_CR_HSEON;					// HSE ON
@@ -82,7 +82,9 @@ void SystemClock_Config(void)
 	if (idNumber == 0x1001 || idNumber == 0x100F)
 		FLASH->ACR |= FLASH_ACR_PRFTEN;			// Enable the Flash prefetch
 
-	// See page 83 of manual for other possibly performance boost options: instruction cache enable (ICEN) and data cache enable (DCEN)
+	// Enable data and instruction cache
+	FLASH->ACR |= FLASH_ACR_ICEN;
+	FLASH->ACR |= FLASH_ACR_DCEN;
 }
 
 
@@ -126,6 +128,8 @@ void InitDAC()
 
 void InitSwitches()
 {
+	// MODER: 00: Input (default), 01: Output, 10: Alternate function, 11: Analog
+
 	//	Enable GPIO and external interrupt clocks
 	RCC->AHB1ENR |= RCC_AHB1ENR_GPIOBEN;			// reset and clock control - advanced high performance bus - GPIO port B
 	RCC->AHB1ENR |= RCC_AHB1ENR_GPIOCEN;			// reset and clock control - advanced high performance bus - GPIO port C
@@ -144,6 +148,9 @@ void InitSwitches()
 	GPIOB->PUPDR |= GPIO_PUPDR_PUPDR5_1;			// Set pin to pull up:  01 Pull-up; 10 Pull-down; 11 Reserved
 
 	// Set up PC10 and PC12 for octave up and down switch
+
+	GPIOC->MODER |= GPIO_MODER_MODER10_0;			// Debug
+
 	GPIOC->MODER &= ~(GPIO_MODER_MODER10);			// input mode is default
 	GPIOC->MODER &= ~(GPIO_MODER_MODER12);			// input mode is default
 	GPIOC->PUPDR |= GPIO_PUPDR_PUPDR10_1;			// Set pin to pull down:  01 Pull-up; 10 Pull-down; 11 Reserved

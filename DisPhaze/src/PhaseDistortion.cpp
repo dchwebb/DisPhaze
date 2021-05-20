@@ -62,6 +62,8 @@ float PhaseDistortion::GetBlendPhaseDist(const float pdBlend, const float LUTPos
 
 void PhaseDistortion::CalcNextSamples()
 {
+	//GPIOC->ODR |= GPIO_ODR_OD10;	// Used for debug timing
+
 	// Calculate frequencies
 	pitch = ((3 * pitch) + ADC_array[ADC_Pitch]) / 4;				// 1V/Oct input
 	fineTune = ((15 * fineTune) + ADC_array[ADC_FTune]) / 16;		// FIne tune with smoothing
@@ -146,4 +148,5 @@ void PhaseDistortion::CalcNextSamples()
 
 	dacRead = 0;		// Clear ready for next sample flag
 
+	//GPIOC->ODR &= ~GPIO_ODR_OD10;		// Used for debug timing
 }
