@@ -61,6 +61,11 @@ defined in linker script */
 Reset_Handler:  
   ldr   sp, =_estack     /* set stack pointer */
 
+// DW - SystemInit puts the vector table to the beginning of Flash - change it to the correct offset here
+  ldr r3, =0xe000ed00			// SCB location
+  ldr r2, =g_pfnVectors			// Location of vector table in Flash (set by linker)
+  str r2, [r3, #8]				// store vector table location to offset 8 of SCB which is VTOR
+
 /* Copy the data segment initializers from flash to SRAM */  
   ldr r0, =_sdata
   ldr r1, =_edata
