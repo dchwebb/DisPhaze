@@ -1,9 +1,19 @@
-#include "stm32f4xx.h"
 #include "initialisation.h"
 #include "PhaseDistortion.h"
+#include "config.h"
 
+/*
+ * Calibration process:
+ *
+ * 1. Set fine tune and both phase distortion amount knobs to the center position
+ * 2. Connect a voltage source to the 1V/Oct input
+ * 3. Press the calibration button once - a square wave will be output on channel 1
+ * 4. The top left knob will adjust the tuning offset (will be affected by spread setting)
+ * 5. The top right knob will adjust the tuning spread (test by checking different octaves)
+ * 6. When the calibration is complete press the calibration button again to save
+ */
 
-CalibSettings calibSettings;
+Config config;
 PhaseDistortion phaseDist;
 
 extern uint32_t SystemCoreClock;
@@ -12,12 +22,7 @@ volatile uint16_t ADC_array[ADC_BUFFER_LENGTH];
 bool dacRead = false;				// Tells the main loop when to queue up the next samples
 volatile uint32_t overrun;			// For monitoring if samples are not being delivered to the DAC quickly enough
 
-int calibration = 0;
-int calibBtn = 0;
-
-
-//	Use extern C to allow linker to find ISR
-extern "C" {
+extern "C" {						// Use extern C to allow linker to find ISR
 #include "interrupts.h"
 }
 
@@ -28,7 +33,7 @@ int main(void)
 	SystemClock_Config();			// Configure the clock and PLL
 	SystemCoreClockUpdate();		// Update SystemCoreClock (system clock frequency) derived from settings of oscillators, prescalers and PLL
 
-	CalibRestore(calibSettings);	// Restore calibration settings from flash memory
+	config.RestoreConfig();			// Restore calibration settings from flash memory
 	CreateLUTs();					// Create pitch and sine wave look up tables
 	InitSwitches();					// Configure switches for Ring mod, mix and octave selection
 	InitDAC();						// DAC1 Output on PA4 (Pin 20); DAC2 Output on PA5 (Pin 21)
@@ -39,49 +44,12 @@ int main(void)
 	EXTI9_5_IRQHandler();			// Call the Interrupt event handler to set up the mix switch to current position
 
 	while (1) {
-
-		// Toggle calibration mode when button pressed using simple debouncer
-		if (READ_BIT(GPIOB->IDR, GPIO_IDR_IDR_5)) {
-			calibBtn++;
-
-			if (calibBtn == 200) {
-				calibration = !calibration;
-
-				// write calibration settings to flash
-				if (!calibration) {
-					calibSettings.Scale = 0.5f;
-					//WriteToFlash(calibration);
-				}
-			}
-		} else {
-			calibBtn = 0;
-		}
-
-
-		if (calibration) {
-			// Generate square wave
-			if (dacRead) {
-				static float pitch, fineTune, samplePos1;
-
-				pitch = ((3.0f * pitch) + ADC_array[ADC_Pitch]) / 4.0f;
-				fineTune = ((15.0f * fineTune) + ADC_array[ADC_FTune]) / 16.0f;
-				DAC->DHR12R1 = (samplePos1 > SAMPLERATE / 2) ? 4095: 0;
-				dacRead = 0;
-				float adjPitch = static_cast<float>(pitch) + static_cast<float>(2048 - fineTune) / 32.0f;
-				samplePos1 += (2299.0f * std::pow(2.0f, adjPitch / -583.0f));	// Increase 2299 to increase pitch
-				while (samplePos1 >= SAMPLERATE) {
-					samplePos1-= SAMPLERATE;
-				}
-			}
-			continue;
-		}
-
+		config.Calibrate();			// Checks if calibrate button has been pressed and runs calibration routine if so
 
 		// Ready for next sample
-		if (dacRead) {
+		if (dacRead && !config.calibrating) {
 			phaseDist.CalcNextSamples();
 		}
-
 
 	}
 }

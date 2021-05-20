@@ -4,6 +4,8 @@
 #include "LUT.h"
 #include <algorithm>
 
+
+
 class PhaseDistortion {
 public:
 	bool ringModOn = false;
@@ -29,11 +31,12 @@ private:
 	uint16_t pitch;
 	int16_t fineTune = 0;
 	int16_t coarseTune = 0;
-	float tuningOffset = 0.0f;
-	float tuningScale = 0.0f;
+
 
 	float Interpolate(float* LUT, float& LUTPosition);
 	float GetPhaseDist(const float* PdLUT, const float LUTPosition, const float scale, const float offset);
 	float GetBlendPhaseDist(const float PDBlend, const float LUTPosition, const float scale, const float& offset);
 
 };
+
+extern PhaseDistortion phaseDist;

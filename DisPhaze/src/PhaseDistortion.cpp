@@ -83,7 +83,7 @@ void PhaseDistortion::CalcNextSamples()
 
 
 	// octave down
-	switch(relativePitch) {
+	switch (relativePitch) {
 		case NONE: 			freq2 = freq1; 		break;
 		case OCTAVEDOWN:	freq2 = freq1 / 2;	break;
 		case OCTAVEUP: 		freq2 = freq1 * 2;	break;

@@ -2477,4 +2477,6 @@ F 3 "" H 12650 2200 50  0001 C CNN
 	1    12650 2200
 	-1   0    0    1   
 $EndComp
+Text Notes 7300 8900 0    50   ~ 0
+To Do:\nAdd Reset button\nGround Boot0\nCapacitors to VDDA input\nUART/USB IO?
 $EndSCHEMATC
