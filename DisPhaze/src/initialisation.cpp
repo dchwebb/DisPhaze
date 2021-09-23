@@ -203,7 +203,8 @@ void InitTimer()
 }
 
 
-void InitAdcPins(ADC_TypeDef* ADC_No, std::initializer_list<uint8_t> channels) {
+void InitAdcPins(ADC_TypeDef* ADC_No, std::initializer_list<uint8_t> channels)
+{
 	uint8_t sequence = 1;
 
 	for (auto channel: channels) {
