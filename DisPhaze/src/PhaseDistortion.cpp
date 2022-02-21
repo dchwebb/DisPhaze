@@ -65,8 +65,8 @@ void PhaseDistortion::CalcNextSamples()
 	//GPIOC->ODR |= GPIO_ODR_OD10;	// Used for debug timing
 
 	// Calculate frequencies
-	pitch = ((3 * pitch) + ADC_array[ADC_Pitch]) / 4;				// 1V/Oct input
-	fineTune = ((15 * fineTune) + ADC_array[ADC_FTune]) / 16;		// FIne tune with smoothing
+	pitch = ((3 * pitch) + ADC_array[ADC_Pitch]) / 4;				// 1V/Oct input with smoothing
+	fineTune = ((15 * fineTune) + ADC_array[ADC_FTune]) / 16;		// Fine tune with smoothing
 	freq1 = PitchLUT[(pitch + ((2048 - fineTune) / 32)) / 4];		// divide by four as there are 1024 items in DAC CV Voltage to Pitch Freq LUT and 4096 possible DAC voltage values
 
 	//	Coarse tuning - add some hysteresis to prevent jumping

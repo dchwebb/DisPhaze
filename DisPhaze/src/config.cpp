@@ -11,9 +11,10 @@ void Config::Calibrate() 			// Checks if calibrate button has been pressed and r
 		if (calibBtn == 200) {
 			calibrating = !calibrating;
 
-			// write calibration settings to flash
+			// write calibration settings to flash (These are applied when CreateLUTs() is run on startup)
 			if (!calibrating) {
 				SaveConfig();
+				CreateLUTs();
 			}
 		}
 	} else {

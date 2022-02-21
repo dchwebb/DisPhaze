@@ -25,7 +25,7 @@ struct Config {
 public:
 	float tuningOffset = 0.0f;
 	float tuningSpread = 0.0f;
-	bool calibrating = 0;
+	bool calibrating = false;
 
 	void Calibrate();
 	void SaveConfig();
