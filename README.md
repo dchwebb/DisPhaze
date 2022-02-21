@@ -20,12 +20,12 @@ The amount of phase distortion applied can be controlled with a knob and/or CV i
 Calibration
 -----------
 
- * 1. Set fine tune and both phase distortion amount knobs to the center position
- * 2. Connect a voltage source to the 1V/Oct input
- * 3. Press the calibration button once (top right of back of PCB) - a square wave will be output on channel 1
- * 4. The top left knob will adjust the tuning offset (will be affected by spread setting)
- * 5. The top right knob will adjust the tuning spread (test by checking different octaves)
- * 6. When the calibration is complete press the calibration button again to save
+ * Set fine tune and both phase distortion amount knobs to the center position
+ * Connect a voltage source to the 1V/Oct input
+ * Press the calibration button once (top right of back of PCB) - a square wave will be output on channel 1
+ * The top left knob will adjust the tuning offset (will be affected by spread setting)
+ * The top right knob will adjust the tuning spread (test by checking different octaves)
+ * When the calibration is complete press the calibration button again to save
 
 Technical
 ---------
