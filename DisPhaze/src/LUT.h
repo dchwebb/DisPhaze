@@ -14,8 +14,8 @@ extern const float PDWave4LUT[LUTSIZE];
 extern const float PDWave5LUT[LUTSIZE];
 
 // Create an array of pointers to the PD LUTs
-extern const float* LUTArray[5];
-extern const uint8_t noOfLUTs;
+extern const float* LUTArray[7];
+//extern const uint8_t noOfLUTs;
 
 extern float SineLUT[LUTSIZE];
 extern float PitchLUT[LUTSIZE];

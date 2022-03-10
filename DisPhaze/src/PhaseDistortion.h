@@ -11,6 +11,8 @@ public:
 	bool ringModOn = false;
 	bool mixOn = false;
 	enum RelativePitch { NONE, OCTAVEDOWN, OCTAVEUP	} relativePitch;		// used to adjust pitch of oscillator 2 relative to oscillator 2
+	static constexpr uint8_t pd1LutCount = 5;
+	static constexpr uint8_t pd2LutCount = 7;
 
 	void CalcNextSamples();
 
@@ -34,9 +36,9 @@ private:
 
 
 	float Interpolate(float* LUT, float& LUTPosition);
-	float GetPhaseDist(const float* PdLUT, const float LUTPosition, const float scale, const float offset);
-	float GetBlendPhaseDist(const float PDBlend, const float LUTPosition, const float scale, const float& offset);
-
+	float GetPhaseDist(const float* PdLUT, const float LUTPosition, const float scale);
+	float GetBlendPhaseDist(const float PDBlend, const float LUTPosition, const float scale);
+	float GetResonantWave(const float LUTPosition, const float scale);
 };
 
 extern PhaseDistortion phaseDist;

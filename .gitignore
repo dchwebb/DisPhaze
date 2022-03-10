@@ -1,5 +1,7 @@
 Hardware/DisPhaze-backups/
 DisPhaze/Debug/
+PhaseTools/.vs/
+PhaseTools/Debug/
 
 *.exe
 *.out
@@ -14,8 +16,13 @@ DisPhaze/Debug/
 *.gbr
 *.drl
 *.kicad_pcb-bak
+*.tlog
+*.obj
+*.log
 
 Libraries/CMSIS/CMSIS END USER LICENCE AGREEMENT.pdf
 pictures/disphaze_back.jpg
 pictures/disphaze_front.jpg
+
+
 
