@@ -2,6 +2,8 @@ Hardware/DisPhaze-backups/
 DisPhaze/Debug/
 PhaseTools/.vs/
 PhaseTools/Debug/
+Phase_calc/bu/PhaseTools/Debug/
+Phase_calc/bu/PhaseTools/SampleImport/Debug/
 
 *.exe
 *.out
