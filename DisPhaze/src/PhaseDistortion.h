@@ -10,9 +10,9 @@ class PhaseDistortion {
 public:
 	bool ringModOn = false;
 	bool mixOn = false;
-	enum RelativePitch { NONE, OCTAVEDOWN, OCTAVEUP	} relativePitch;		// used to adjust pitch of oscillator 2 relative to oscillator 2
+	enum RelativePitch { NONE, OCTAVEDOWN, OCTAVEUP	} relativePitch;		// used to adjust pitch of oscillator 2 relative to oscillator 1
 	static constexpr uint8_t pd1LutCount = 5;
-	static constexpr uint8_t pd2LutCount = 7;
+	static constexpr uint8_t pd2LutCount = 8;
 
 	void CalcNextSamples();
 
@@ -23,6 +23,7 @@ private:
 	uint16_t pd2Type = 0;
 	float pdLut1 = 0.0f;			// Phase distortion LUT - float as channel 1 allows blending
 	uint8_t pdLut2 = 0;				// PD LUT is being used for channel 2
+	bool pd2Resonant;				// Using resonant wave for channel 2
 
 	float VCALevel;
 
@@ -39,6 +40,8 @@ private:
 	float GetPhaseDist(const float* PdLUT, const float LUTPosition, const float scale);
 	float GetBlendPhaseDist(const float PDBlend, const float LUTPosition, const float scale);
 	float GetResonantWave(const float LUTPosition, const float scale);
+	static float sinLutWrap(float pos);
+
 };
 
 extern PhaseDistortion phaseDist;

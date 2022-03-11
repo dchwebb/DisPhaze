@@ -41,13 +41,13 @@ void SystemClock_Config(void)
 {
 	uint32_t temp = 0x00000000;
 
-	RCC->APB1ENR |= RCC_APB1ENR_PWREN;			// Enable Power Control clock
-	PWR->CR |= PWR_CR_VOS;						// Enable VOS voltage scaling - allows maximum clock speed
+	RCC->APB1ENR |= RCC_APB1ENR_PWREN;				// Enable Power Control clock
+	PWR->CR |= PWR_CR_VOS;							// Enable VOS voltage scaling - allows maximum clock speed
 
 #ifdef USE_HSE
-	RCC->CR |= RCC_CR_HSEON;					// HSE ON
-	while ((RCC->CR & RCC_CR_HSERDY) == 0);		// Wait till HSE is ready
-	temp = RCC_PLLCFGR_PLLSRC_HSE;				// PLL source is HSE
+	RCC->CR |= RCC_CR_HSEON;						// HSE ON
+	while ((RCC->CR & RCC_CR_HSERDY) == 0);			// Wait till HSE is ready
+	temp = RCC_PLLCFGR_PLLSRC_HSE;					// PLL source is HSE
 #endif
 
 #ifdef USE_HSI
@@ -67,20 +67,20 @@ void SystemClock_Config(void)
 	temp |= ((uint32_t)AHB_PRESCALAR << 4);
 	temp |= ((uint32_t)APB1_PRESCALAR << 10);
 	temp |= ((uint32_t)APB2_PRESCALAR << 13);
-	temp |= RCC_CFGR_SW_1;						// Select PLL as SYSCLK
+	temp |= RCC_CFGR_SW_1;							// Select PLL as SYSCLK
 	RCC->CFGR = temp;
 
-	FLASH->ACR |= FLASH_ACR_LATENCY_5WS;		// Clock faster than 150MHz requires 5 Wait States for Flash memory access time
+	FLASH->ACR |= FLASH_ACR_LATENCY_5WS;			// Clock faster than 150MHz requires 5 Wait States for Flash memory access time
 
-	RCC->CR |= RCC_CR_PLLON;					// Switch ON the PLL
-	while ((RCC->CR & RCC_CR_PLLRDY) == 0);		// Wait till PLL is ready
-	while ((RCC->CFGR & RCC_CFGR_SWS_PLL) == 0); // System clock switch status SWS = 0b10 = PLL is really selected
+	RCC->CR |= RCC_CR_PLLON;						// Switch ON the PLL
+	while ((RCC->CR & RCC_CR_PLLRDY) == 0);			// Wait till PLL is ready
+	while ((RCC->CFGR & RCC_CFGR_SWS_PLL) == 0);	// System clock switch status SWS = 0b10 = PLL is really selected
 
 	// STM32F405x/407x/415x/417x Revision Z (0x1001) devices: prefetch is supported DW - assume revision Y (0x100F) is OK
 	volatile uint32_t idNumber = DBGMCU->IDCODE;
 	idNumber = idNumber >> 16;
 	if (idNumber == 0x1001 || idNumber == 0x100F)
-		FLASH->ACR |= FLASH_ACR_PRFTEN;			// Enable the Flash prefetch
+		FLASH->ACR |= FLASH_ACR_PRFTEN;				// Enable the Flash prefetch
 
 	// Enable data and instruction cache
 	FLASH->ACR |= FLASH_ACR_ICEN;
@@ -91,17 +91,17 @@ void SystemClock_Config(void)
 void InitSysTick(uint32_t ticks, uint32_t calib)
 {
 	// Register macros found in core_cm4.h
-	SysTick->CTRL = 0;									// Disable SysTick
-	SysTick->LOAD = (ticks - 1) - calib;				// Set reload register - ie number of ticks before interrupt fired
+	SysTick->CTRL = 0;								// Disable SysTick
+	SysTick->LOAD = (ticks - 1) - calib;			// Set reload register - ie number of ticks before interrupt fired
 
 	// Set priority of Systick interrupt to least urgency (ie largest priority value)
 	NVIC_SetPriority (SysTick_IRQn, (1 << __NVIC_PRIO_BITS) - 1);
 
-	SysTick->VAL = 0;									// Reset the SysTick counter value
+	SysTick->VAL = 0;								// Reset the SysTick counter value
 
-//	SysTick->CTRL |= SysTick_CTRL_CLKSOURCE_Msk;		// Select processor clock: 1 = processor clock; 0 = external clock
-	SysTick->CTRL |= SysTick_CTRL_TICKINT_Msk;			// Enable SysTick interrupt
-	SysTick->CTRL |= SysTick_CTRL_ENABLE_Msk;			// Enable SysTick
+//	SysTick->CTRL |= SysTick_CTRL_CLKSOURCE_Msk;	// Select processor clock: 1 = processor clock; 0 = external clock
+	SysTick->CTRL |= SysTick_CTRL_TICKINT_Msk;		// Enable SysTick interrupt
+	SysTick->CTRL |= SysTick_CTRL_ENABLE_Msk;		// Enable SysTick
 }
 
 
@@ -192,7 +192,7 @@ void InitTimer()
 	//	Setup Timer 3 on an interrupt to trigger sample loading
 	RCC->APB1ENR |= RCC_APB1ENR_TIM3EN;				// Enable Timer 3
 	TIM3->PSC = (SystemCoreClock / SAMPLERATE) / 4;	// Set prescaler to fire at sample rate - this is divided by 4 to match the APB2 prescaler
-	TIM3->ARR = 1; //SystemCoreClock / 48000 - 1;	// Set maximum count value (auto reload register) - set to system clock / sampling rate
+	TIM3->ARR = 1; 									// Set maximum count value (auto reload register) - set to system clock / sampling rate
 
 	TIM3->DIER |= TIM_DIER_UIE;						//  DMA/interrupt enable register
 	NVIC_EnableIRQ(TIM3_IRQn);
@@ -200,6 +200,16 @@ void InitTimer()
 
 	TIM3->CR1 |= TIM_CR1_CEN;
 	TIM3->EGR |= TIM_EGR_UG;
+}
+
+
+
+void InitDebugTimer()
+{
+	//	Setup Timer 4 for debug timing
+	RCC->APB1ENR |= RCC_APB1ENR_TIM4EN;				// Enable Timer 4
+	TIM4->CR1 |= TIM_CR1_CEN;
+	TIM4->EGR |= TIM_EGR_UG;
 }
 
 
@@ -295,12 +305,12 @@ void InitADC(void)
 	 *
 	 */
 	//	Setup Timer 2 to trigger ADC
-	RCC->APB1ENR |= RCC_APB1ENR_TIM2EN;		// Enable Timer 2 clock
-	TIM2->CR2 |= TIM_CR2_MMS_2;				// 100: Compare - OC1REF signal is used as trigger output (TRGO)
-	TIM2->PSC = 20 - 1;					// Prescaler
-	TIM2->ARR = 100 - 1;					// Auto-reload register (ie reset counter) divided by 100
-	TIM2->CCR1 = 50 - 1;					// Capture and compare - ie when counter hits this number PWM high
-	TIM2->CCER |= TIM_CCER_CC1E;			// Capture/Compare 1 output enable
+	RCC->APB1ENR |= RCC_APB1ENR_TIM2EN;				// Enable Timer 2 clock
+	TIM2->CR2 |= TIM_CR2_MMS_2;						// 100: Compare - OC1REF signal is used as trigger output (TRGO)
+	TIM2->PSC = 20 - 1;								// Prescaler
+	TIM2->ARR = 100 - 1;							// Auto-reload register (ie reset counter) divided by 100
+	TIM2->CCR1 = 50 - 1;							// Capture and compare - ie when counter hits this number PWM high
+	TIM2->CCER |= TIM_CCER_CC1E;					// Capture/Compare 1 output enable
 	TIM2->CCMR1 |= TIM_CCMR1_OC1M_1 |TIM_CCMR1_OC1M_2;		// 110 PWM Mode 1
 	TIM2->CR1 |= TIM_CR1_CEN;
 
@@ -322,34 +332,12 @@ void InitADC(void)
 
 
 	ADC1->CR1 |= ADC_CR1_SCAN;						// Activate scan mode
-	ADC1->SQR1 = (ADC_BUFFER_LENGTH - 1) << 20;		// Number of conversions in sequence
+	ADC1->SQR1 = (ADC_BUFFER_LENGTH - 1) << ADC_SQR1_L_Pos;		// Number of conversions in sequence
 	InitAdcPins(ADC1, {8, 9, 1, 2, 3, 10, 12, 14, 7, 11});
 
-	/*
-	 *
-	// Enable ADC on PA7 (Pin 23) Alternate mode: ADC12_IN7
-	RCC->AHB1ENR |= RCC_AHB1ENR_GPIOAEN;
-	GPIOA->MODER |= GPIO_MODER_MODER1;			// Set PA1 to Analog mode (0b11)
-	GPIOA->MODER |= GPIO_MODER_MODER7;			// Set PA7 to Analog mode (0b11)
-
-	ADC1->CR1 |= ADC_CR1_SCAN;					// Activate scan mode
-	ADC1->SQR1 = ADC_SQR1_L_0;					// Two conversions in sequence
-	ADC1->SQR3 |= 7 << 0;						// Set Pin7 to first conversion in sequence
-	ADC1->SQR3 |= 1 << 5;						// Set Pin1 to second conversion in sequence
-
-	//	Set to slow sampling mode
-	ADC1->SMPR2 |= 0b11 << 3;
-	ADC1->SMPR2 |= 0b11 << 21;
-*/
-	ADC1->CR2 |= ADC_CR2_EOCS;							// Trigger interrupt on end of each individual conversion
-	ADC1->CR2 |= ADC_CR2_EXTEN_0;						// ADC hardware trigger 00: Trigger detection disabled; 01: Trigger detection on the rising edge; 10: Trigger detection on the falling edge; 11: Trigger detection on both the rising and falling edges
+	ADC1->CR2 |= ADC_CR2_EOCS;						// Trigger interrupt on end of each individual conversion
+	ADC1->CR2 |= ADC_CR2_EXTEN_0;					// ADC hardware trigger 00: Trigger detection disabled; 01: Trigger detection on the rising edge; 10: Trigger detection on the falling edge; 11: Trigger detection on both the rising and falling edges
 	ADC1->CR2 |= ADC_CR2_EXTSEL_1 | ADC_CR2_EXTSEL_2;	// ADC External trigger: 0110 = TIM2_TRGO event
-
-	/*
-	// Interrupt settings
-	ADC1->CR1 |= ADC_CR1_EOCIE;
-	NVIC_EnableIRQ(ADC_IRQn);
-*/
 
 	// Enable DMA - DMA2, Channel 0, Stream 0  = ADC1 (Manual p207)
 	ADC1->CR2 |= ADC_CR2_DMA;						// Enable DMA Mode on ADC1
@@ -371,8 +359,7 @@ void InitADC(void)
 	DMA2_Stream0->CR &= ~DMA_SxCR_CHSEL;			// channel select to 0 for ADC1
 
 	DMA2_Stream0->CR |= DMA_SxCR_EN;				// Enable DMA2
-	ADC1->CR2 |= ADC_CR2_ADON;						// Activate ADC*/
-
+	ADC1->CR2 |= ADC_CR2_ADON;						// Activate ADC
 
 }
 

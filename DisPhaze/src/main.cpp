@@ -13,6 +13,10 @@
  * 6. When the calibration is complete press the calibration button again to save
  */
 
+/* To do:
+ * sample extraction python script
+ */
+
 Config config;
 PhaseDistortion phaseDist;
 
@@ -21,6 +25,9 @@ volatile uint16_t ADC_array[ADC_BUFFER_LENGTH];
 
 bool dacRead = false;				// Tells the main loop when to queue up the next samples
 volatile uint32_t overrun;			// For monitoring if samples are not being delivered to the DAC quickly enough
+
+volatile uint32_t debugInterval;	// Debug timing counter - duration of sample interval available for calculations
+volatile uint32_t debugWorkTime;	// Debug timing counter - how much time spent calculating
 
 extern "C" {						// Use extern C to allow linker to find ISR
 #include "interrupts.h"
@@ -39,6 +46,7 @@ int main(void)
 	InitDAC();						// DAC1 Output on PA4 (Pin 20); DAC2 Output on PA5 (Pin 21)
 	InitTimer();					// Sample output timer 3 - fires interrupt to trigger sample output from DAC
 	InitADC();						// Configure ADC for analog controls
+	InitDebugTimer();				// Timer to check available calculation time
 
 	EXTI15_10_IRQHandler();			// Call the Interrupt event handler to set up the octave up/down switch to current position
 	EXTI9_5_IRQHandler();			// Call the Interrupt event handler to set up the mix switch to current position
@@ -49,6 +57,7 @@ int main(void)
 		// Ready for next sample (Calibrating sends out a square wave for tuning so disables normal output)
 		if (dacRead && !config.calibrating) {
 			phaseDist.CalcNextSamples();
+			debugWorkTime = TIM4->CNT;
 		}
 
 	}

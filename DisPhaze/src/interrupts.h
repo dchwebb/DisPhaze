@@ -7,11 +7,15 @@ void TIM3_IRQHandler(void)
 		DAC->SWTRIGR |= DAC_SWTRIGR_SWTRIG1;		// Tell the DAC to output the next value
 		DAC->SWTRIGR |= DAC_SWTRIGR_SWTRIG2;		// Tell the DAC to output the next value
 
-		if (dacRead == 1) {							// If the buffer has not been refilled increment overrun warning
+		if (dacRead) {							// If the buffer has not been refilled increment overrun warning
 			overrun++;
 		}
 
-		dacRead = 1;
+		// Debug timing
+		debugInterval = TIM4->CNT;
+		TIM4->EGR |= TIM_EGR_UG;
+
+		dacRead = true;
 	}
 }
 

@@ -29,5 +29,6 @@ void InitDAC();
 void InitSwitches();
 void InitTimer();
 void InitADC();
+void InitDebugTimer();
 
 
