@@ -16,7 +16,7 @@ fileName = sys.argv[1]
 if (argCount > 2):
 	lutSize = int(sys.argv[2])
 
-outputFileName = Path(fileName).stem + "_PD.txt"
+outputFileName = "output/" + Path(fileName).stem + "_PD.txt"
 
 sampleFile = open(fileName, "r")			# Open file containing samples as text list
 samples = sampleFile.read()
@@ -64,6 +64,7 @@ for x in range(lutSize):
 	pd = sin - posScale
 	outputPD = outputPD + str(round(pd, 6)) + ","
 
+print("Output phase distortion array data to " + outputFileName)
 sampleFile = open(outputFileName, "w")			# Open file to write output PD samples
 sampleFile.write(outputPD)
 sampleFile.close()

@@ -1,0 +1,13 @@
+1. Create a single cycle mono 16 bit wave file with 2000+ samples. Start and end of wave should be around zero crossing.
+
+2. Use Extract_Samples.py to extract the samples from the wav file into a comma delimited list of samples in the output folder. Syntax:
+
+python Extract_Samples.py [rawsample].wav
+
+3. This file can be topped and tailed to get the closest match to a zero at the start and end
+
+4. Use Generate_PD.py to convert the raw sample file into a phase distortion array. Syntax:
+
+python Generate_PD.py output/[rawsample].txt
+
+5. This can be inserted into the LUT.cpp file as a new Phase distortion array

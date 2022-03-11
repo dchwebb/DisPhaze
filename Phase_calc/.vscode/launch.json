@@ -10,7 +10,7 @@
             "request": "launch",
             "program": "${file}",
             "console": "integratedTerminal",
-            "args": ["D:\\Eurorack\\DisPhaze\\Phase_calc\\wave1_sample.txt"]
+            "args": ["D:\\Music\\casio_cz\\Audio\\Casio-wave4.wav"]
         }
     ]
 }
