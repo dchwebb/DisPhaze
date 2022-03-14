@@ -1,5 +1,5 @@
 Hardware/DisPhaze-backups/
-DisPhaze/Debug/
+DisPhaze/Debug/src
 PhaseTools/.vs/
 PhaseTools/Debug/
 Phase_calc/bu/PhaseTools/Debug/
@@ -8,7 +8,7 @@ Phase_calc/bu/PhaseTools/SampleImport/Debug/
 *.exe
 *.out
 *.app
-*.elf
+#*.elf
 *.hex
 *.list
 *.map
@@ -25,6 +25,6 @@ Phase_calc/bu/PhaseTools/SampleImport/Debug/
 Libraries/CMSIS/CMSIS END USER LICENCE AGREEMENT.pdf
 pictures/disphaze_back.jpg
 pictures/disphaze_front.jpg
-
-
-
+DisPhaze/Debug/sources.mk
+DisPhaze/Debug/objects.mk
+DisPhaze/Debug/makefile
