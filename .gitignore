@@ -1,4 +1,6 @@
 Hardware/DisPhaze-backups/
+Hardware_v3/DisPhaze_Components-backups/
+Hardware_v3/DisPhaze_Panel-backups/
 DisPhaze/Debug/src
 PhaseTools/.vs/
 PhaseTools/Debug/
@@ -28,3 +30,5 @@ pictures/disphaze_front.jpg
 DisPhaze/Debug/sources.mk
 DisPhaze/Debug/objects.mk
 DisPhaze/Debug/makefile
+
+Hardware_v3/_autosave-DisPhaze_Components.kicad_pcb

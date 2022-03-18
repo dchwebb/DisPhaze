@@ -31,7 +31,6 @@
       1,
       2,
       3,
-      4,
       5,
       6,
       8,
@@ -61,11 +60,11 @@
       35,
       36
     ],
-    "visible_layers": "000ffef_80000001",
-    "zone_display_mode": 1
+    "visible_layers": "003fedf_80000001",
+    "zone_display_mode": 0
   },
   "meta": {
-    "filename": "DisPhaze.kicad_prl",
+    "filename": "DisPhaze_Panel.kicad_prl",
     "version": 3
   },
   "project": {

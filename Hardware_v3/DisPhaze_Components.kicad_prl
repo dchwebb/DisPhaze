@@ -1,11 +1,11 @@
 {
   "board": {
-    "active_layer": 0,
+    "active_layer": 37,
     "active_layer_preset": "",
-    "auto_track_width": true,
+    "auto_track_width": false,
     "hidden_nets": [],
     "high_contrast_mode": 0,
-    "net_color_mode": 1,
+    "net_color_mode": 0,
     "opacity": {
       "pads": 1.0,
       "tracks": 1.0,
@@ -20,7 +20,7 @@
       "keepouts": true,
       "lockedItems": true,
       "otherItems": true,
-      "pads": true,
+      "pads": false,
       "text": true,
       "tracks": true,
       "vias": true,
@@ -37,13 +37,13 @@
       8,
       9,
       10,
+      11,
       12,
       13,
       14,
       15,
       16,
       18,
-      19,
       20,
       21,
       22,
@@ -61,11 +61,11 @@
       35,
       36
     ],
-    "visible_layers": "000ffef_80000001",
+    "visible_layers": "001beef_80000001",
     "zone_display_mode": 1
   },
   "meta": {
-    "filename": "DisPhaze.kicad_prl",
+    "filename": "DisPhaze_Components.kicad_prl",
     "version": 3
   },
   "project": {
