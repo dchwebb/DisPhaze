@@ -37,7 +37,8 @@ The module uses a two PCB sandwich construction with vertical potentiometers and
  Errata
  ------
  
- * On v2 of the PCB the BOOT0 pin (pin 60) is floating which causes problems programming and debugging over the SWD interface. A bodge wire connects this to ground.
+ * On v2 of the PCB the BOOT0 pin (pin 60) is floating which causes problems programming and debugging over the SWD interface. A bodge wire connects this to ground (pin 2 of C9).
+ * Silkscreen for C4 and C17 are incorrectly swapped
  * VDDA is missing decoupling capacitors
  * Reset button missing
  * USB/UART not exposed
