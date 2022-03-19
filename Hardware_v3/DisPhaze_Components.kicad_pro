@@ -33,9 +33,9 @@
         "other_text_thickness": 0.15,
         "other_text_upright": false,
         "pads": {
-          "drill": 1.0922,
-          "height": 2.5,
-          "width": 1.5
+          "drill": 1.6,
+          "height": 2.0,
+          "width": 2.6
         },
         "silk_line_width": 0.15,
         "silk_text_italic": false,
@@ -55,7 +55,11 @@
           "width": 0.0
         }
       ],
-      "drc_exclusions": [],
+      "drc_exclusions": [
+        "silk_over_copper|137900000|52290000|dc796764-a3eb-46bb-98a3-da467ab707dc|0d6417c0-bd16-4cda-86a8-38c943985b41",
+        "silk_over_copper|142540000|58400000|b3f21ecd-ba64-4e76-a574-625c01daea82|4d8931d7-0a06-4cec-a68b-3e6c04639c59",
+        "silk_over_copper|144300000|54940000|3ca29e63-6013-491b-bb7c-b8dc7887d85c|4d8931d7-0a06-4cec-a68b-3e6c04639c59"
+      ],
       "meta": {
         "filename": "board_design_settings.json",
         "version": 2
@@ -442,7 +446,6 @@
       "/DAC1_RING_MOD": "rgb(194, 0, 194)",
       "/DAC2_MIX": "rgb(194, 0, 194)",
       "/FTUNE": "rgb(0, 194, 0)",
-      "/MIDI_RX": "rgb(0, 194, 0)",
       "/OCTAVE_DN": "rgb(194, 0, 194)",
       "/OCTAVE_UP": "rgb(194, 0, 194)",
       "/PD1_CV": "rgb(0, 194, 0)",

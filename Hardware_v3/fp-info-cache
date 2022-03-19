@@ -1,442 +1,1653 @@
-101584488467422
-Custom_Footprints
-1.3mm_Test_Point
-1.3mm Test Point
-Through Hole Mount Test Points
-0
-1
-1
-Custom_Footprints
-2mm_Connector
-
-
-0
-1
-1
-Custom_Footprints
-4_Layer_Markers
-
-
-0
-0
-0
-Custom_Footprints
-4pin_header
-http://www.farnell.com/datasheets/1520732.pdf
-connector multicomp MC9A MC9A12
+388787189753385
+Package_DIP
+DIP-4_W7.62mm
+4-lead though-hole mounted DIP package, row spacing 7.62 mm (300 mils)
+THT DIP DIL PDIP 2.54mm 7.62mm 300mil
 0
 4
 4
-Custom_Footprints
-18x0.8mmLCDConnector
-
-
-0
-18
-18
-Custom_Footprints
-ARM-UQFN-48-7x7mm_Pitch0.5mm
-UK Package; 48-Lead Plastic QFN (7mm x 7mm); (see Linear Technology QFN_48_05-08-1704.pdf)
-UQFN48
-0
-49
-49
-Custom_Footprints
-Alpha_9mm_Potentiometer
-Potentiometer, horizontally mounted, Omeg PC16PU, Omeg PC16PU, Omeg PC16PU, Vishay/Spectrol 248GJ/249GJ Single, Vishay/Spectrol 248GJ/249GJ Single, Vishay/Spectrol 248GJ/249GJ Single, Vishay/Spectrol 248GH/249GH Single, Vishay/Spectrol 148/149 Single, Vishay/Spectrol 148/149 Single, Vishay/Spectrol 148/149 Single, Vishay/Spectrol 148A/149A Single with mounting plates, Vishay/Spectrol 148/149 Double, Vishay/Spectrol 148A/149A Double with mounting plates, Piher PC-16 Single, Piher PC-16 Single, Piher PC-16 Single, Piher PC-16SV Single, Piher PC-16 Double, Piher PC-16 Triple, Piher T16H Single, Piher T16L Single, Piher T16H Double, Alps RK163 Single, Alps RK163 Double, Alps RK097 Single, Alps RK097 Double, Bourns PTV09A-2 Single with mounting sleve Single, Bourns PTV09A-1 with mounting sleve Single, Bourns PRS11S Single, Alps RK09K Single with mounting sleve Single, Alps RK09K with mounting sleve Single, http://www.alps.com/prod/info/E/HTML/Potentiometer/RotaryPotentiometers/RK09K/RK09D1130C1B.html
-Potentiometer horizontal  Omeg PC16PU  Omeg PC16PU  Omeg PC16PU  Vishay/Spectrol 248GJ/249GJ Single  Vishay/Spectrol 248GJ/249GJ Single  Vishay/Spectrol 248GJ/249GJ Single  Vishay/Spectrol 248GH/249GH Single  Vishay/Spectrol 148/149 Single  Vishay/Spectrol 148/149 Single  Vishay/Spectrol 148/149 Single  Vishay/Spectrol 148A/149A Single with mounting plates  Vishay/Spectrol 148/149 Double  Vishay/Spectrol 148A/149A Double with mounting plates  Piher PC-16 Single  Piher PC-16 Single  Piher PC-16 Single  Piher PC-16SV Single  Piher PC-16 Double  Piher PC-16 Triple  Piher T16H Single  Piher T16L Single  Piher T16H Double  Alps RK163 Single  Alps RK163 Double  Alps RK097 Single  Alps RK097 Double  Bourns PTV09A-2 Single with mounting sleve Single  Bourns PTV09A-1 with mounting sleve Single  Bourns PRS11S Single  Alps RK09K Single with mounting sleve Single  Alps RK09K with mounting sleve Single
-0
-3
-3
-Custom_Footprints
-Alpha_9mm_Potentiometer_Aligned
-Potentiometer 9mm
-Potentiometer 9mm
-0
-3
-3
-Custom_Footprints
-Alpha_9mm_pot_hole
-Mounting Hole 7mm
-mounting hole 7mm
-0
-0
-0
-Custom_Footprints
-BGA-24_5x5_6.0x8.0mm
-
-
-0
-24
-24
-Custom_Footprints
-CP_Elec_4x5.8_Big_pad
-SMT capacitor, aluminium electrolytic, 4x5.8
-
-0
-2
-2
-Custom_Footprints
-Cliff_3.5mm_Stereo_Jack
-
-
+Package_DIP
+DIP-4_W7.62mm_LongPads
+4-lead though-hole mounted DIP package, row spacing 7.62 mm (300 mils), LongPads
+THT DIP DIL PDIP 2.54mm 7.62mm 300mil LongPads
 0
 4
-3
-Custom_Footprints
-Cliff_8mm_Jack_Hole
-Mounting Hole 8mm
-mounting hole 8mm
+4
+Package_DIP
+DIP-4_W7.62mm_SMDSocket_SmallPads
+4-lead though-hole mounted DIP package, row spacing 7.62 mm (300 mils), SMDSocket, SmallPads
+THT DIP DIL PDIP 2.54mm 7.62mm 300mil SMDSocket SmallPads
 0
+4
+4
+Package_DIP
+DIP-4_W7.62mm_Socket
+4-lead though-hole mounted DIP package, row spacing 7.62 mm (300 mils), Socket
+THT DIP DIL PDIP 2.54mm 7.62mm 300mil Socket
 0
+4
+4
+Package_DIP
+DIP-4_W7.62mm_Socket_LongPads
+4-lead though-hole mounted DIP package, row spacing 7.62 mm (300 mils), Socket, LongPads
+THT DIP DIL PDIP 2.54mm 7.62mm 300mil Socket LongPads
 0
-Custom_Footprints
-Connector_27x2.54mm
-http://www.farnell.com/datasheets/1520732.pdf
-connector multicomp MC9A MC9A12
+4
+4
+Package_DIP
+DIP-4_W8.89mm_SMDSocket_LongPads
+4-lead though-hole mounted DIP package, row spacing 8.89 mm (350 mils), SMDSocket, LongPads
+THT DIP DIL PDIP 2.54mm 8.89mm 350mil SMDSocket LongPads
 0
-27
-27
-Custom_Footprints
-Crystal_SMD
-SMD Crystal HC-49-SD http://cdn-reichelt.de/documents/datenblatt/B400/xxx-HC49-SMD.pdf, 11.4x4.7mm^2 package
-SMD SMT crystal
+4
+4
+Package_DIP
+DIP-4_W10.16mm
+4-lead though-hole mounted DIP package, row spacing 10.16 mm (400 mils)
+THT DIP DIL PDIP 2.54mm 10.16mm 400mil
 0
-2
-2
-Custom_Footprints
-Crystal_SMD_2pin_6.0x3.5mm
-SMD Crystal SERIES SMD0603/2 http://www.petermann-technik.de/fileadmin/petermann/pdf/SMD0603-2.pdf, hand-soldering, 6.0x3.5mm^2 package
-SMD SMT crystal hand-soldering
+4
+4
+Package_DIP
+DIP-4_W10.16mm_LongPads
+4-lead though-hole mounted DIP package, row spacing 10.16 mm (400 mils), LongPads
+THT DIP DIL PDIP 2.54mm 10.16mm 400mil LongPads
 0
-2
-2
-Custom_Footprints
-D_SOD-123_custom
-SOD-123
-SOD-123
+4
+4
+Package_DIP
+DIP-5-6_W7.62mm
+5-lead though-hole mounted DIP package, row spacing 7.62 mm (300 mils)
+THT DIP DIL PDIP 2.54mm 7.62mm 300mil
 0
-2
-2
-Custom_Footprints
-Encoder
-
-rotary, encoder, ALPS
+5
+5
+Package_DIP
+DIP-5-6_W7.62mm_LongPads
+5-lead though-hole mounted DIP package, row spacing 7.62 mm (300 mils), LongPads
+THT DIP DIL PDIP 2.54mm 7.62mm 300mil LongPads
+0
+5
+5
+Package_DIP
+DIP-5-6_W7.62mm_SMDSocket_SmallPads
+5-lead though-hole mounted DIP package, row spacing 7.62 mm (300 mils), SMDSocket, SmallPads
+THT DIP DIL PDIP 2.54mm 7.62mm 300mil SMDSocket SmallPads
+0
+5
+5
+Package_DIP
+DIP-5-6_W7.62mm_Socket
+5-lead though-hole mounted DIP package, row spacing 7.62 mm (300 mils), Socket
+THT DIP DIL PDIP 2.54mm 7.62mm 300mil Socket
+0
+5
+5
+Package_DIP
+DIP-5-6_W7.62mm_Socket_LongPads
+5-lead though-hole mounted DIP package, row spacing 7.62 mm (300 mils), Socket, LongPads
+THT DIP DIL PDIP 2.54mm 7.62mm 300mil Socket LongPads
+0
+5
+5
+Package_DIP
+DIP-5-6_W8.89mm_SMDSocket_LongPads
+5-lead though-hole mounted DIP package, row spacing 8.89 mm (350 mils), SMDSocket, LongPads
+THT DIP DIL PDIP 2.54mm 8.89mm 350mil SMDSocket LongPads
+0
+5
+5
+Package_DIP
+DIP-5-6_W10.16mm
+5-lead though-hole mounted DIP package, row spacing 10.16 mm (400 mils)
+THT DIP DIL PDIP 2.54mm 10.16mm 400mil
+0
+5
+5
+Package_DIP
+DIP-5-6_W10.16mm_LongPads
+5-lead though-hole mounted DIP package, row spacing 10.16 mm (400 mils), LongPads
+THT DIP DIL PDIP 2.54mm 10.16mm 400mil LongPads
+0
+5
+5
+Package_DIP
+DIP-6_W7.62mm
+6-lead though-hole mounted DIP package, row spacing 7.62 mm (300 mils)
+THT DIP DIL PDIP 2.54mm 7.62mm 300mil
+0
+6
+6
+Package_DIP
+DIP-6_W7.62mm_LongPads
+6-lead though-hole mounted DIP package, row spacing 7.62 mm (300 mils), LongPads
+THT DIP DIL PDIP 2.54mm 7.62mm 300mil LongPads
+0
+6
+6
+Package_DIP
+DIP-6_W7.62mm_SMDSocket_SmallPads
+6-lead though-hole mounted DIP package, row spacing 7.62 mm (300 mils), SMDSocket, SmallPads
+THT DIP DIL PDIP 2.54mm 7.62mm 300mil SMDSocket SmallPads
+0
+6
+6
+Package_DIP
+DIP-6_W7.62mm_Socket
+6-lead though-hole mounted DIP package, row spacing 7.62 mm (300 mils), Socket
+THT DIP DIL PDIP 2.54mm 7.62mm 300mil Socket
+0
+6
+6
+Package_DIP
+DIP-6_W7.62mm_Socket_LongPads
+6-lead though-hole mounted DIP package, row spacing 7.62 mm (300 mils), Socket, LongPads
+THT DIP DIL PDIP 2.54mm 7.62mm 300mil Socket LongPads
+0
+6
+6
+Package_DIP
+DIP-6_W8.89mm_SMDSocket_LongPads
+6-lead though-hole mounted DIP package, row spacing 8.89 mm (350 mils), SMDSocket, LongPads
+THT DIP DIL PDIP 2.54mm 8.89mm 350mil SMDSocket LongPads
+0
+6
+6
+Package_DIP
+DIP-6_W10.16mm
+6-lead though-hole mounted DIP package, row spacing 10.16 mm (400 mils)
+THT DIP DIL PDIP 2.54mm 10.16mm 400mil
+0
+6
+6
+Package_DIP
+DIP-6_W10.16mm_LongPads
+6-lead though-hole mounted DIP package, row spacing 10.16 mm (400 mils), LongPads
+THT DIP DIL PDIP 2.54mm 10.16mm 400mil LongPads
+0
+6
+6
+Package_DIP
+DIP-8-16_W7.62mm
+16-lead though-hole mounted DIP package, row spacing 7.62 mm (300 mils)
+THT DIP DIL PDIP 2.54mm 7.62mm 300mil
+0
+8
+8
+Package_DIP
+DIP-8-16_W7.62mm_Socket
+16-lead though-hole mounted DIP package, row spacing 7.62 mm (300 mils), Socket
+THT DIP DIL PDIP 2.54mm 7.62mm 300mil Socket
+0
+8
+8
+Package_DIP
+DIP-8-16_W7.62mm_Socket_LongPads
+16-lead though-hole mounted DIP package, row spacing 7.62 mm (300 mils), Socket, LongPads
+THT DIP DIL PDIP 2.54mm 7.62mm 300mil Socket LongPads
+0
+8
+8
+Package_DIP
+DIP-8-N6_W7.62mm
+8-lead though-hole mounted DIP package, row spacing 7.62 mm (300 mils), missing pin 6
+THT DIP DIL PDIP 2.54mm 7.62mm 300mil
 0
 7
-6
-Custom_Footprints
-Eurorack_10_pin_header
-http://www.farnell.com/datasheets/1520732.pdf
-connector multicomp MC9A MC9A12
+7
+Package_DIP
+DIP-8-N7_W7.62mm
+8-lead though-hole mounted DIP package, row spacing 7.62 mm (300 mils), missing pin 7
+THT DIP DIL PDIP 2.54mm 7.62mm 300mil
+0
+7
+7
+Package_DIP
+DIP-8_W7.62mm
+8-lead though-hole mounted DIP package, row spacing 7.62 mm (300 mils)
+THT DIP DIL PDIP 2.54mm 7.62mm 300mil
+0
+8
+8
+Package_DIP
+DIP-8_W7.62mm_LongPads
+8-lead though-hole mounted DIP package, row spacing 7.62 mm (300 mils), LongPads
+THT DIP DIL PDIP 2.54mm 7.62mm 300mil LongPads
+0
+8
+8
+Package_DIP
+DIP-8_W7.62mm_SMDSocket_SmallPads
+8-lead though-hole mounted DIP package, row spacing 7.62 mm (300 mils), SMDSocket, SmallPads
+THT DIP DIL PDIP 2.54mm 7.62mm 300mil SMDSocket SmallPads
+0
+8
+8
+Package_DIP
+DIP-8_W7.62mm_Socket
+8-lead though-hole mounted DIP package, row spacing 7.62 mm (300 mils), Socket
+THT DIP DIL PDIP 2.54mm 7.62mm 300mil Socket
+0
+8
+8
+Package_DIP
+DIP-8_W7.62mm_Socket_LongPads
+8-lead though-hole mounted DIP package, row spacing 7.62 mm (300 mils), Socket, LongPads
+THT DIP DIL PDIP 2.54mm 7.62mm 300mil Socket LongPads
+0
+8
+8
+Package_DIP
+DIP-8_W8.89mm_SMDSocket_LongPads
+8-lead though-hole mounted DIP package, row spacing 8.89 mm (350 mils), SMDSocket, LongPads
+THT DIP DIL PDIP 2.54mm 8.89mm 350mil SMDSocket LongPads
+0
+8
+8
+Package_DIP
+DIP-8_W10.16mm
+8-lead though-hole mounted DIP package, row spacing 10.16 mm (400 mils)
+THT DIP DIL PDIP 2.54mm 10.16mm 400mil
+0
+8
+8
+Package_DIP
+DIP-8_W10.16mm_LongPads
+8-lead though-hole mounted DIP package, row spacing 10.16 mm (400 mils), LongPads
+THT DIP DIL PDIP 2.54mm 10.16mm 400mil LongPads
+0
+8
+8
+Package_DIP
+DIP-10_W7.62mm
+10-lead though-hole mounted DIP package, row spacing 7.62 mm (300 mils)
+THT DIP DIL PDIP 2.54mm 7.62mm 300mil
 0
 10
 10
-Custom_Footprints
-Eurorack_16_pin_header
-http://www.farnell.com/datasheets/1520732.pdf
-connector multicomp MC9A MC9A12
+Package_DIP
+DIP-10_W7.62mm_LongPads
+10-lead though-hole mounted DIP package, row spacing 7.62 mm (300 mils), LongPads
+THT DIP DIL PDIP 2.54mm 7.62mm 300mil LongPads
+0
+10
+10
+Package_DIP
+DIP-10_W7.62mm_SMDSocket_SmallPads
+10-lead though-hole mounted DIP package, row spacing 7.62 mm (300 mils), SMDSocket, SmallPads
+THT DIP DIL PDIP 2.54mm 7.62mm 300mil SMDSocket SmallPads
+0
+10
+10
+Package_DIP
+DIP-10_W7.62mm_Socket
+10-lead though-hole mounted DIP package, row spacing 7.62 mm (300 mils), Socket
+THT DIP DIL PDIP 2.54mm 7.62mm 300mil Socket
+0
+10
+10
+Package_DIP
+DIP-10_W7.62mm_Socket_LongPads
+10-lead though-hole mounted DIP package, row spacing 7.62 mm (300 mils), Socket, LongPads
+THT DIP DIL PDIP 2.54mm 7.62mm 300mil Socket LongPads
+0
+10
+10
+Package_DIP
+DIP-10_W8.89mm_SMDSocket_LongPads
+10-lead though-hole mounted DIP package, row spacing 8.89 mm (350 mils), SMDSocket, LongPads
+THT DIP DIL PDIP 2.54mm 8.89mm 350mil SMDSocket LongPads
+0
+10
+10
+Package_DIP
+DIP-10_W10.16mm
+10-lead though-hole mounted DIP package, row spacing 10.16 mm (400 mils)
+THT DIP DIL PDIP 2.54mm 10.16mm 400mil
+0
+10
+10
+Package_DIP
+DIP-10_W10.16mm_LongPads
+10-lead though-hole mounted DIP package, row spacing 10.16 mm (400 mils), LongPads
+THT DIP DIL PDIP 2.54mm 10.16mm 400mil LongPads
+0
+10
+10
+Package_DIP
+DIP-12_W7.62mm
+12-lead though-hole mounted DIP package, row spacing 7.62 mm (300 mils)
+THT DIP DIL PDIP 2.54mm 7.62mm 300mil
+0
+12
+12
+Package_DIP
+DIP-12_W7.62mm_LongPads
+12-lead though-hole mounted DIP package, row spacing 7.62 mm (300 mils), LongPads
+THT DIP DIL PDIP 2.54mm 7.62mm 300mil LongPads
+0
+12
+12
+Package_DIP
+DIP-12_W7.62mm_SMDSocket_SmallPads
+12-lead though-hole mounted DIP package, row spacing 7.62 mm (300 mils), SMDSocket, SmallPads
+THT DIP DIL PDIP 2.54mm 7.62mm 300mil SMDSocket SmallPads
+0
+12
+12
+Package_DIP
+DIP-12_W7.62mm_Socket
+12-lead though-hole mounted DIP package, row spacing 7.62 mm (300 mils), Socket
+THT DIP DIL PDIP 2.54mm 7.62mm 300mil Socket
+0
+12
+12
+Package_DIP
+DIP-12_W7.62mm_Socket_LongPads
+12-lead though-hole mounted DIP package, row spacing 7.62 mm (300 mils), Socket, LongPads
+THT DIP DIL PDIP 2.54mm 7.62mm 300mil Socket LongPads
+0
+12
+12
+Package_DIP
+DIP-12_W8.89mm_SMDSocket_LongPads
+12-lead though-hole mounted DIP package, row spacing 8.89 mm (350 mils), SMDSocket, LongPads
+THT DIP DIL PDIP 2.54mm 8.89mm 350mil SMDSocket LongPads
+0
+12
+12
+Package_DIP
+DIP-12_W10.16mm
+12-lead though-hole mounted DIP package, row spacing 10.16 mm (400 mils)
+THT DIP DIL PDIP 2.54mm 10.16mm 400mil
+0
+12
+12
+Package_DIP
+DIP-12_W10.16mm_LongPads
+12-lead though-hole mounted DIP package, row spacing 10.16 mm (400 mils), LongPads
+THT DIP DIL PDIP 2.54mm 10.16mm 400mil LongPads
+0
+12
+12
+Package_DIP
+DIP-14_W7.62mm
+14-lead though-hole mounted DIP package, row spacing 7.62 mm (300 mils)
+THT DIP DIL PDIP 2.54mm 7.62mm 300mil
+0
+14
+14
+Package_DIP
+DIP-14_W7.62mm_LongPads
+14-lead though-hole mounted DIP package, row spacing 7.62 mm (300 mils), LongPads
+THT DIP DIL PDIP 2.54mm 7.62mm 300mil LongPads
+0
+14
+14
+Package_DIP
+DIP-14_W7.62mm_SMDSocket_SmallPads
+14-lead though-hole mounted DIP package, row spacing 7.62 mm (300 mils), SMDSocket, SmallPads
+THT DIP DIL PDIP 2.54mm 7.62mm 300mil SMDSocket SmallPads
+0
+14
+14
+Package_DIP
+DIP-14_W7.62mm_Socket
+14-lead though-hole mounted DIP package, row spacing 7.62 mm (300 mils), Socket
+THT DIP DIL PDIP 2.54mm 7.62mm 300mil Socket
+0
+14
+14
+Package_DIP
+DIP-14_W7.62mm_Socket_LongPads
+14-lead though-hole mounted DIP package, row spacing 7.62 mm (300 mils), Socket, LongPads
+THT DIP DIL PDIP 2.54mm 7.62mm 300mil Socket LongPads
+0
+14
+14
+Package_DIP
+DIP-14_W8.89mm_SMDSocket_LongPads
+14-lead though-hole mounted DIP package, row spacing 8.89 mm (350 mils), SMDSocket, LongPads
+THT DIP DIL PDIP 2.54mm 8.89mm 350mil SMDSocket LongPads
+0
+14
+14
+Package_DIP
+DIP-14_W10.16mm
+14-lead though-hole mounted DIP package, row spacing 10.16 mm (400 mils)
+THT DIP DIL PDIP 2.54mm 10.16mm 400mil
+0
+14
+14
+Package_DIP
+DIP-14_W10.16mm_LongPads
+14-lead though-hole mounted DIP package, row spacing 10.16 mm (400 mils), LongPads
+THT DIP DIL PDIP 2.54mm 10.16mm 400mil LongPads
+0
+14
+14
+Package_DIP
+DIP-16_W7.62mm
+16-lead though-hole mounted DIP package, row spacing 7.62 mm (300 mils)
+THT DIP DIL PDIP 2.54mm 7.62mm 300mil
 0
 16
 16
-Custom_Footprints
-FBGA-24
-
-
+Package_DIP
+DIP-16_W7.62mm_LongPads
+16-lead though-hole mounted DIP package, row spacing 7.62 mm (300 mils), LongPads
+THT DIP DIL PDIP 2.54mm 7.62mm 300mil LongPads
 0
-24
-24
-Custom_Footprints
-ICE40_QFN-48-1EP_7x7mm_Pitch0.5mm
-UK Package; 48-Lead Plastic QFN (7mm x 7mm); (see Linear Technology QFN_48_05-08-1704.pdf)
-QFN 0.5
+16
+16
+Package_DIP
+DIP-16_W7.62mm_SMDSocket_SmallPads
+16-lead though-hole mounted DIP package, row spacing 7.62 mm (300 mils), SMDSocket, SmallPads
+THT DIP DIL PDIP 2.54mm 7.62mm 300mil SMDSocket SmallPads
 0
-73
-49
-Custom_Footprints
-ICE40_QFN-48-stencil
-UK Package; 48-Lead Plastic QFN (7mm x 7mm); (see Linear Technology QFN_48_05-08-1704.pdf)
-QFN 0.5
+16
+16
+Package_DIP
+DIP-16_W7.62mm_Socket
+16-lead though-hole mounted DIP package, row spacing 7.62 mm (300 mils), Socket
+THT DIP DIL PDIP 2.54mm 7.62mm 300mil Socket
 0
-64
-49
-Custom_Footprints
-ILI9341_SPI
-ILI9341 LCD
-ILI9341 LCD SPI
+16
+16
+Package_DIP
+DIP-16_W7.62mm_Socket_LongPads
+16-lead though-hole mounted DIP package, row spacing 7.62 mm (300 mils), Socket, LongPads
+THT DIP DIL PDIP 2.54mm 7.62mm 300mil Socket LongPads
+0
+16
+16
+Package_DIP
+DIP-16_W8.89mm_SMDSocket_LongPads
+16-lead though-hole mounted DIP package, row spacing 8.89 mm (350 mils), SMDSocket, LongPads
+THT DIP DIL PDIP 2.54mm 8.89mm 350mil SMDSocket LongPads
+0
+16
+16
+Package_DIP
+DIP-16_W10.16mm
+16-lead though-hole mounted DIP package, row spacing 10.16 mm (400 mils)
+THT DIP DIL PDIP 2.54mm 10.16mm 400mil
+0
+16
+16
+Package_DIP
+DIP-16_W10.16mm_LongPads
+16-lead though-hole mounted DIP package, row spacing 10.16 mm (400 mils), LongPads
+THT DIP DIL PDIP 2.54mm 10.16mm 400mil LongPads
+0
+16
+16
+Package_DIP
+DIP-18_W7.62mm
+18-lead though-hole mounted DIP package, row spacing 7.62 mm (300 mils)
+THT DIP DIL PDIP 2.54mm 7.62mm 300mil
 0
 18
-14
-Custom_Footprints
-ILI9341_SPI_daughterboard
-ILI9341 LCD
-ILI9341 LCD SPI
+18
+Package_DIP
+DIP-18_W7.62mm_LongPads
+18-lead though-hole mounted DIP package, row spacing 7.62 mm (300 mils), LongPads
+THT DIP DIL PDIP 2.54mm 7.62mm 300mil LongPads
 0
-24
-24
-Custom_Footprints
-Inductor_SMD_6x6mm
-3L COILS SNR6045K-680M
-inductor smd
+18
+18
+Package_DIP
+DIP-18_W7.62mm_SMDSocket_SmallPads
+18-lead though-hole mounted DIP package, row spacing 7.62 mm (300 mils), SMDSocket, SmallPads
+THT DIP DIL PDIP 2.54mm 7.62mm 300mil SMDSocket SmallPads
 0
-2
-2
-Custom_Footprints
-JLC_SMT_Tooling_Hole
-Mounting Hole 2.2mm, no annular, M2
-mounting hole 2.2mm no annular m2
+18
+18
+Package_DIP
+DIP-18_W7.62mm_Socket
+18-lead though-hole mounted DIP package, row spacing 7.62 mm (300 mils), Socket
+THT DIP DIL PDIP 2.54mm 7.62mm 300mil Socket
 0
+18
+18
+Package_DIP
+DIP-18_W7.62mm_Socket_LongPads
+18-lead though-hole mounted DIP package, row spacing 7.62 mm (300 mils), Socket, LongPads
+THT DIP DIL PDIP 2.54mm 7.62mm 300mil Socket LongPads
 0
+18
+18
+Package_DIP
+DIP-18_W8.89mm_SMDSocket_LongPads
+18-lead though-hole mounted DIP package, row spacing 8.89 mm (350 mils), SMDSocket, LongPads
+THT DIP DIL PDIP 2.54mm 8.89mm 350mil SMDSocket LongPads
 0
-Custom_Footprints
-Jack_3.5mm_QingPu_WQP-PJ302M_Horizontal
-
-
-0
-3
-3
-Custom_Footprints
-LED_D3.0mm
-LED, diameter 3.0mm, 2 pins
-LED diameter 3.0mm 2 pins
-0
-2
-2
-Custom_Footprints
-LED_Hole_3mm
-Mounting Hole 6mm, no annular
-mounting hole 6mm no annular
-0
-0
-0
-Custom_Footprints
-LED_RGB_PLCC4
-RGB LED PLCC4 Broadcom
-LED 3227
-0
-4
-4
-Custom_Footprints
-LFL212G45TC1A007
-
-
-0
-8
-8
-Custom_Footprints
-L_0806
-Resistor SMD 0805, reflow soldering, Vishay (see dcrcw.pdf)
-resistor 0805
-0
-2
-2
-Custom_Footprints
-MIDISocket_Hole_15mm
-Mounting Hole 15mm
-mounting hole 15mm
-0
-0
-0
-Custom_Footprints
-MIDI_DIN
-MIDI_DIN, standard DIN connector, 5 pins, midi
-MIDI_DIN DIN 5-pins connector midi
-0
-6
-6
-Custom_Footprints
-MLPF-WB-01E3
-
-
-0
-6
-6
-Custom_Footprints
-MountingHole_6.1mm
-Mounting Hole 6mm, no annular
-mounting hole 6mm no annular
-0
-0
-0
-Custom_Footprints
-MountingHole_6.7mm_Button
-Mounting Hole 6mm, no annular
-mounting hole 6mm no annular
-0
-0
-0
-Custom_Footprints
-NN01_102
-Ignion Fractus 2.4GHz Antenna
-
-0
-2
-2
-Custom_Footprints
-Oval_Mounting_Hole
-Mounting Hole 6mm, no annular
-mounting hole 6mm no annular
-0
-0
-0
-Custom_Footprints
-SPDTSubMiniature
-SPDT Sub Miniature Switch
-Switch SPDT
-0
-3
-3
-Custom_Footprints
-SPDT_Slide_Switch
-On-On PCB Slide Switch SPDT 0.3A 50VDC Switch Electronics p/n 482028
-Switch SPDT
-0
-3
-3
-Custom_Footprints
-SPDT_SubMiniature_Aligned
-SPDT Sub Miniature Switch
-Switch SPDT
-0
-3
-3
-Custom_Footprints
-SSOP-20_4.4x6.5mm_Pitch0.65mm_Round_Pads
-SSOP20: plastic shrink small outline package; 20 leads; body width 4.4 mm; (see NXP SSOP-TSSOP-VSO-REFLOW.pdf and sot266-1_po.pdf)
-SSOP 0.65
+18
+18
+Package_DIP
+DIP-20_W7.62mm
+20-lead though-hole mounted DIP package, row spacing 7.62 mm (300 mils)
+THT DIP DIL PDIP 2.54mm 7.62mm 300mil
 0
 20
 20
-Custom_Footprints
-SWD_header
-
-SWD ARM Header Programmer
+Package_DIP
+DIP-20_W7.62mm_LongPads
+20-lead though-hole mounted DIP package, row spacing 7.62 mm (300 mils), LongPads
+THT DIP DIL PDIP 2.54mm 7.62mm 300mil LongPads
 0
-4
-4
-Custom_Footprints
-SW_PUSH_6mm_aligned
-https://www.omron.com/ecb/products/pdf/en-b3f.pdf
-tact sw push 6mm
+20
+20
+Package_DIP
+DIP-20_W7.62mm_SMDSocket_SmallPads
+20-lead though-hole mounted DIP package, row spacing 7.62 mm (300 mils), SMDSocket, SmallPads
+THT DIP DIL PDIP 2.54mm 7.62mm 300mil SMDSocket SmallPads
 0
-4
-2
-Custom_Footprints
-SW_Rotary_2x5
-
-
+20
+20
+Package_DIP
+DIP-20_W7.62mm_Socket
+20-lead though-hole mounted DIP package, row spacing 7.62 mm (300 mils), Socket
+THT DIP DIL PDIP 2.54mm 7.62mm 300mil Socket
 0
-12
-12
-Custom_Footprints
-SW_SPST_EVQQ2
-Light Touch Switch, https://industrial.panasonic.com/cdbs/www-data/pdf/ATK0000/ATK0000CE28.pdf
-
+20
+20
+Package_DIP
+DIP-20_W7.62mm_Socket_LongPads
+20-lead though-hole mounted DIP package, row spacing 7.62 mm (300 mils), Socket, LongPads
+THT DIP DIL PDIP 2.54mm 7.62mm 300mil Socket LongPads
 0
-4
-2
-Custom_Footprints
-Small_Pushbutton_Hole_3.5mm
-Button Hole 3.5mm
-
+20
+20
+Package_DIP
+DIP-20_W8.89mm_SMDSocket_LongPads
+20-lead though-hole mounted DIP package, row spacing 8.89 mm (350 mils), SMDSocket, LongPads
+THT DIP DIL PDIP 2.54mm 8.89mm 350mil SMDSocket LongPads
 0
+20
+20
+Package_DIP
+DIP-22_W7.62mm
+22-lead though-hole mounted DIP package, row spacing 7.62 mm (300 mils)
+THT DIP DIL PDIP 2.54mm 7.62mm 300mil
 0
+22
+22
+Package_DIP
+DIP-22_W7.62mm_LongPads
+22-lead though-hole mounted DIP package, row spacing 7.62 mm (300 mils), LongPads
+THT DIP DIL PDIP 2.54mm 7.62mm 300mil LongPads
 0
-Custom_Footprints
-Sub_Miniature_Switch_MountingHole_3.5mm
-Mounting Hole 6mm, no annular
-mounting hole 6mm no annular
+22
+22
+Package_DIP
+DIP-22_W7.62mm_SMDSocket_SmallPads
+22-lead though-hole mounted DIP package, row spacing 7.62 mm (300 mils), SMDSocket, SmallPads
+THT DIP DIL PDIP 2.54mm 7.62mm 300mil SMDSocket SmallPads
 0
+22
+22
+Package_DIP
+DIP-22_W7.62mm_Socket
+22-lead though-hole mounted DIP package, row spacing 7.62 mm (300 mils), Socket
+THT DIP DIL PDIP 2.54mm 7.62mm 300mil Socket
 0
+22
+22
+Package_DIP
+DIP-22_W7.62mm_Socket_LongPads
+22-lead though-hole mounted DIP package, row spacing 7.62 mm (300 mils), Socket, LongPads
+THT DIP DIL PDIP 2.54mm 7.62mm 300mil Socket LongPads
 0
-Custom_Footprints
-Sub_Miniature_Switch_MountingHole_3mm
-Mounting Hole 6mm, no annular
-mounting hole 6mm no annular
+22
+22
+Package_DIP
+DIP-22_W8.89mm_SMDSocket_LongPads
+22-lead though-hole mounted DIP package, row spacing 8.89 mm (350 mils), SMDSocket, LongPads
+THT DIP DIL PDIP 2.54mm 8.89mm 350mil SMDSocket LongPads
 0
+22
+22
+Package_DIP
+DIP-22_W10.16mm
+22-lead though-hole mounted DIP package, row spacing 10.16 mm (400 mils)
+THT DIP DIL PDIP 2.54mm 10.16mm 400mil
 0
+22
+22
+Package_DIP
+DIP-22_W10.16mm_LongPads
+22-lead though-hole mounted DIP package, row spacing 10.16 mm (400 mils), LongPads
+THT DIP DIL PDIP 2.54mm 10.16mm 400mil LongPads
 0
-Custom_Footprints
-Sub_Miniature_Switch_MountingHole_5mm
-Mounting Hole 6mm, no annular
-mounting hole 6mm no annular
+22
+22
+Package_DIP
+DIP-22_W10.16mm_SMDSocket_SmallPads
+22-lead though-hole mounted DIP package, row spacing 10.16 mm (400 mils), SMDSocket, SmallPads
+THT DIP DIL PDIP 2.54mm 10.16mm 400mil SMDSocket SmallPads
 0
+22
+22
+Package_DIP
+DIP-22_W10.16mm_Socket
+22-lead though-hole mounted DIP package, row spacing 10.16 mm (400 mils), Socket
+THT DIP DIL PDIP 2.54mm 10.16mm 400mil Socket
 0
+22
+22
+Package_DIP
+DIP-22_W10.16mm_Socket_LongPads
+22-lead though-hole mounted DIP package, row spacing 10.16 mm (400 mils), Socket, LongPads
+THT DIP DIL PDIP 2.54mm 10.16mm 400mil Socket LongPads
 0
-Custom_Footprints
-TDK_Inductor_6.9x7.2
-Choke, SMD, 6.3x6.3mm 3mm height
-Choke SMD
+22
+22
+Package_DIP
+DIP-22_W11.43mm_SMDSocket_LongPads
+22-lead though-hole mounted DIP package, row spacing 11.43 mm (450 mils), SMDSocket, LongPads
+THT DIP DIL PDIP 2.54mm 11.43mm 450mil SMDSocket LongPads
 0
-2
-2
-Custom_Footprints
-THONKICONN_hole
-
-
+22
+22
+Package_DIP
+DIP-24_W7.62mm
+24-lead though-hole mounted DIP package, row spacing 7.62 mm (300 mils)
+THT DIP DIL PDIP 2.54mm 7.62mm 300mil
 0
-3
-3
-Custom_Footprints
-TSOP-II-54_22.2x10.16mm_P0.8mm
-54-lead TSOP typ II package
-TSOPII TSOP2
+24
+24
+Package_DIP
+DIP-24_W7.62mm_LongPads
+24-lead though-hole mounted DIP package, row spacing 7.62 mm (300 mils), LongPads
+THT DIP DIL PDIP 2.54mm 7.62mm 300mil LongPads
 0
-54
-54
-Custom_Footprints
-Thonkiconn_Socket_MountingHole_6mm
-Mounting Hole 6mm, no annular
-mounting hole 6mm no annular
+24
+24
+Package_DIP
+DIP-24_W7.62mm_SMDSocket_SmallPads
+24-lead though-hole mounted DIP package, row spacing 7.62 mm (300 mils), SMDSocket, SmallPads
+THT DIP DIL PDIP 2.54mm 7.62mm 300mil SMDSocket SmallPads
 0
+24
+24
+Package_DIP
+DIP-24_W7.62mm_Socket
+24-lead though-hole mounted DIP package, row spacing 7.62 mm (300 mils), Socket
+THT DIP DIL PDIP 2.54mm 7.62mm 300mil Socket
 0
+24
+24
+Package_DIP
+DIP-24_W7.62mm_Socket_LongPads
+24-lead though-hole mounted DIP package, row spacing 7.62 mm (300 mils), Socket, LongPads
+THT DIP DIL PDIP 2.54mm 7.62mm 300mil Socket LongPads
 0
-Custom_Footprints
-Thonkiconn_Stereo-PJ366ST
-T-R-S Vertical mounting jack AKA WQP-WQP419GR, Stereo Thonkiconn
-WQP-WQP419GR Thonkiconn
+24
+24
+Package_DIP
+DIP-24_W8.89mm_SMDSocket_LongPads
+24-lead though-hole mounted DIP package, row spacing 8.89 mm (350 mils), SMDSocket, LongPads
+THT DIP DIL PDIP 2.54mm 8.89mm 350mil SMDSocket LongPads
 0
-3
-3
-Custom_Footprints
-USB_B_Molex
-USB B female connector, straight, rugged
-USB_B_MUSB_Straight female connector straight rugged MUSB D511
+24
+24
+Package_DIP
+DIP-24_W10.16mm
+24-lead though-hole mounted DIP package, row spacing 10.16 mm (400 mils)
+THT DIP DIL PDIP 2.54mm 10.16mm 400mil
 0
-6
-4
-Custom_Footprints
-USB_B_Wurth
-USB B female connector, straight, rugged
-USB_B_MUSB_Straight female connector straight rugged MUSB D511
+24
+24
+Package_DIP
+DIP-24_W10.16mm_LongPads
+24-lead though-hole mounted DIP package, row spacing 10.16 mm (400 mils), LongPads
+THT DIP DIL PDIP 2.54mm 10.16mm 400mil LongPads
 0
-6
-5
-Custom_Footprints
-USB_Micro-B_Amphenol
-Micro USB Type B Receptacle
-USB USB_B USB_micro USB_OTG
+24
+24
+Package_DIP
+DIP-24_W10.16mm_SMDSocket_SmallPads
+24-lead though-hole mounted DIP package, row spacing 10.16 mm (400 mils), SMDSocket, SmallPads
+THT DIP DIL PDIP 2.54mm 10.16mm 400mil SMDSocket SmallPads
+0
+24
+24
+Package_DIP
+DIP-24_W10.16mm_Socket
+24-lead though-hole mounted DIP package, row spacing 10.16 mm (400 mils), Socket
+THT DIP DIL PDIP 2.54mm 10.16mm 400mil Socket
+0
+24
+24
+Package_DIP
+DIP-24_W10.16mm_Socket_LongPads
+24-lead though-hole mounted DIP package, row spacing 10.16 mm (400 mils), Socket, LongPads
+THT DIP DIL PDIP 2.54mm 10.16mm 400mil Socket LongPads
+0
+24
+24
+Package_DIP
+DIP-24_W11.43mm_SMDSocket_LongPads
+24-lead though-hole mounted DIP package, row spacing 11.43 mm (450 mils), SMDSocket, LongPads
+THT DIP DIL PDIP 2.54mm 11.43mm 450mil SMDSocket LongPads
+0
+24
+24
+Package_DIP
+DIP-24_W15.24mm
+24-lead though-hole mounted DIP package, row spacing 15.24 mm (600 mils)
+THT DIP DIL PDIP 2.54mm 15.24mm 600mil
+0
+24
+24
+Package_DIP
+DIP-24_W15.24mm_LongPads
+24-lead though-hole mounted DIP package, row spacing 15.24 mm (600 mils), LongPads
+THT DIP DIL PDIP 2.54mm 15.24mm 600mil LongPads
+0
+24
+24
+Package_DIP
+DIP-24_W15.24mm_SMDSocket_SmallPads
+24-lead though-hole mounted DIP package, row spacing 15.24 mm (600 mils), SMDSocket, SmallPads
+THT DIP DIL PDIP 2.54mm 15.24mm 600mil SMDSocket SmallPads
+0
+24
+24
+Package_DIP
+DIP-24_W15.24mm_Socket
+24-lead though-hole mounted DIP package, row spacing 15.24 mm (600 mils), Socket
+THT DIP DIL PDIP 2.54mm 15.24mm 600mil Socket
+0
+24
+24
+Package_DIP
+DIP-24_W15.24mm_Socket_LongPads
+24-lead though-hole mounted DIP package, row spacing 15.24 mm (600 mils), Socket, LongPads
+THT DIP DIL PDIP 2.54mm 15.24mm 600mil Socket LongPads
+0
+24
+24
+Package_DIP
+DIP-24_W16.51mm_SMDSocket_LongPads
+24-lead though-hole mounted DIP package, row spacing 16.51 mm (650 mils), SMDSocket, LongPads
+THT DIP DIL PDIP 2.54mm 16.51mm 650mil SMDSocket LongPads
+0
+24
+24
+Package_DIP
+DIP-28_W7.62mm
+28-lead though-hole mounted DIP package, row spacing 7.62 mm (300 mils)
+THT DIP DIL PDIP 2.54mm 7.62mm 300mil
+0
+28
+28
+Package_DIP
+DIP-28_W7.62mm_LongPads
+28-lead though-hole mounted DIP package, row spacing 7.62 mm (300 mils), LongPads
+THT DIP DIL PDIP 2.54mm 7.62mm 300mil LongPads
+0
+28
+28
+Package_DIP
+DIP-28_W7.62mm_SMDSocket_SmallPads
+28-lead though-hole mounted DIP package, row spacing 7.62 mm (300 mils), SMDSocket, SmallPads
+THT DIP DIL PDIP 2.54mm 7.62mm 300mil SMDSocket SmallPads
+0
+28
+28
+Package_DIP
+DIP-28_W7.62mm_Socket
+28-lead though-hole mounted DIP package, row spacing 7.62 mm (300 mils), Socket
+THT DIP DIL PDIP 2.54mm 7.62mm 300mil Socket
+0
+28
+28
+Package_DIP
+DIP-28_W7.62mm_Socket_LongPads
+28-lead though-hole mounted DIP package, row spacing 7.62 mm (300 mils), Socket, LongPads
+THT DIP DIL PDIP 2.54mm 7.62mm 300mil Socket LongPads
+0
+28
+28
+Package_DIP
+DIP-28_W8.89mm_SMDSocket_LongPads
+28-lead though-hole mounted DIP package, row spacing 8.89 mm (350 mils), SMDSocket, LongPads
+THT DIP DIL PDIP 2.54mm 8.89mm 350mil SMDSocket LongPads
+0
+28
+28
+Package_DIP
+DIP-28_W15.24mm
+28-lead though-hole mounted DIP package, row spacing 15.24 mm (600 mils)
+THT DIP DIL PDIP 2.54mm 15.24mm 600mil
+0
+28
+28
+Package_DIP
+DIP-28_W15.24mm_LongPads
+28-lead though-hole mounted DIP package, row spacing 15.24 mm (600 mils), LongPads
+THT DIP DIL PDIP 2.54mm 15.24mm 600mil LongPads
+0
+28
+28
+Package_DIP
+DIP-28_W15.24mm_SMDSocket_SmallPads
+28-lead though-hole mounted DIP package, row spacing 15.24 mm (600 mils), SMDSocket, SmallPads
+THT DIP DIL PDIP 2.54mm 15.24mm 600mil SMDSocket SmallPads
+0
+28
+28
+Package_DIP
+DIP-28_W15.24mm_Socket
+28-lead though-hole mounted DIP package, row spacing 15.24 mm (600 mils), Socket
+THT DIP DIL PDIP 2.54mm 15.24mm 600mil Socket
+0
+28
+28
+Package_DIP
+DIP-28_W15.24mm_Socket_LongPads
+28-lead though-hole mounted DIP package, row spacing 15.24 mm (600 mils), Socket, LongPads
+THT DIP DIL PDIP 2.54mm 15.24mm 600mil Socket LongPads
+0
+28
+28
+Package_DIP
+DIP-28_W16.51mm_SMDSocket_LongPads
+28-lead though-hole mounted DIP package, row spacing 16.51 mm (650 mils), SMDSocket, LongPads
+THT DIP DIL PDIP 2.54mm 16.51mm 650mil SMDSocket LongPads
+0
+28
+28
+Package_DIP
+DIP-32_W7.62mm
+32-lead dip package, row spacing 7.62 mm (300 mils)
+DIL DIP PDIP 2.54mm 7.62mm 300mil
+0
+32
+32
+Package_DIP
+DIP-32_W15.24mm
+32-lead though-hole mounted DIP package, row spacing 15.24 mm (600 mils)
+THT DIP DIL PDIP 2.54mm 15.24mm 600mil
+0
+32
+32
+Package_DIP
+DIP-32_W15.24mm_LongPads
+32-lead though-hole mounted DIP package, row spacing 15.24 mm (600 mils), LongPads
+THT DIP DIL PDIP 2.54mm 15.24mm 600mil LongPads
+0
+32
+32
+Package_DIP
+DIP-32_W15.24mm_SMDSocket_SmallPads
+32-lead though-hole mounted DIP package, row spacing 15.24 mm (600 mils), SMDSocket, SmallPads
+THT DIP DIL PDIP 2.54mm 15.24mm 600mil SMDSocket SmallPads
+0
+32
+32
+Package_DIP
+DIP-32_W15.24mm_Socket
+32-lead though-hole mounted DIP package, row spacing 15.24 mm (600 mils), Socket
+THT DIP DIL PDIP 2.54mm 15.24mm 600mil Socket
+0
+32
+32
+Package_DIP
+DIP-32_W15.24mm_Socket_LongPads
+32-lead though-hole mounted DIP package, row spacing 15.24 mm (600 mils), Socket, LongPads
+THT DIP DIL PDIP 2.54mm 15.24mm 600mil Socket LongPads
+0
+32
+32
+Package_DIP
+DIP-32_W16.51mm_SMDSocket_LongPads
+32-lead though-hole mounted DIP package, row spacing 16.51 mm (650 mils), SMDSocket, LongPads
+THT DIP DIL PDIP 2.54mm 16.51mm 650mil SMDSocket LongPads
+0
+32
+32
+Package_DIP
+DIP-40_W15.24mm
+40-lead though-hole mounted DIP package, row spacing 15.24 mm (600 mils)
+THT DIP DIL PDIP 2.54mm 15.24mm 600mil
+0
+40
+40
+Package_DIP
+DIP-40_W15.24mm_LongPads
+40-lead though-hole mounted DIP package, row spacing 15.24 mm (600 mils), LongPads
+THT DIP DIL PDIP 2.54mm 15.24mm 600mil LongPads
+0
+40
+40
+Package_DIP
+DIP-40_W15.24mm_SMDSocket_SmallPads
+40-lead though-hole mounted DIP package, row spacing 15.24 mm (600 mils), SMDSocket, SmallPads
+THT DIP DIL PDIP 2.54mm 15.24mm 600mil SMDSocket SmallPads
+0
+40
+40
+Package_DIP
+DIP-40_W15.24mm_Socket
+40-lead though-hole mounted DIP package, row spacing 15.24 mm (600 mils), Socket
+THT DIP DIL PDIP 2.54mm 15.24mm 600mil Socket
+0
+40
+40
+Package_DIP
+DIP-40_W15.24mm_Socket_LongPads
+40-lead though-hole mounted DIP package, row spacing 15.24 mm (600 mils), Socket, LongPads
+THT DIP DIL PDIP 2.54mm 15.24mm 600mil Socket LongPads
+0
+40
+40
+Package_DIP
+DIP-40_W16.51mm_SMDSocket_LongPads
+40-lead though-hole mounted DIP package, row spacing 16.51 mm (650 mils), SMDSocket, LongPads
+THT DIP DIL PDIP 2.54mm 16.51mm 650mil SMDSocket LongPads
+0
+40
+40
+Package_DIP
+DIP-40_W25.4mm
+40-lead though-hole mounted DIP package, row spacing 25.4 mm (1000 mils)
+THT DIP DIL PDIP 2.54mm 25.4mm 1000mil
+0
+40
+40
+Package_DIP
+DIP-40_W25.4mm_LongPads
+40-lead though-hole mounted DIP package, row spacing 25.4 mm (1000 mils), LongPads
+THT DIP DIL PDIP 2.54mm 25.4mm 1000mil LongPads
+0
+40
+40
+Package_DIP
+DIP-40_W25.4mm_SMDSocket_SmallPads
+40-lead though-hole mounted DIP package, row spacing 25.4 mm (1000 mils), SMDSocket, SmallPads
+THT DIP DIL PDIP 2.54mm 25.4mm 1000mil SMDSocket SmallPads
+0
+40
+40
+Package_DIP
+DIP-40_W25.4mm_Socket
+40-lead though-hole mounted DIP package, row spacing 25.4 mm (1000 mils), Socket
+THT DIP DIL PDIP 2.54mm 25.4mm 1000mil Socket
+0
+40
+40
+Package_DIP
+DIP-40_W25.4mm_Socket_LongPads
+40-lead though-hole mounted DIP package, row spacing 25.4 mm (1000 mils), Socket, LongPads
+THT DIP DIL PDIP 2.54mm 25.4mm 1000mil Socket LongPads
+0
+40
+40
+Package_DIP
+DIP-40_W26.67mm_SMDSocket_LongPads
+40-lead though-hole mounted DIP package, row spacing 26.67 mm (1050 mils), SMDSocket, LongPads
+THT DIP DIL PDIP 2.54mm 26.669999999999998mm 1050mil SMDSocket LongPads
+0
+40
+40
+Package_DIP
+DIP-42_W15.24mm
+42-lead though-hole mounted DIP package, row spacing 15.24 mm (600 mils)
+THT DIP DIL PDIP 2.54mm 15.24mm 600mil
+0
+42
+42
+Package_DIP
+DIP-42_W15.24mm_LongPads
+42-lead though-hole mounted DIP package, row spacing 15.24 mm (600 mils), LongPads
+THT DIP DIL PDIP 2.54mm 15.24mm 600mil LongPads
+0
+42
+42
+Package_DIP
+DIP-42_W15.24mm_SMDSocket_SmallPads
+42-lead though-hole mounted DIP package, row spacing 15.24 mm (600 mils), SMDSocket, SmallPads
+THT DIP DIL PDIP 2.54mm 15.24mm 600mil SMDSocket SmallPads
+0
+42
+42
+Package_DIP
+DIP-42_W15.24mm_Socket
+42-lead though-hole mounted DIP package, row spacing 15.24 mm (600 mils), Socket
+THT DIP DIL PDIP 2.54mm 15.24mm 600mil Socket
+0
+42
+42
+Package_DIP
+DIP-42_W15.24mm_Socket_LongPads
+42-lead though-hole mounted DIP package, row spacing 15.24 mm (600 mils), Socket, LongPads
+THT DIP DIL PDIP 2.54mm 15.24mm 600mil Socket LongPads
+0
+42
+42
+Package_DIP
+DIP-42_W16.51mm_SMDSocket_LongPads
+42-lead though-hole mounted DIP package, row spacing 16.51 mm (650 mils), SMDSocket, LongPads
+THT DIP DIL PDIP 2.54mm 16.51mm 650mil SMDSocket LongPads
+0
+42
+42
+Package_DIP
+DIP-48_W15.24mm
+48-lead though-hole mounted DIP package, row spacing 15.24 mm (600 mils)
+THT DIP DIL PDIP 2.54mm 15.24mm 600mil
+0
+48
+48
+Package_DIP
+DIP-48_W15.24mm_LongPads
+48-lead though-hole mounted DIP package, row spacing 15.24 mm (600 mils), LongPads
+THT DIP DIL PDIP 2.54mm 15.24mm 600mil LongPads
+0
+48
+48
+Package_DIP
+DIP-48_W15.24mm_SMDSocket_SmallPads
+48-lead though-hole mounted DIP package, row spacing 15.24 mm (600 mils), SMDSocket, SmallPads
+THT DIP DIL PDIP 2.54mm 15.24mm 600mil SMDSocket SmallPads
+0
+48
+48
+Package_DIP
+DIP-48_W15.24mm_Socket
+48-lead though-hole mounted DIP package, row spacing 15.24 mm (600 mils), Socket
+THT DIP DIL PDIP 2.54mm 15.24mm 600mil Socket
+0
+48
+48
+Package_DIP
+DIP-48_W15.24mm_Socket_LongPads
+48-lead though-hole mounted DIP package, row spacing 15.24 mm (600 mils), Socket, LongPads
+THT DIP DIL PDIP 2.54mm 15.24mm 600mil Socket LongPads
+0
+48
+48
+Package_DIP
+DIP-48_W16.51mm_SMDSocket_LongPads
+48-lead though-hole mounted DIP package, row spacing 16.51 mm (650 mils), SMDSocket, LongPads
+THT DIP DIL PDIP 2.54mm 16.51mm 650mil SMDSocket LongPads
+0
+48
+48
+Package_DIP
+DIP-64_W15.24mm
+64-lead though-hole mounted DIP package, row spacing 15.24 mm (600 mils)
+THT DIP DIL PDIP 2.54mm 15.24mm 600mil
+0
+64
+64
+Package_DIP
+DIP-64_W15.24mm_LongPads
+64-lead though-hole mounted DIP package, row spacing 15.24 mm (600 mils), LongPads
+THT DIP DIL PDIP 2.54mm 15.24mm 600mil LongPads
+0
+64
+64
+Package_DIP
+DIP-64_W15.24mm_SMDSocket_SmallPads
+64-lead though-hole mounted DIP package, row spacing 15.24 mm (600 mils), SMDSocket, SmallPads
+THT DIP DIL PDIP 2.54mm 15.24mm 600mil SMDSocket SmallPads
+0
+64
+64
+Package_DIP
+DIP-64_W15.24mm_Socket
+64-lead though-hole mounted DIP package, row spacing 15.24 mm (600 mils), Socket
+THT DIP DIL PDIP 2.54mm 15.24mm 600mil Socket
+0
+64
+64
+Package_DIP
+DIP-64_W15.24mm_Socket_LongPads
+64-lead though-hole mounted DIP package, row spacing 15.24 mm (600 mils), Socket, LongPads
+THT DIP DIL PDIP 2.54mm 15.24mm 600mil Socket LongPads
+0
+64
+64
+Package_DIP
+DIP-64_W16.51mm_SMDSocket_LongPads
+64-lead though-hole mounted DIP package, row spacing 16.51 mm (650 mils), SMDSocket, LongPads
+THT DIP DIL PDIP 2.54mm 16.51mm 650mil SMDSocket LongPads
+0
+64
+64
+Package_DIP
+DIP-64_W22.86mm
+64-lead though-hole mounted DIP package, row spacing 22.86 mm (900 mils)
+THT DIP DIL PDIP 2.54mm 22.86mm 900mil
+0
+64
+64
+Package_DIP
+DIP-64_W22.86mm_LongPads
+64-lead though-hole mounted DIP package, row spacing 22.86 mm (900 mils), LongPads
+THT DIP DIL PDIP 2.54mm 22.86mm 900mil LongPads
+0
+64
+64
+Package_DIP
+DIP-64_W22.86mm_SMDSocket_SmallPads
+64-lead though-hole mounted DIP package, row spacing 22.86 mm (900 mils), SMDSocket, SmallPads
+THT DIP DIL PDIP 2.54mm 22.86mm 900mil SMDSocket SmallPads
+0
+64
+64
+Package_DIP
+DIP-64_W22.86mm_Socket
+64-lead though-hole mounted DIP package, row spacing 22.86 mm (900 mils), Socket
+THT DIP DIL PDIP 2.54mm 22.86mm 900mil Socket
+0
+64
+64
+Package_DIP
+DIP-64_W22.86mm_Socket_LongPads
+64-lead though-hole mounted DIP package, row spacing 22.86 mm (900 mils), Socket, LongPads
+THT DIP DIL PDIP 2.54mm 22.86mm 900mil Socket LongPads
+0
+64
+64
+Package_DIP
+DIP-64_W24.13mm_SMDSocket_LongPads
+64-lead though-hole mounted DIP package, row spacing 24.13 mm (950 mils), SMDSocket, LongPads
+THT DIP DIL PDIP 2.54mm 24.13mm 950mil SMDSocket LongPads
+0
+64
+64
+Package_DIP
+DIP-64_W25.4mm
+64-lead though-hole mounted DIP package, row spacing 25.4 mm (1000 mils)
+THT DIP DIL PDIP 2.54mm 25.4mm 1000mil
+0
+64
+64
+Package_DIP
+DIP-64_W25.4mm_LongPads
+64-lead though-hole mounted DIP package, row spacing 25.4 mm (1000 mils), LongPads
+THT DIP DIL PDIP 2.54mm 25.4mm 1000mil LongPads
+0
+64
+64
+Package_DIP
+DIP-64_W25.4mm_SMDSocket_SmallPads
+64-lead though-hole mounted DIP package, row spacing 25.4 mm (1000 mils), SMDSocket, SmallPads
+THT DIP DIL PDIP 2.54mm 25.4mm 1000mil SMDSocket SmallPads
+0
+64
+64
+Package_DIP
+DIP-64_W25.4mm_Socket
+64-lead though-hole mounted DIP package, row spacing 25.4 mm (1000 mils), Socket
+THT DIP DIL PDIP 2.54mm 25.4mm 1000mil Socket
+0
+64
+64
+Package_DIP
+DIP-64_W25.4mm_Socket_LongPads
+64-lead though-hole mounted DIP package, row spacing 25.4 mm (1000 mils), Socket, LongPads
+THT DIP DIL PDIP 2.54mm 25.4mm 1000mil Socket LongPads
+0
+64
+64
+Package_DIP
+DIP-64_W26.67mm_SMDSocket_LongPads
+64-lead though-hole mounted DIP package, row spacing 26.67 mm (1050 mils), SMDSocket, LongPads
+THT DIP DIL PDIP 2.54mm 26.669999999999998mm 1050mil SMDSocket LongPads
+0
+64
+64
+Package_DIP
+Fairchild_LSOP-8
+8-Lead, 300\" Wide, Surface Mount Package (https://www.fairchildsemi.com/package-drawings/ML/MLSOP08A.pdf)
+LSOP 2.54mm 300mil
+0
+8
+8
+Package_DIP
+PowerIntegrations_PDIP-8B
+Power Integrations variant of 8-lead though-hole mounted DIP package, row spacing 7.62 mm (300 mils), LongPads, see https://www.power.com/sites/default/files/product-docs/lnk520.pdf
+THT DIP DIL PDIP 2.54mm 7.62mm 300mil LongPads
+0
+7
+7
+Package_DIP
+PowerIntegrations_PDIP-8C
+Power Integrations variant of 8-lead though-hole mounted DIP package, row spacing 7.62 mm (300 mils), LongPads, see https://ac-dc.power.com/sites/default/files/product-docs/tinyswitch-iii_family_datasheet.pdf
+THT DIP DIL PDIP 2.54mm 7.62mm 300mil LongPads
+0
+7
+7
+Package_DIP
+PowerIntegrations_SDIP-10C
+PowerIntegrations variant of 10-lead though-hole mounted DIP package, row spacing 7.62 mm (300 mils), LongPads, see https://www.power.com/sites/default/files/product-docs/tophx_family_datasheet.pdf
+THT DIP DIL PDIP 2.54mm 7.62mm 300mil LongPads
 0
 9
-6
-Custom_Footprints
-USB_TE_1734517-1
-
-
+9
+Package_DIP
+PowerIntegrations_SMD-8
+PowerIntegrations variant of 8-lead surface-mounted (SMD) DIP package, row spacing 7.62 mm (300 mils), see https://www.power.com/sites/default/files/product-docs/lnk520.pdf
+SMD DIP DIL PDIP SMDIP 2.54mm 7.62mm 300mil
 0
-6
-6
-Custom_Footprints
-Wurth_2.4GHz_Filter_2.5mm_2.0mm
-
-
+8
+8
+Package_DIP
+PowerIntegrations_SMD-8B
+PowerIntegrations variant of 8-lead surface-mounted (SMD) DIP package, row spacing 7.62 mm (300 mils), see https://www.power.com/sites/default/files/product-docs/lnk520.pdf
+SMD DIP DIL PDIP SMDIP 2.54mm 7.62mm 300mil
+0
+7
+7
+Package_DIP
+PowerIntegrations_SMD-8C
+PowerIntegrations variant of 8-lead surface-mounted (SMD) DIP package, row spacing 7.62 mm (300 mils), see https://ac-dc.power.com/sites/default/files/product-docs/tinyswitch-iii_family_datasheet.pdf
+SMD DIP DIL PDIP SMDIP 2.54mm 7.62mm 300mil
+0
+7
+7
+Package_DIP
+PowerIntegrations_eDIP-12B
+Power Integrations eDIP-12B, see https://www.power.com/sites/default/files/product-docs/linkswitch-pl_family_datasheet.pdf
+THT DIP DIL PDIP 2.54mm 7.62mm 300mil
+0
+11
+11
+Package_DIP
+SMDIP-4_W7.62mm
+4-lead surface-mounted (SMD) DIP package, row spacing 7.62 mm (300 mils)
+SMD DIP DIL PDIP SMDIP 2.54mm 7.62mm 300mil
 0
 4
 4
-Custom_Footprints
-bluetooth
-
-
+Package_DIP
+SMDIP-4_W9.53mm
+4-lead surface-mounted (SMD) DIP package, row spacing 9.53 mm (375 mils)
+SMD DIP DIL PDIP SMDIP 2.54mm 9.53mm 375mil
 0
+4
+4
+Package_DIP
+SMDIP-4_W9.53mm_Clearance8mm
+4-lead surface-mounted (SMD) DIP package, row spacing 9.53 mm (375 mils), Clearance8mm
+SMD DIP DIL PDIP SMDIP 2.54mm 9.53mm 375mil Clearance8mm
 0
+4
+4
+Package_DIP
+SMDIP-4_W11.48mm
+4-lead surface-mounted (SMD) DIP package, row spacing 11.48 mm (451 mils)
+SMD DIP DIL PDIP SMDIP 2.54mm 11.48mm 451mil
 0
+4
+4
+Package_DIP
+SMDIP-6_W7.62mm
+6-lead surface-mounted (SMD) DIP package, row spacing 7.62 mm (300 mils)
+SMD DIP DIL PDIP SMDIP 2.54mm 7.62mm 300mil
+0
+6
+6
+Package_DIP
+SMDIP-6_W9.53mm
+6-lead surface-mounted (SMD) DIP package, row spacing 9.53 mm (375 mils)
+SMD DIP DIL PDIP SMDIP 2.54mm 9.53mm 375mil
+0
+6
+6
+Package_DIP
+SMDIP-6_W9.53mm_Clearance8mm
+6-lead surface-mounted (SMD) DIP package, row spacing 9.53 mm (375 mils), Clearance8mm
+SMD DIP DIL PDIP SMDIP 2.54mm 9.53mm 375mil Clearance8mm
+0
+6
+6
+Package_DIP
+SMDIP-6_W11.48mm
+6-lead surface-mounted (SMD) DIP package, row spacing 11.48 mm (451 mils)
+SMD DIP DIL PDIP SMDIP 2.54mm 11.48mm 451mil
+0
+6
+6
+Package_DIP
+SMDIP-8_W7.62mm
+8-lead surface-mounted (SMD) DIP package, row spacing 7.62 mm (300 mils)
+SMD DIP DIL PDIP SMDIP 2.54mm 7.62mm 300mil
+0
+8
+8
+Package_DIP
+SMDIP-8_W9.53mm
+8-lead surface-mounted (SMD) DIP package, row spacing 9.53 mm (375 mils)
+SMD DIP DIL PDIP SMDIP 2.54mm 9.53mm 375mil
+0
+8
+8
+Package_DIP
+SMDIP-8_W9.53mm_Clearance8mm
+8-lead surface-mounted (SMD) DIP package, row spacing 9.53 mm (375 mils), Clearance8mm
+SMD DIP DIL PDIP SMDIP 2.54mm 9.53mm 375mil Clearance8mm
+0
+8
+8
+Package_DIP
+SMDIP-8_W11.48mm
+8-lead surface-mounted (SMD) DIP package, row spacing 11.48 mm (451 mils)
+SMD DIP DIL PDIP SMDIP 2.54mm 11.48mm 451mil
+0
+8
+8
+Package_DIP
+SMDIP-10_W7.62mm
+10-lead surface-mounted (SMD) DIP package, row spacing 7.62 mm (300 mils)
+SMD DIP DIL PDIP SMDIP 2.54mm 7.62mm 300mil
+0
+10
+10
+Package_DIP
+SMDIP-10_W9.53mm
+10-lead surface-mounted (SMD) DIP package, row spacing 9.53 mm (375 mils)
+SMD DIP DIL PDIP SMDIP 2.54mm 9.53mm 375mil
+0
+10
+10
+Package_DIP
+SMDIP-10_W9.53mm_Clearance8mm
+10-lead surface-mounted (SMD) DIP package, row spacing 9.53 mm (375 mils), Clearance8mm
+SMD DIP DIL PDIP SMDIP 2.54mm 9.53mm 375mil Clearance8mm
+0
+10
+10
+Package_DIP
+SMDIP-10_W11.48mm
+10-lead surface-mounted (SMD) DIP package, row spacing 11.48 mm (451 mils)
+SMD DIP DIL PDIP SMDIP 2.54mm 11.48mm 451mil
+0
+10
+10
+Package_DIP
+SMDIP-12_W7.62mm
+12-lead surface-mounted (SMD) DIP package, row spacing 7.62 mm (300 mils)
+SMD DIP DIL PDIP SMDIP 2.54mm 7.62mm 300mil
+0
+12
+12
+Package_DIP
+SMDIP-12_W9.53mm
+12-lead surface-mounted (SMD) DIP package, row spacing 9.53 mm (375 mils)
+SMD DIP DIL PDIP SMDIP 2.54mm 9.53mm 375mil
+0
+12
+12
+Package_DIP
+SMDIP-12_W9.53mm_Clearance8mm
+12-lead surface-mounted (SMD) DIP package, row spacing 9.53 mm (375 mils), Clearance8mm
+SMD DIP DIL PDIP SMDIP 2.54mm 9.53mm 375mil Clearance8mm
+0
+12
+12
+Package_DIP
+SMDIP-12_W11.48mm
+12-lead surface-mounted (SMD) DIP package, row spacing 11.48 mm (451 mils)
+SMD DIP DIL PDIP SMDIP 2.54mm 11.48mm 451mil
+0
+12
+12
+Package_DIP
+SMDIP-14_W7.62mm
+14-lead surface-mounted (SMD) DIP package, row spacing 7.62 mm (300 mils)
+SMD DIP DIL PDIP SMDIP 2.54mm 7.62mm 300mil
+0
+14
+14
+Package_DIP
+SMDIP-14_W9.53mm
+14-lead surface-mounted (SMD) DIP package, row spacing 9.53 mm (375 mils)
+SMD DIP DIL PDIP SMDIP 2.54mm 9.53mm 375mil
+0
+14
+14
+Package_DIP
+SMDIP-14_W9.53mm_Clearance8mm
+14-lead surface-mounted (SMD) DIP package, row spacing 9.53 mm (375 mils), Clearance8mm
+SMD DIP DIL PDIP SMDIP 2.54mm 9.53mm 375mil Clearance8mm
+0
+14
+14
+Package_DIP
+SMDIP-14_W11.48mm
+14-lead surface-mounted (SMD) DIP package, row spacing 11.48 mm (451 mils)
+SMD DIP DIL PDIP SMDIP 2.54mm 11.48mm 451mil
+0
+14
+14
+Package_DIP
+SMDIP-16_W7.62mm
+16-lead surface-mounted (SMD) DIP package, row spacing 7.62 mm (300 mils)
+SMD DIP DIL PDIP SMDIP 2.54mm 7.62mm 300mil
+0
+16
+16
+Package_DIP
+SMDIP-16_W9.53mm
+16-lead surface-mounted (SMD) DIP package, row spacing 9.53 mm (375 mils)
+SMD DIP DIL PDIP SMDIP 2.54mm 9.53mm 375mil
+0
+16
+16
+Package_DIP
+SMDIP-16_W9.53mm_Clearance8mm
+16-lead surface-mounted (SMD) DIP package, row spacing 9.53 mm (375 mils), Clearance8mm
+SMD DIP DIL PDIP SMDIP 2.54mm 9.53mm 375mil Clearance8mm
+0
+16
+16
+Package_DIP
+SMDIP-16_W11.48mm
+16-lead surface-mounted (SMD) DIP package, row spacing 11.48 mm (451 mils)
+SMD DIP DIL PDIP SMDIP 2.54mm 11.48mm 451mil
+0
+16
+16
+Package_DIP
+SMDIP-18_W7.62mm
+18-lead surface-mounted (SMD) DIP package, row spacing 7.62 mm (300 mils)
+SMD DIP DIL PDIP SMDIP 2.54mm 7.62mm 300mil
+0
+18
+18
+Package_DIP
+SMDIP-18_W9.53mm
+18-lead surface-mounted (SMD) DIP package, row spacing 9.53 mm (375 mils)
+SMD DIP DIL PDIP SMDIP 2.54mm 9.53mm 375mil
+0
+18
+18
+Package_DIP
+SMDIP-18_W9.53mm_Clearance8mm
+18-lead surface-mounted (SMD) DIP package, row spacing 9.53 mm (375 mils), Clearance8mm
+SMD DIP DIL PDIP SMDIP 2.54mm 9.53mm 375mil Clearance8mm
+0
+18
+18
+Package_DIP
+SMDIP-18_W11.48mm
+18-lead surface-mounted (SMD) DIP package, row spacing 11.48 mm (451 mils)
+SMD DIP DIL PDIP SMDIP 2.54mm 11.48mm 451mil
+0
+18
+18
+Package_DIP
+SMDIP-20_W7.62mm
+20-lead surface-mounted (SMD) DIP package, row spacing 7.62 mm (300 mils)
+SMD DIP DIL PDIP SMDIP 2.54mm 7.62mm 300mil
+0
+20
+20
+Package_DIP
+SMDIP-20_W9.53mm
+20-lead surface-mounted (SMD) DIP package, row spacing 9.53 mm (375 mils)
+SMD DIP DIL PDIP SMDIP 2.54mm 9.53mm 375mil
+0
+20
+20
+Package_DIP
+SMDIP-20_W9.53mm_Clearance8mm
+20-lead surface-mounted (SMD) DIP package, row spacing 9.53 mm (375 mils), Clearance8mm
+SMD DIP DIL PDIP SMDIP 2.54mm 9.53mm 375mil Clearance8mm
+0
+20
+20
+Package_DIP
+SMDIP-20_W11.48mm
+20-lead surface-mounted (SMD) DIP package, row spacing 11.48 mm (451 mils)
+SMD DIP DIL PDIP SMDIP 2.54mm 11.48mm 451mil
+0
+20
+20
+Package_DIP
+SMDIP-22_W7.62mm
+22-lead surface-mounted (SMD) DIP package, row spacing 7.62 mm (300 mils)
+SMD DIP DIL PDIP SMDIP 2.54mm 7.62mm 300mil
+0
+22
+22
+Package_DIP
+SMDIP-22_W9.53mm
+22-lead surface-mounted (SMD) DIP package, row spacing 9.53 mm (375 mils)
+SMD DIP DIL PDIP SMDIP 2.54mm 9.53mm 375mil
+0
+22
+22
+Package_DIP
+SMDIP-22_W9.53mm_Clearance8mm
+22-lead surface-mounted (SMD) DIP package, row spacing 9.53 mm (375 mils), Clearance8mm
+SMD DIP DIL PDIP SMDIP 2.54mm 9.53mm 375mil Clearance8mm
+0
+22
+22
+Package_DIP
+SMDIP-22_W11.48mm
+22-lead surface-mounted (SMD) DIP package, row spacing 11.48 mm (451 mils)
+SMD DIP DIL PDIP SMDIP 2.54mm 11.48mm 451mil
+0
+22
+22
+Package_DIP
+SMDIP-24_W7.62mm
+24-lead surface-mounted (SMD) DIP package, row spacing 7.62 mm (300 mils)
+SMD DIP DIL PDIP SMDIP 2.54mm 7.62mm 300mil
+0
+24
+24
+Package_DIP
+SMDIP-24_W9.53mm
+24-lead surface-mounted (SMD) DIP package, row spacing 9.53 mm (375 mils)
+SMD DIP DIL PDIP SMDIP 2.54mm 9.53mm 375mil
+0
+24
+24
+Package_DIP
+SMDIP-24_W11.48mm
+24-lead surface-mounted (SMD) DIP package, row spacing 11.48 mm (451 mils)
+SMD DIP DIL PDIP SMDIP 2.54mm 11.48mm 451mil
+0
+24
+24
+Package_DIP
+SMDIP-24_W15.24mm
+24-lead surface-mounted (SMD) DIP package, row spacing 15.24 mm (600 mils)
+SMD DIP DIL PDIP SMDIP 2.54mm 15.24mm 600mil
+0
+24
+24
+Package_DIP
+SMDIP-28_W15.24mm
+28-lead surface-mounted (SMD) DIP package, row spacing 15.24 mm (600 mils)
+SMD DIP DIL PDIP SMDIP 2.54mm 15.24mm 600mil
+0
+28
+28
+Package_DIP
+SMDIP-32_W7.62mm
+32-lead surface-mounted (SMD) DIP package, row spacing 7.62 mm (300 mils)
+SMD DIP DIL PDIP SMDIP 2.54mm 7.62mm 300mil
+0
+32
+32
+Package_DIP
+SMDIP-32_W9.53mm
+32-lead surface-mounted (SMD) DIP package, row spacing 9.53 mm (375 mils)
+SMD DIP DIL PDIP SMDIP 2.54mm 9.53mm 375mil
+0
+32
+32
+Package_DIP
+SMDIP-32_W11.48mm
+32-lead surface-mounted (SMD) DIP package, row spacing 11.48 mm (451 mils)
+SMD DIP DIL PDIP SMDIP 2.54mm 11.48mm 451mil
+0
+32
+32
+Package_DIP
+SMDIP-32_W15.24mm
+32-lead surface-mounted (SMD) DIP package, row spacing 15.24 mm (600 mils)
+SMD DIP DIL PDIP SMDIP 2.54mm 15.24mm 600mil
+0
+32
+32
+Package_DIP
+SMDIP-40_W15.24mm
+40-lead surface-mounted (SMD) DIP package, row spacing 15.24 mm (600 mils)
+SMD DIP DIL PDIP SMDIP 2.54mm 15.24mm 600mil
+0
+40
+40
+Package_DIP
+SMDIP-40_W25.24mm
+40-lead surface-mounted (SMD) DIP package, row spacing 25.24 mm (993 mils)
+SMD DIP DIL PDIP SMDIP 2.54mm 25.24mm 993mil
+0
+40
+40
+Package_DIP
+SMDIP-42_W15.24mm
+42-lead surface-mounted (SMD) DIP package, row spacing 15.24 mm (600 mils)
+SMD DIP DIL PDIP SMDIP 2.54mm 15.24mm 600mil
+0
+42
+42
+Package_DIP
+SMDIP-48_W15.24mm
+48-lead surface-mounted (SMD) DIP package, row spacing 15.24 mm (600 mils)
+SMD DIP DIL PDIP SMDIP 2.54mm 15.24mm 600mil
+0
+48
+48
+Package_DIP
+SMDIP-64_W15.24mm
+64-lead surface-mounted (SMD) DIP package, row spacing 15.24 mm (600 mils)
+SMD DIP DIL PDIP SMDIP 2.54mm 15.24mm 600mil
+0
+64
+64
+Package_DIP
+Toshiba_11-7A9
+Toshiba 11-7A9 package, like 6-lead dip package with missing pin 5, row spacing 7.62 mm (300 mils), https://toshiba.semicon-storage.com/info/docget.jsp?did=1421&prodName=TLP3021(S)
+Toshiba 11-7A9 DIL DIP PDIP 2.54mm 7.62mm 300mil
+0
+5
+5
+Package_DIP
+Vishay_HVM-DIP-3_W7.62mm
+3-lead though-hole mounted high-volatge DIP package (based on standard DIP-4), row spacing 7.62 mm (300 mils), see https://www.vishay.com/docs/91361/hexdip.pdf
+THT DIP DIL PDIP 2.54mm 7.62mm 300mil Vishay HVMDIP HEXDIP
+0
+4
+3
