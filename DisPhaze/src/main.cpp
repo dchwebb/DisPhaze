@@ -1,6 +1,8 @@
 #include "initialisation.h"
 #include "PhaseDistortion.h"
 #include "config.h"
+#include "USB.h"
+#include "CDCHandler.h"
 
 /*
  * Calibration process:
@@ -26,6 +28,8 @@
 
 Config config;
 PhaseDistortion phaseDist;
+
+USB usb;
 
 extern uint32_t SystemCoreClock;
 volatile uint16_t ADC_array[ADC_BUFFER_LENGTH];
@@ -55,6 +59,9 @@ int main(void)
 	InitADC();						// Configure ADC for analog controls
 	InitDebugTimer();				// Timer to check available calculation time
 
+	usb.InitUSB();
+	usb.cdcDataHandler = std::bind(CDCHandler, std::placeholders::_1, std::placeholders::_2);
+
 	EXTI15_10_IRQHandler();			// Call the Interrupt event handler to set up the octave up/down switch to current position
 	EXTI9_5_IRQHandler();			// Call the Interrupt event handler to set up the mix switch to current position
 
@@ -65,6 +72,14 @@ int main(void)
 		if (dacRead && !config.calibrating) {
 			phaseDist.CalcNextSamples();
 			debugWorkTime = TIM4->CNT;
+		}
+
+		// Check for incoming CDC commands
+		if (CmdPending) {
+			if (!CDCCommand(ComCmd)) {
+				usb.SendString("Unrecognised command. Type 'help' for supported commands\n");
+			}
+			CmdPending = false;
 		}
 
 	}

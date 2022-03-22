@@ -43,6 +43,9 @@ void EXTI9_5_IRQHandler(void)
 }
 
 
+void OTG_FS_IRQHandler(void) {
+	usb.USBInterruptHandler();
+}
 
 void NMI_Handler(void) {}
 void HardFault_Handler(void) {

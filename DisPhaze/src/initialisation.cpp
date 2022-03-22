@@ -16,9 +16,9 @@
 
 #define USE_HSE
 #define PLL_M 4
-#define PLL_N 168	//	Max is 168
-#define PLL_P 0		//  Main PLL (PLL) division factor for main system clock can be 2 (PLL_P = 0), 4 (PLL_P = 1), 6 (PLL_P = 2), 8 (PLL_P = 3)
-#define PLL_Q 0
+#define PLL_N 168	// Max is 168
+#define PLL_P 0		// Main PLL (PLL) division factor for main system clock can be 2 (PLL_P = 0), 4 (PLL_P = 1), 6 (PLL_P = 2), 8 (PLL_P = 3)
+#define PLL_Q 7		// 48MHz for USB: 8MHz / 4(M) * 168(N) / 7(Q) = 48MHz
 #define AHB_PRESCALAR 0b0000
 #define APB1_PRESCALAR 0b101		// AHB divided by 4 APB Prescaler: 0b0xx: AHB clock not divided, 0b100 div by  2, 0b101: div by  4, 0b110 div by  8; 0b111 div by 16
 #define APB2_PRESCALAR 0b101
