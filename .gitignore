@@ -6,6 +6,7 @@ PhaseTools/.vs/
 PhaseTools/Debug/
 Phase_calc/bu/PhaseTools/Debug/
 Phase_calc/bu/PhaseTools/SampleImport/Debug/
+Hardware_v3/Production_Files/
 
 *.exe
 *.out
@@ -32,3 +33,4 @@ DisPhaze/Debug/objects.mk
 DisPhaze/Debug/makefile
 
 Hardware_v3/_autosave-DisPhaze_Components.kicad_pcb
+
