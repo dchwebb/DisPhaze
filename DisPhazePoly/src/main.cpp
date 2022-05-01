@@ -60,6 +60,7 @@ int main(void)
 	InitTimer();					// Sample output timer 3 - fires interrupt to trigger sample output from DAC
 	InitADC();						// Configure ADC for analog controls
 	InitDebugTimer();				// Timer to check available calculation time
+	InitPWMTimer();					// PWM timers for LED control
 
 //	usb.InitUSB();
 //	usb.cdcDataHandler = std::bind(CDCHandler, std::placeholders::_1, std::placeholders::_2);
@@ -73,7 +74,7 @@ int main(void)
 		// Ready for next sample (Calibrating sends out a square wave for tuning so disables normal output)
 		if (dacRead && !config.calibrating) {
 			phaseDist.CalcNextSamples();
-			debugWorkTime = TIM4->CNT;
+			debugWorkTime = TIM5->CNT;
 		}
 
 		// Check for incoming CDC commands

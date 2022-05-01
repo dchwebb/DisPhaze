@@ -12,8 +12,8 @@ void TIM3_IRQHandler(void)
 		}
 
 		// Debug timing
-		debugInterval = TIM4->CNT;
-		TIM4->EGR |= TIM_EGR_UG;
+		debugInterval = TIM5->CNT;
+		TIM5->EGR |= TIM_EGR_UG;
 
 		dacRead = true;
 	}

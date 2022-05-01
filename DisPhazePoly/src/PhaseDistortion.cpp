@@ -155,12 +155,13 @@ void PhaseDistortion::CalcNextSamples()
 
 	// Get VCA levels (filtering out very low level VCA signals)
 	if (ADC_array[ADC_VCA] > 4070) {
-		VCALevel = 0;
+		VCALevel = 0.0f;
 	} else if (ADC_array[ADC_VCA] < 30) {
-		VCALevel = 1;
+		VCALevel = 1.0f;
 	} else {
-		VCALevel = ((VCALevel * 31) + (4096.0f - ADC_array[ADC_VCA]) / 4096) / 32;			// Convert ADC for VCA to float between 0 and 1 with damping
+		VCALevel = ((VCALevel * 31) + (4096.0f - ADC_array[ADC_VCA]) / 4096) / 32;		// Convert ADC for VCA to float between 0 and 1 with damping
 	}
+	TIM4->CCR2 = static_cast<uint32_t>(VCALevel * 4095.0f);								// Set LED PWM level to VCA
 
 	// Calculate output as a float from -1 to +1 checking phase distortion and phase offset as required
 	float sampleOut1 = GetBlendPhaseDist(pdLut1, samplePos1 / SAMPLERATE, pd1Scale);

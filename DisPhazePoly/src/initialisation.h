@@ -33,5 +33,5 @@ void InitSwitches();
 void InitTimer();
 void InitADC();
 void InitDebugTimer();
-
+void InitPWMTimer();
 

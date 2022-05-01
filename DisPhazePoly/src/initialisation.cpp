@@ -168,10 +168,10 @@ void InitTimer()
 
 void InitDebugTimer()
 {
-	//	Setup Timer 4 for debug timing
-	RCC->APB1ENR |= RCC_APB1ENR_TIM4EN;				// Enable Timer 4
-	TIM4->CR1 |= TIM_CR1_CEN;
-	TIM4->EGR |= TIM_EGR_UG;
+	//	Setup Timer 5 for debug timing
+	RCC->APB1ENR |= RCC_APB1ENR_TIM5EN;				// Enable Timer 5
+	TIM5->CR1 |= TIM_CR1_CEN;
+	TIM5->EGR |= TIM_EGR_UG;
 }
 
 
@@ -204,7 +204,7 @@ void InitADC(void)
 {
 	//  Using ADC1
 
-	//	Setup Timer 2 to trigger ADC
+	//	Setup Timer 8 to trigger ADC
 	RCC->APB2ENR |= RCC_APB2ENR_TIM8EN;				// Enable Timer clock
 	TIM8->CR2 |= TIM_CR2_MMS_2;						// 100: Compare - OC1REF signal is used as trigger output (TRGO)
 	TIM8->PSC = 20 - 1;								// Prescaler
@@ -214,22 +214,18 @@ void InitADC(void)
 	TIM8->CCMR1 |= TIM_CCMR1_OC1M_1 |TIM_CCMR1_OC1M_2;		// 110 PWM Mode 1
 	TIM8->CR1 |= TIM_CR1_CEN;
 
-	// Enable ADC1 clock source
-	RCC->AHB1ENR |= RCC_AHB1ENR_GPIOAEN;
+	// Enable GPIO and ADC1 clock source
+	RCC->AHB1ENR |= RCC_AHB1ENR_GPIOAEN | RCC_AHB1ENR_GPIOBEN | RCC_AHB1ENR_GPIOCEN;
 	RCC->APB2ENR |= RCC_APB2ENR_ADC1EN;
 
+	// Configure PA1 (1), PA2 (2), PA3 (3) PA7 (7) to Analog mode (0b11)
+	GPIOA->MODER |= GPIO_MODER_MODER1 | GPIO_MODER_MODER2 | GPIO_MODER_MODER3 | GPIO_MODER_MODER7;
 
-	GPIOB->MODER |= GPIO_MODER_MODER0;				// Set PB0 to Analog mode (0b11) 8
-	GPIOB->MODER |= GPIO_MODER_MODER1;				// Set PB1 to Analog mode (0b11) 9
-	GPIOA->MODER |= GPIO_MODER_MODER1;				// Set PA1 to Analog mode (0b11) 1
-	GPIOA->MODER |= GPIO_MODER_MODER2;				// Set PA2 to Analog mode (0b11) 2
-	GPIOA->MODER |= GPIO_MODER_MODER3;				// Set PA3 to Analog mode (0b11) 3
-	GPIOC->MODER |= GPIO_MODER_MODER0;				// Set PC0 to Analog mode (0b11) 10
-	GPIOC->MODER |= GPIO_MODER_MODER2;				// Set PC2 to Analog mode (0b11) 12
-	GPIOC->MODER |= GPIO_MODER_MODER4;				// Set PC4 to Analog mode (0b11) 14
-	GPIOA->MODER |= GPIO_MODER_MODER7;				// Set PA7 to Analog mode (0b11) 7
-	GPIOC->MODER |= GPIO_MODER_MODER1;				// Set PC1 to Analog mode (0b11) 11
+	// Configure PB0 (8), PB1 (9) to Analog mode (0b11)
+	GPIOB->MODER |= GPIO_MODER_MODER0 | GPIO_MODER_MODER1;
 
+	// Configure PC0 (10), PC1 (11), PC2 (12), PC4 (14) to Analog mode (0b11)
+	GPIOC->MODER |= GPIO_MODER_MODER0 | GPIO_MODER_MODER1 | GPIO_MODER_MODER2 | GPIO_MODER_MODER4;
 
 	ADC1->CR1 |= ADC_CR1_SCAN;						// Activate scan mode
 	ADC1->SQR1 = (ADC_BUFFER_LENGTH - 1) << ADC_SQR1_L_Pos;		// Number of conversions in sequence
@@ -322,39 +318,43 @@ void InitADC(void)
 */
 }
 
-/*
 void InitPWMTimer()
 {
-	// Green LED: PB7 (TIM4 CH2); Red LED: PB3 (TIM2 CH2)
-	// TIM2: Channel 1 Output: *PA0, PA5, (PA15); Channel 2: *PA1, PB3; Channel 3: *PA2, PB10; Channel 4: PA3, PB11
-	RCC->AHB2ENR |= RCC_AHB2ENR_GPIOAEN;
-	RCC->APB1ENR1 |= RCC_APB1ENR1_TIM2EN;
+	// Red LED: PB3 (TIM2 CH2); Green LED: PB7 (TIM4 CH2)
+	RCC->AHB1ENR |= RCC_AHB1ENR_GPIOBEN;
+	RCC->APB1ENR |= RCC_APB1ENR_TIM2EN | RCC_APB1ENR_TIM4EN;
 
-	// Enable channel 1, 2, 3 PWM output pins on PA0, PA1, PA2
-	GPIOA->MODER &= ~(GPIO_MODER_MODE0_0 | GPIO_MODER_MODE1_0 | GPIO_MODER_MODE2_0);			// 00: Input mode; 01: General purpose output mode; 10: Alternate function mode; 11: Analog mode (default)
-	GPIOA->AFR[0] |= (GPIO_AFRL_AFSEL0_0 | GPIO_AFRL_AFSEL1_0 | GPIO_AFRL_AFSEL2_0);			// Timer 2 Output channel is AF1
+	// Enable channel 2 PWM output pins on PB3
+	GPIOB->MODER &= ~(GPIO_MODER_MODE3_0 | GPIO_MODER_MODE7_0);			// 00: Input mode; 01: General purpose output mode; 10: Alternate function mode; 11: Analog mode (default)
+	GPIOB->MODER |= GPIO_MODER_MODE3_1 | GPIO_MODER_MODE7_1;
+	GPIOB->AFR[0] |= GPIO_AFRL_AFSEL3_0;			// Timer 2 Output channel is AF1
+	GPIOB->AFR[0] |= GPIO_AFRL_AFSEL7_1;			// Timer 4 Output channel is AF2
 
-	// Timing calculations: Clock = 64MHz / (PSC + 1) = 32m counts per second
+	// Timing calculations: Clock = 168MHz / (PSC + 1) = 33.6m counts per second
 	// ARR = number of counts per PWM tick = 4096
-	// 32m / ARR = 7.812kHz of PWM square wave with 4096 levels of output
-	TIM2->CCMR1 |= TIM_CCMR1_OC1PE;					// Output compare 1 preload enable
+	// 33.6m / ARR = 8.2kHz of PWM square wave with 4096 levels of output
+
+	// Red LED: PB3 (TIM2 CH2)
 	TIM2->CCMR1 |= TIM_CCMR1_OC2PE;					// Output compare 2 preload enable
-	TIM2->CCMR2 |= TIM_CCMR2_OC3PE;					// Output compare 3 preload enable
-
-	TIM2->CCMR1 |= (TIM_CCMR1_OC1M_1 | TIM_CCMR1_OC1M_2);	// 0110: PWM mode 1 - In upcounting, channel 1 active if TIMx_CNT<TIMx_CCR1
 	TIM2->CCMR1 |= (TIM_CCMR1_OC2M_1 | TIM_CCMR1_OC2M_2);	// 0110: PWM mode 1 - In upcounting, channel 2 active if TIMx_CNT<TIMx_CCR2
-	TIM2->CCMR2 |= (TIM_CCMR2_OC3M_1 | TIM_CCMR2_OC3M_2);	// 0110: PWM mode 1 - In upcounting, channel 3 active if TIMx_CNT<TIMx_CCR3
-
-	TIM2->CCR1 = 0x800;								// Initialise PWM level to midpoint (PWM level set in ble_hid.cpp)
-	TIM2->CCR2 = 0x800;
-	TIM2->CCR3 = 0x800;
-
+	TIM2->CCR2 = 0x0;								// Initialise PWM level to midpoint
 	TIM2->ARR = 0xFFF;								// Total number of PWM ticks = 4096
-	TIM2->PSC = 1;									// Should give ~7.8kHz
+	TIM2->PSC = 4;									// Should give ~8.2kHz
 	TIM2->CR1 |= TIM_CR1_ARPE;						// 1: TIMx_ARR register is buffered
-	TIM2->CCER |= (TIM_CCER_CC1E | TIM_CCER_CC2E | TIM_CCER_CC3E);		// Capture mode enabled / OC1 signal is output on the corresponding output pin
+	TIM2->CCER |= TIM_CCER_CC2E;					// Capture mode enabled / OC1 signal is output on the corresponding output pin
 	TIM2->EGR |= TIM_EGR_UG;						// 1: Re-initialize the counter and generates an update of the registers
 	TIM2->CR1 |= TIM_CR1_CEN;						// Enable counter
+
+	// Green LED: PB7 (TIM4 CH2)
+	TIM4->CCMR1 |= TIM_CCMR1_OC2PE;					// Output compare 2 preload enable
+	TIM4->CCMR1 |= (TIM_CCMR1_OC2M_1 | TIM_CCMR1_OC2M_2);	// 0110: PWM mode 1 - In upcounting, channel 2 active if TIMx_CNT<TIMx_CCR2
+	TIM4->CCR2 = 0x0;								// Initialise PWM level to midpoint
+	TIM4->ARR = 0xFFF;								// Total number of PWM ticks = 4096
+	TIM4->PSC = 4;									// Should give ~8.2kHz
+	TIM4->CR1 |= TIM_CR1_ARPE;						// 1: TIMx_ARR register is buffered
+	TIM4->CCER |= TIM_CCER_CC2E;					// Capture mode enabled / OC1 signal is output on the corresponding output pin
+	TIM4->EGR |= TIM_EGR_UG;						// 1: Re-initialize the counter and generates an update of the registers
+	TIM4->CR1 |= TIM_CR1_CEN;						// Enable counter
 }
-*/
+
 
