@@ -1,0 +1,360 @@
+#include "initialisation.h"
+#include <algorithm>
+
+#define AHB_PRESCALAR 0b0000
+#define APB1_PRESCALAR 0b101		// AHB divided by 4 APB Prescaler: 0b0xx: AHB clock not divided, 0b100 div by  2, 0b101: div by  4, 0b110 div by  8; 0b111 div by 16
+#define APB2_PRESCALAR 0b101
+
+
+void SystemClock_Config(void)
+{
+	RCC->APB1ENR |= RCC_APB1ENR_PWREN;				// Enable Power Control clock
+	PWR->CR |= PWR_CR_VOS;							// Enable VOS voltage scaling - allows maximum clock speed
+
+	RCC->CR |= RCC_CR_HSEON;						// HSE ON
+	while ((RCC->CR & RCC_CR_HSERDY) == 0);			// Wait till HSE is ready
+
+	// PLL: 12MHz / 6(M) * 168(N) / 2(P) = 168MHz
+	RCC->PLLCFGR = RCC_PLLCFGR_PLLSRC_HSE |			// PLL source is HSE
+			(6   << RCC_PLLCFGR_PLLM_Pos) |
+			(168 << RCC_PLLCFGR_PLLN_Pos) |
+			(0   << RCC_PLLCFGR_PLLP_Pos) |			// Divide by 2 (0 = /2, 1 = /4, 2 = /6, 3 = /8)
+			(7   << RCC_PLLCFGR_PLLQ_Pos);			// 48MHz for USB: 8MHz / 4(M) * 168(N) / 7(Q) = 48MHz
+
+	//	Set AHB, APB1 and APB2 prescalars
+	RCC->CFGR |= (AHB_PRESCALAR << RCC_CFGR_HPRE_Pos) |
+			(APB1_PRESCALAR << RCC_CFGR_PPRE1_Pos) |
+			(APB2_PRESCALAR << RCC_CFGR_PPRE2_Pos) |
+			RCC_CFGR_SW_1;							// Select PLL as SYSCLK
+
+	FLASH->ACR |= FLASH_ACR_LATENCY_5WS;			// Clock faster than 150MHz requires 5 Wait States for Flash memory access time
+
+	RCC->CR |= RCC_CR_PLLON;						// Switch ON the PLL
+	while ((RCC->CR & RCC_CR_PLLRDY) == 0);			// Wait till PLL is ready
+	while ((RCC->CFGR & RCC_CFGR_SWS_PLL) == 0);	// System clock switch status SWS = 0b10 = PLL is really selected
+
+	// STM32F405x/407x/415x/417x Revision Z (0x1001) devices: prefetch is supported DW - assume revision Y (0x100F) is OK
+	volatile uint32_t idNumber = DBGMCU->IDCODE;
+	idNumber = idNumber >> 16;
+	if (idNumber == 0x1001 || idNumber == 0x100F)
+		FLASH->ACR |= FLASH_ACR_PRFTEN;				// Enable the Flash prefetch
+
+	// Enable data and instruction cache
+	FLASH->ACR |= FLASH_ACR_ICEN;
+	FLASH->ACR |= FLASH_ACR_DCEN;
+}
+
+
+void InitSysTick(uint32_t ticks, uint32_t calib)
+{
+	// Register macros found in core_cm4.h
+	SysTick->CTRL = 0;								// Disable SysTick
+	SysTick->LOAD = (ticks - 1) - calib;			// Set reload register - ie number of ticks before interrupt fired
+
+	// Set priority of Systick interrupt to least urgency (ie largest priority value)
+	NVIC_SetPriority (SysTick_IRQn, (1 << __NVIC_PRIO_BITS) - 1);
+
+	SysTick->VAL = 0;								// Reset the SysTick counter value
+
+//	SysTick->CTRL |= SysTick_CTRL_CLKSOURCE_Msk;	// Select processor clock: 1 = processor clock; 0 = external clock
+	SysTick->CTRL |= SysTick_CTRL_TICKINT_Msk;		// Enable SysTick interrupt
+	SysTick->CTRL |= SysTick_CTRL_ENABLE_Msk;		// Enable SysTick
+}
+
+
+void InitDAC()
+{
+	// Once the DAC channelx is enabled, the corresponding GPIO pin (PA4 or PA5) is automatically connected to the analog converter output (DAC_OUTx).
+	// In order to avoid parasitic consumption, the PA4 or PA5 pin should first be configured to analog (AIN).
+
+	// Enable DAC and GPIO Clock
+	RCC->AHB1ENR |= RCC_AHB1ENR_GPIOAEN;			// Enable GPIO Clock
+	RCC->APB1ENR |= RCC_APB1ENR_DACEN;				// Enable DAC Clock
+
+	DAC->CR |= DAC_CR_EN1;							// Enable DAC using PA4 (DAC_OUT1)
+	DAC->CR |= DAC_CR_BOFF1;						// Enable DAC channel output buffer to reduce the output impedance
+	DAC->CR |= DAC_CR_TEN1;							// DAC 1 enable trigger
+	DAC->CR |= DAC_CR_TSEL1;						// Set trigger to software (0b111: Software trigger)
+
+	DAC->CR |= DAC_CR_EN2;							// Enable DAC using PA5 (DAC_OUT2)
+	DAC->CR |= DAC_CR_BOFF2;						// Enable DAC channel output buffer
+	DAC->CR |= DAC_CR_TEN2;							// DAC 2 enable trigger
+	DAC->CR |= DAC_CR_TSEL2;						// Set trigger to software (0b111: Software trigger)
+}
+
+
+void InitSwitches()
+{
+	// MODER: 00: Input (default), 01: Output, 10: Alternate function, 11: Analog
+
+	//	Enable GPIO and external interrupt clocks
+	RCC->AHB1ENR |= RCC_AHB1ENR_GPIOAEN;			// reset and clock control - advanced high performance bus - GPIO port A
+	RCC->AHB1ENR |= RCC_AHB1ENR_GPIOBEN;			// reset and clock control - advanced high performance bus - GPIO port B
+	RCC->AHB1ENR |= RCC_AHB1ENR_GPIOCEN;			// reset and clock control - advanced high performance bus - GPIO port C
+	RCC->APB2ENR |= RCC_APB2ENR_SYSCFGEN;			// Enable system configuration clock: used to manage external interrupt line connection to GPIOs
+
+	// PC6 Ring Mod Button in
+	GPIOC->MODER &= ~(GPIO_MODER_MODER6);			// input mode is default
+	//GPIOC->PUPDR |= GPIO_PUPDR_PUPDR6_0;			// Set pin to pull up:  01 Pull-up; 10 Pull-down; 11 Reserved
+
+	// PC13 DAC2 Mix mode switch
+	GPIOC->MODER &= ~(GPIO_MODER_MODER13);			// input mode is default
+	//GPIOC->PUPDR |= GPIO_PUPDR_PUPDR13_1;			// Set pin to pull down:  01 Pull-up; 10 Pull-down; 11 Reserved
+
+	// PB5 Action button
+	GPIOB->MODER &= ~(GPIO_MODER_MODER5);			// input mode is default
+	GPIOB->PUPDR |= GPIO_PUPDR_PUPDR5_1;			// Set pin to pull up:  01 Pull-up; 10 Pull-down; 11 Reserved
+
+	// Set up PA0 and PC3 for octave up and down switch
+	GPIOA->MODER &= ~(GPIO_MODER_MODER0);			// input mode is default
+	GPIOA->PUPDR |= GPIO_PUPDR_PUPDR0_1;			// Set pin to pull down:  01 Pull-up; 10 Pull-down; 11 Reserved
+
+	GPIOC->MODER &= ~(GPIO_MODER_MODER3);			// input mode is default
+	GPIOC->PUPDR |= GPIO_PUPDR_PUPDR3_1;			// Set pin to pull down:  01 Pull-up; 10 Pull-down; 11 Reserved
+
+	// configure PC13 switch to fire an interrupt (mix)
+	SYSCFG->EXTICR[3] |= SYSCFG_EXTICR4_EXTI13_PC;	// Select Pin PC13 which uses External interrupt 4
+	EXTI->RTSR |= EXTI_RTSR_TR13;					// Enable rising edge trigger
+	EXTI->FTSR |= EXTI_FTSR_TR13;					// Enable falling edge trigger
+	EXTI->IMR |= EXTI_IMR_MR13;						// Activate interrupt using mask
+
+	// configure PC6 switch to fire an interrupt (ring mod)
+	SYSCFG->EXTICR[1] |= SYSCFG_EXTICR2_EXTI6_PC;	// Select Pin PC6 which uses External interrupt 2
+	EXTI->RTSR |= EXTI_RTSR_TR6;					// Enable rising edge trigger
+	EXTI->FTSR |= EXTI_FTSR_TR6;					// Enable falling edge trigger
+	EXTI->IMR |= EXTI_IMR_MR6;						// Activate interrupt using mask
+
+	// configure PA0 & PC3 switch to fire an interrupt
+	SYSCFG->EXTICR[0] |= SYSCFG_EXTICR1_EXTI0_PA;	// Select Pin PA0 which uses External interrupt 1
+	EXTI->RTSR |= EXTI_RTSR_TR0;					// Enable rising edge trigger
+	EXTI->FTSR |= EXTI_FTSR_TR0;					// Enable falling edge trigger for line 10
+	EXTI->IMR |= EXTI_IMR_MR0;						// Activate interrupt using mask
+
+	SYSCFG->EXTICR[0] |= SYSCFG_EXTICR1_EXTI3_PC;	// Select Pin PC3 which uses External interrupt 1
+	EXTI->RTSR |= EXTI_RTSR_TR3;					// Enable rising edge trigger
+	EXTI->FTSR |= EXTI_FTSR_TR3;					// Enable falling edge trigger
+	EXTI->IMR |= EXTI_IMR_MR3;						// Activate interrupt using mask
+
+	NVIC_SetPriority(EXTI0_IRQn, 3);
+	NVIC_EnableIRQ(EXTI0_IRQn);
+
+	NVIC_SetPriority(EXTI3_IRQn, 3);
+	NVIC_EnableIRQ(EXTI3_IRQn);
+
+	NVIC_SetPriority(EXTI15_10_IRQn, 3);
+	NVIC_EnableIRQ(EXTI15_10_IRQn);
+
+	NVIC_SetPriority(EXTI15_10_IRQn, 3);
+	NVIC_EnableIRQ(EXTI15_10_IRQn);
+}
+
+
+void InitTimer()
+{
+	//	Setup Timer 3 on an interrupt to trigger sample loading
+	RCC->APB1ENR |= RCC_APB1ENR_TIM3EN;				// Enable Timer 3
+	TIM3->PSC = (SystemCoreClock / SAMPLERATE) / 4;	// Set prescaler to fire at sample rate - this is divided by 4 to match the APB2 prescaler
+	TIM3->ARR = 1; 									// Set maximum count value (auto reload register) - set to system clock / sampling rate
+
+	TIM3->DIER |= TIM_DIER_UIE;						//  DMA/interrupt enable register
+	NVIC_EnableIRQ(TIM3_IRQn);
+	NVIC_SetPriority(TIM3_IRQn, 0);
+
+	TIM3->CR1 |= TIM_CR1_CEN;
+	TIM3->EGR |= TIM_EGR_UG;
+}
+
+
+
+void InitDebugTimer()
+{
+	//	Setup Timer 4 for debug timing
+	RCC->APB1ENR |= RCC_APB1ENR_TIM4EN;				// Enable Timer 4
+	TIM4->CR1 |= TIM_CR1_CEN;
+	TIM4->EGR |= TIM_EGR_UG;
+}
+
+
+void InitAdcPins(ADC_TypeDef* ADC_No, std::initializer_list<uint8_t> channels)
+{
+	uint8_t sequence = 1;
+
+	for (auto channel: channels) {
+		// Set conversion sequence to order ADC channels are passed to this function
+		if (sequence < 7) {
+			ADC_No->SQR3 |= channel << ((sequence - 1) * 5);
+		} else if (sequence < 13) {
+			ADC_No->SQR2 |= channel << ((sequence - 7) * 5);
+		} else {
+			ADC_No->SQR1 |= channel << ((sequence - 13) * 5);
+		}
+
+		// 000: 3 cycles, 001: 15 cycles, 010: 28 cycles, 011: 56 cycles, 100: 84 cycles, 101: 112 cycles, 110: 144 cycles, 111: 480 cycles
+		if (channel < 10)
+			ADC_No->SMPR2 |= 0b010 << (3 * channel);
+		else
+			ADC_No->SMPR1 |= 0b010 << (3 * (channel - 10));
+
+		sequence++;
+	}
+}
+
+
+void InitADC(void)
+{
+	//  Using ADC1
+
+	//	Setup Timer 2 to trigger ADC
+	RCC->APB2ENR |= RCC_APB2ENR_TIM8EN;				// Enable Timer clock
+	TIM8->CR2 |= TIM_CR2_MMS_2;						// 100: Compare - OC1REF signal is used as trigger output (TRGO)
+	TIM8->PSC = 20 - 1;								// Prescaler
+	TIM8->ARR = 100 - 1;							// Auto-reload register (ie reset counter) divided by 100
+	TIM8->CCR1 = 50 - 1;							// Capture and compare - ie when counter hits this number PWM high
+	TIM8->CCER |= TIM_CCER_CC1E;					// Capture/Compare 1 output enable
+	TIM8->CCMR1 |= TIM_CCMR1_OC1M_1 |TIM_CCMR1_OC1M_2;		// 110 PWM Mode 1
+	TIM8->CR1 |= TIM_CR1_CEN;
+
+	// Enable ADC1 clock source
+	RCC->AHB1ENR |= RCC_AHB1ENR_GPIOAEN;
+	RCC->APB2ENR |= RCC_APB2ENR_ADC1EN;
+
+
+	GPIOB->MODER |= GPIO_MODER_MODER0;				// Set PB0 to Analog mode (0b11) 8
+	GPIOB->MODER |= GPIO_MODER_MODER1;				// Set PB1 to Analog mode (0b11) 9
+	GPIOA->MODER |= GPIO_MODER_MODER1;				// Set PA1 to Analog mode (0b11) 1
+	GPIOA->MODER |= GPIO_MODER_MODER2;				// Set PA2 to Analog mode (0b11) 2
+	GPIOA->MODER |= GPIO_MODER_MODER3;				// Set PA3 to Analog mode (0b11) 3
+	GPIOC->MODER |= GPIO_MODER_MODER0;				// Set PC0 to Analog mode (0b11) 10
+	GPIOC->MODER |= GPIO_MODER_MODER2;				// Set PC2 to Analog mode (0b11) 12
+	GPIOC->MODER |= GPIO_MODER_MODER4;				// Set PC4 to Analog mode (0b11) 14
+	GPIOA->MODER |= GPIO_MODER_MODER7;				// Set PA7 to Analog mode (0b11) 7
+	GPIOC->MODER |= GPIO_MODER_MODER1;				// Set PC1 to Analog mode (0b11) 11
+
+
+	ADC1->CR1 |= ADC_CR1_SCAN;						// Activate scan mode
+	ADC1->SQR1 = (ADC_BUFFER_LENGTH - 1) << ADC_SQR1_L_Pos;		// Number of conversions in sequence
+	InitAdcPins(ADC1, {8, 3, 14, 9, 11, 2, 12, 1, 7, 10});
+
+	ADC1->CR2 |= ADC_CR2_EOCS;						// Trigger interrupt on end of each individual conversion
+	ADC1->CR2 |= ADC_CR2_EXTEN_0;					// ADC hardware trigger 00: Trigger detection disabled; 01: Trigger detection on the rising edge; 10: Trigger detection on the falling edge; 11: Trigger detection on both the rising and falling edges
+	ADC1->CR2 |= 0b1110 << ADC_CR2_EXTSEL_Pos;		// ADC External trigger: 1110 = TIM8_TRGO event
+
+	// Enable DMA - DMA2, Channel 0, Stream 0  = ADC1 (Manual p207)
+	ADC1->CR2 |= ADC_CR2_DMA;						// Enable DMA Mode on ADC1
+	ADC1->CR2 |= ADC_CR2_DDS;						// DMA requests are issued as long as data are converted and DMA=1
+	RCC->AHB1ENR|= RCC_AHB1ENR_DMA2EN;
+
+	DMA2_Stream0->CR &= ~DMA_SxCR_DIR;				// 00 = Peripheral-to-memory
+	DMA2_Stream0->CR |= DMA_SxCR_PL_1;				// Priority: 00 = low; 01 = Medium; 10 = High; 11 = Very High
+	DMA2_Stream0->CR |= DMA_SxCR_PSIZE_0;			// Peripheral size: 8 bit; 01 = 16 bit; 10 = 32 bit
+	DMA2_Stream0->CR |= DMA_SxCR_MSIZE_0;			// Memory size: 8 bit; 01 = 16 bit; 10 = 32 bit
+	DMA2_Stream0->CR &= ~DMA_SxCR_PINC;				// Peripheral not in increment mode
+	DMA2_Stream0->CR |= DMA_SxCR_MINC;				// Memory in increment mode
+	DMA2_Stream0->CR |= DMA_SxCR_CIRC;				// circular mode to keep refilling buffer
+	DMA2_Stream0->CR &= ~DMA_SxCR_DIR;				// data transfer direction: 00: peripheral-to-memory; 01: memory-to-peripheral; 10: memory-to-memory
+
+	DMA2_Stream0->NDTR |= ADC_BUFFER_LENGTH;		// Number of data items to transfer (ie size of ADC buffer)
+	DMA2_Stream0->PAR = (uint32_t)(&(ADC1->DR));	// Configure the peripheral data register address
+	DMA2_Stream0->M0AR = (uint32_t)(ADC_array);		// Configure the memory address (note that M1AR is used for double-buffer mode)
+	DMA2_Stream0->CR &= ~DMA_SxCR_CHSEL;			// channel select to 0 for ADC1
+
+	DMA2_Stream0->CR |= DMA_SxCR_EN;				// Enable DMA2
+	ADC1->CR2 |= ADC_CR2_ADON;						// Activate ADC
+
+	/*
+	//	Setup Timer 2 to trigger ADC
+	RCC->APB1ENR |= RCC_APB1ENR_TIM2EN;				// Enable Timer 2 clock
+	TIM2->CR2 |= TIM_CR2_MMS_2;						// 100: Compare - OC1REF signal is used as trigger output (TRGO)
+	TIM2->PSC = 20 - 1;								// Prescaler
+	TIM2->ARR = 100 - 1;							// Auto-reload register (ie reset counter) divided by 100
+	TIM2->CCR1 = 50 - 1;							// Capture and compare - ie when counter hits this number PWM high
+	TIM2->CCER |= TIM_CCER_CC1E;					// Capture/Compare 1 output enable
+	TIM2->CCMR1 |= TIM_CCMR1_OC1M_1 |TIM_CCMR1_OC1M_2;	// 110 PWM Mode 1
+	TIM2->CR1 |= TIM_CR1_CEN;
+
+	// Enable ADC2 and GPIO clock sources
+	RCC->AHB1ENR |= RCC_AHB1ENR_GPIOAEN;
+	RCC->AHB1ENR |= RCC_AHB1ENR_GPIOBEN;
+	RCC->AHB1ENR |= RCC_AHB1ENR_GPIOCEN;
+	RCC->APB2ENR |= RCC_APB2ENR_ADC2EN;
+
+	// Enable ADC - PB0: IN8; PB1: IN9; PA1: IN1; PA2: IN2; PA3: IN3; PC0: IN10, PC2: IN12, PC4: IN14; PA7: IN7, PC1: IN11
+	GPIOB->MODER |= GPIO_MODER_MODER0;				// Set PB0 to Analog mode (0b11)
+	GPIOB->MODER |= GPIO_MODER_MODER1;				// Set PB1 to Analog mode (0b11)
+	GPIOA->MODER |= GPIO_MODER_MODER1;				// Set PA1 to Analog mode (0b11)
+	GPIOA->MODER |= GPIO_MODER_MODER2;				// Set PA2 to Analog mode (0b11)
+	GPIOA->MODER |= GPIO_MODER_MODER3;				// Set PA3 to Analog mode (0b11)
+	GPIOC->MODER |= GPIO_MODER_MODER0;				// Set PC0 to Analog mode (0b11)
+	GPIOC->MODER |= GPIO_MODER_MODER2;				// Set PC2 to Analog mode (0b11)
+	GPIOC->MODER |= GPIO_MODER_MODER4;				// Set PC4 to Analog mode (0b11)
+	GPIOA->MODER |= GPIO_MODER_MODER7;				// Set PA7 to Analog mode (0b11)
+	GPIOC->MODER |= GPIO_MODER_MODER1;				// Set PA7 to Analog mode (0b11)
+
+	ADC2->CR1 |= ADC_CR1_SCAN;						// Activate scan mode
+	ADC2->SQR1 = (ADC_BUFFER_LENGTH - 1) << 20;		// Number of conversions in sequence
+	InitAdcPins(ADC2, {8, 9, 1, 2, 3, 10, 12, 14, 7, 11});
+
+	ADC2->CR2 |= ADC_CR2_EOCS;						// Trigger interrupt on end of each individual conversion
+	ADC2->CR2 |= ADC_CR2_EXTEN_0;					// ADC hardware trigger 00: Trigger detection disabled; 01: Trigger detection on the rising edge; 10: Trigger detection on the falling edge; 11: Trigger detection on both the rising and falling edges
+	ADC2->CR2 |= ADC_CR2_EXTSEL_1 | ADC_CR2_EXTSEL_2;	// ADC External trigger: 0110 = TIM2_TRGO event
+
+	// Enable DMA - DMA2, Channel 1, Stream 2  = ADC2 (Manual p207)
+	ADC2->CR2 |= ADC_CR2_DMA;						// Enable DMA Mode on ADC2
+	ADC2->CR2 |= ADC_CR2_DDS;						// DMA requests are issued as long as data are converted and DMA=1
+	RCC->AHB1ENR |= RCC_AHB1ENR_DMA2EN;
+
+	DMA2_Stream2->CR &= ~DMA_SxCR_DIR;				// 00 = Peripheral-to-memory
+	DMA2_Stream2->CR |= DMA_SxCR_PL_1;				// Priority: 00 = low; 01 = Medium; 10 = High; 11 = Very High
+	DMA2_Stream2->CR |= DMA_SxCR_PSIZE_0;			// Peripheral size: 8 bit; 01 = 16 bit; 10 = 32 bit
+	DMA2_Stream2->CR |= DMA_SxCR_MSIZE_0;			// Memory size: 8 bit; 01 = 16 bit; 10 = 32 bit
+	DMA2_Stream2->CR &= ~DMA_SxCR_PINC;				// Peripheral not in increment mode
+	DMA2_Stream2->CR |= DMA_SxCR_MINC;				// Memory in increment mode
+	DMA2_Stream2->CR |= DMA_SxCR_CIRC;				// circular mode to keep refilling buffer
+	DMA2_Stream2->CR &= ~DMA_SxCR_DIR;				// data transfer direction: 00: peripheral-to-memory; 01: memory-to-peripheral; 10: memory-to-memory
+
+	DMA2_Stream2->NDTR |= ADC_BUFFER_LENGTH;		// Number of data items to transfer (ie size of ADC buffer)
+	DMA2_Stream2->PAR = (uint32_t)(&(ADC2->DR));	// Configure the peripheral data register address
+	DMA2_Stream2->M0AR = (uint32_t)(ADC_array);		// Configure the memory address (note that M1AR is used for double-buffer mode)
+	DMA2_Stream2->CR |= DMA_SxCR_CHSEL_0;			// channel select to 1 for ADC2
+
+	DMA2_Stream2->CR |= DMA_SxCR_EN;				// Enable DMA2
+	ADC2->CR2 |= ADC_CR2_ADON;						// Activate ADC
+*/
+}
+
+/*
+void InitPWMTimer()
+{
+	// Green LED: PB7 (TIM4 CH2); Red LED: PB3 (TIM2 CH2)
+	// TIM2: Channel 1 Output: *PA0, PA5, (PA15); Channel 2: *PA1, PB3; Channel 3: *PA2, PB10; Channel 4: PA3, PB11
+	RCC->AHB2ENR |= RCC_AHB2ENR_GPIOAEN;
+	RCC->APB1ENR1 |= RCC_APB1ENR1_TIM2EN;
+
+	// Enable channel 1, 2, 3 PWM output pins on PA0, PA1, PA2
+	GPIOA->MODER &= ~(GPIO_MODER_MODE0_0 | GPIO_MODER_MODE1_0 | GPIO_MODER_MODE2_0);			// 00: Input mode; 01: General purpose output mode; 10: Alternate function mode; 11: Analog mode (default)
+	GPIOA->AFR[0] |= (GPIO_AFRL_AFSEL0_0 | GPIO_AFRL_AFSEL1_0 | GPIO_AFRL_AFSEL2_0);			// Timer 2 Output channel is AF1
+
+	// Timing calculations: Clock = 64MHz / (PSC + 1) = 32m counts per second
+	// ARR = number of counts per PWM tick = 4096
+	// 32m / ARR = 7.812kHz of PWM square wave with 4096 levels of output
+	TIM2->CCMR1 |= TIM_CCMR1_OC1PE;					// Output compare 1 preload enable
+	TIM2->CCMR1 |= TIM_CCMR1_OC2PE;					// Output compare 2 preload enable
+	TIM2->CCMR2 |= TIM_CCMR2_OC3PE;					// Output compare 3 preload enable
+
+	TIM2->CCMR1 |= (TIM_CCMR1_OC1M_1 | TIM_CCMR1_OC1M_2);	// 0110: PWM mode 1 - In upcounting, channel 1 active if TIMx_CNT<TIMx_CCR1
+	TIM2->CCMR1 |= (TIM_CCMR1_OC2M_1 | TIM_CCMR1_OC2M_2);	// 0110: PWM mode 1 - In upcounting, channel 2 active if TIMx_CNT<TIMx_CCR2
+	TIM2->CCMR2 |= (TIM_CCMR2_OC3M_1 | TIM_CCMR2_OC3M_2);	// 0110: PWM mode 1 - In upcounting, channel 3 active if TIMx_CNT<TIMx_CCR3
+
+	TIM2->CCR1 = 0x800;								// Initialise PWM level to midpoint (PWM level set in ble_hid.cpp)
+	TIM2->CCR2 = 0x800;
+	TIM2->CCR3 = 0x800;
+
+	TIM2->ARR = 0xFFF;								// Total number of PWM ticks = 4096
+	TIM2->PSC = 1;									// Should give ~7.8kHz
+	TIM2->CR1 |= TIM_CR1_ARPE;						// 1: TIMx_ARR register is buffered
+	TIM2->CCER |= (TIM_CCER_CC1E | TIM_CCER_CC2E | TIM_CCER_CC3E);		// Capture mode enabled / OC1 signal is output on the corresponding output pin
+	TIM2->EGR |= TIM_EGR_UG;						// 1: Re-initialize the counter and generates an update of the registers
+	TIM2->CR1 |= TIM_CR1_CEN;						// Enable counter
+}
+*/
+

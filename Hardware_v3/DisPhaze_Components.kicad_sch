@@ -2264,7 +2264,6 @@
     )
   )
 
-
   (junction (at 237.49 43.18) (diameter 0) (color 0 0 0 0)
     (uuid 01024d27-e392-4482-9e67-565b0c294fe8)
   )
@@ -4306,10 +4305,10 @@
   (symbol (lib_id "Device:Crystal_Small") (at 45.72 80.01 90) (unit 1)
     (in_bom yes) (on_board yes)
     (uuid 00000000-0000-0000-0000-00005c166a7f)
-    (property "Reference" "Y1" (id 0) (at 39.37 78.74 90)
+    (property "Reference" "Y1" (id 0) (at 40.64 81.28 90)
       (effects (font (size 1.27 1.27)) (justify right))
     )
-    (property "Value" "12MHz" (id 1) (at 36.83 81.28 90)
+    (property "Value" "12MHz_18pF" (id 1) (at 35.56 85.09 90)
       (effects (font (size 1.27 1.27)) (justify right))
     )
     (property "Footprint" "Crystal:Crystal_SMD_0603-2Pin_6.0x3.5mm" (id 2) (at 45.72 80.01 0)
@@ -4328,7 +4327,7 @@
     (property "Reference" "C10" (id 0) (at 26.67 74.93 90)
       (effects (font (size 1.27 1.27)) (justify left))
     )
-    (property "Value" "18pF" (id 1) (at 25.4 77.47 90)
+    (property "Value" "30pF" (id 1) (at 25.4 77.47 90)
       (effects (font (size 1.27 1.27)) (justify left))
     )
     (property "Footprint" "Capacitor_SMD:C_0603_1608Metric" (id 2) (at 31.75 76.2 0)
@@ -4347,7 +4346,7 @@
     (property "Reference" "C11" (id 0) (at 26.67 82.55 90)
       (effects (font (size 1.27 1.27)) (justify left))
     )
-    (property "Value" "18pF" (id 1) (at 25.4 85.09 90)
+    (property "Value" "30pF" (id 1) (at 25.4 85.09 90)
       (effects (font (size 1.27 1.27)) (justify left))
     )
     (property "Footprint" "Capacitor_SMD:C_0603_1608Metric" (id 2) (at 31.75 83.82 0)
@@ -5789,7 +5788,7 @@
     (in_bom yes) (on_board yes)
     (uuid 00000000-0000-0000-0000-00005c9448f4)
     (property "Reference" "C18" (id 0) (at 245.11 67.2592 90))
-    (property "Value" "18pF" (id 1) (at 245.11 69.5706 90))
+    (property "Value" "" (id 1) (at 245.11 69.5706 90))
     (property "Footprint" "Capacitor_SMD:C_0603_1608Metric" (id 2) (at 245.11 73.66 0)
       (effects (font (size 1.27 1.27)) hide)
     )
@@ -5804,7 +5803,7 @@
     (in_bom yes) (on_board yes)
     (uuid 00000000-0000-0000-0000-00005c954fe2)
     (property "Reference" "C16" (id 0) (at 245.11 18.9992 90))
-    (property "Value" "18pF" (id 1) (at 245.11 21.3106 90))
+    (property "Value" "" (id 1) (at 245.11 21.3106 90))
     (property "Footprint" "Capacitor_SMD:C_0603_1608Metric" (id 2) (at 245.11 25.4 0)
       (effects (font (size 1.27 1.27)) hide)
     )
@@ -7533,10 +7532,10 @@
       (reference "C9") (unit 1) (value "2.2uF") (footprint "Capacitor_SMD:C_0603_1608Metric")
     )
     (path "/00000000-0000-0000-0000-00005c166f76"
-      (reference "C10") (unit 1) (value "18pF") (footprint "Capacitor_SMD:C_0603_1608Metric")
+      (reference "C10") (unit 1) (value "30pF") (footprint "Capacitor_SMD:C_0603_1608Metric")
     )
     (path "/00000000-0000-0000-0000-00005c166fcd"
-      (reference "C11") (unit 1) (value "18pF") (footprint "Capacitor_SMD:C_0603_1608Metric")
+      (reference "C11") (unit 1) (value "30pF") (footprint "Capacitor_SMD:C_0603_1608Metric")
     )
     (path "/00000000-0000-0000-0000-00005c76cac1"
       (reference "C12") (unit 1) (value "2.2nF") (footprint "Capacitor_SMD:C_0603_1608Metric")
@@ -7551,13 +7550,13 @@
       (reference "C15") (unit 1) (value "1.5nF") (footprint "Capacitor_SMD:C_0603_1608Metric")
     )
     (path "/00000000-0000-0000-0000-00005c954fe2"
-      (reference "C16") (unit 1) (value "18pF") (footprint "Capacitor_SMD:C_0603_1608Metric")
+      (reference "C16") (unit 1) (value "22pF") (footprint "Capacitor_SMD:C_0603_1608Metric")
     )
     (path "/00000000-0000-0000-0000-00005c90a131"
       (reference "C17") (unit 1) (value "10uF") (footprint "Capacitor_SMD:C_0603_1608Metric")
     )
     (path "/00000000-0000-0000-0000-00005c9448f4"
-      (reference "C18") (unit 1) (value "18pF") (footprint "Capacitor_SMD:C_0603_1608Metric")
+      (reference "C18") (unit 1) (value "22pF") (footprint "Capacitor_SMD:C_0603_1608Metric")
     )
     (path "/00000000-0000-0000-0000-00005c8247b4"
       (reference "C19") (unit 1) (value "10uF") (footprint "Capacitor_SMD:C_0603_1608Metric")
@@ -7788,7 +7787,7 @@
       (reference "U7") (unit 1) (value "LM4040DBZ-5") (footprint "Package_TO_SOT_SMD:SOT-23")
     )
     (path "/00000000-0000-0000-0000-00005c166a7f"
-      (reference "Y1") (unit 1) (value "12MHz") (footprint "Crystal:Crystal_SMD_0603-2Pin_6.0x3.5mm")
+      (reference "Y1") (unit 1) (value "12MHz_18pF") (footprint "Crystal:Crystal_SMD_0603-2Pin_6.0x3.5mm")
     )
   )
 )

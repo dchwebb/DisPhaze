@@ -1,0 +1,10 @@
+In CubeIDE Debugger Console :
+
+#Allow unlimited number of elements to be printed:
+set print elements 0
+
+# Prevent <repeats XXX times> messages in print out
+set print repeats 0
+
+# Print 10000 elements from array 'buffer' in hex format
+print /x *buffer@5000
