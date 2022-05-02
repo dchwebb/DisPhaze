@@ -141,8 +141,8 @@ void InitSwitches()
 	NVIC_SetPriority(EXTI3_IRQn, 3);
 	NVIC_EnableIRQ(EXTI3_IRQn);
 
-	NVIC_SetPriority(EXTI15_10_IRQn, 3);
-	NVIC_EnableIRQ(EXTI15_10_IRQn);
+	NVIC_SetPriority(EXTI9_5_IRQn, 3);
+	NVIC_EnableIRQ(EXTI9_5_IRQn);
 
 	NVIC_SetPriority(EXTI15_10_IRQn, 3);
 	NVIC_EnableIRQ(EXTI15_10_IRQn);
@@ -337,9 +337,9 @@ void InitPWMTimer()
 	// Red LED: PB3 (TIM2 CH2)
 	TIM2->CCMR1 |= TIM_CCMR1_OC2PE;					// Output compare 2 preload enable
 	TIM2->CCMR1 |= (TIM_CCMR1_OC2M_1 | TIM_CCMR1_OC2M_2);	// 0110: PWM mode 1 - In upcounting, channel 2 active if TIMx_CNT<TIMx_CCR2
-	TIM2->CCR2 = 0x0;								// Initialise PWM level to midpoint
+	TIM2->CCR2 = 0x0;								// Initialise PWM level
 	TIM2->ARR = 0xFFF;								// Total number of PWM ticks = 4096
-	TIM2->PSC = 4;									// Should give ~8.2kHz
+	TIM2->PSC = 4;									// Prescaler
 	TIM2->CR1 |= TIM_CR1_ARPE;						// 1: TIMx_ARR register is buffered
 	TIM2->CCER |= TIM_CCER_CC2E;					// Capture mode enabled / OC1 signal is output on the corresponding output pin
 	TIM2->EGR |= TIM_EGR_UG;						// 1: Re-initialize the counter and generates an update of the registers
@@ -348,9 +348,9 @@ void InitPWMTimer()
 	// Green LED: PB7 (TIM4 CH2)
 	TIM4->CCMR1 |= TIM_CCMR1_OC2PE;					// Output compare 2 preload enable
 	TIM4->CCMR1 |= (TIM_CCMR1_OC2M_1 | TIM_CCMR1_OC2M_2);	// 0110: PWM mode 1 - In upcounting, channel 2 active if TIMx_CNT<TIMx_CCR2
-	TIM4->CCR2 = 0x0;								// Initialise PWM level to midpoint
+	TIM4->CCR2 = 0x0;								// Initialise PWM level
 	TIM4->ARR = 0xFFF;								// Total number of PWM ticks = 4096
-	TIM4->PSC = 4;									// Should give ~8.2kHz
+	TIM4->PSC = 4;									// Prescaler
 	TIM4->CR1 |= TIM_CR1_ARPE;						// 1: TIMx_ARR register is buffered
 	TIM4->CCER |= TIM_CCER_CC2E;					// Capture mode enabled / OC1 signal is output on the corresponding output pin
 	TIM4->EGR |= TIM_EGR_UG;						// 1: Re-initialize the counter and generates an update of the registers

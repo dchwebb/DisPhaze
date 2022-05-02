@@ -6,7 +6,7 @@
 
 
 
-class PhaseDistortion {
+struct PhaseDistortion {
 public:
 	bool ringModOn = false;
 	bool mixOn = false;

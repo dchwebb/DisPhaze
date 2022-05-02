@@ -110,7 +110,6 @@ void PhaseDistortion::CalcNextSamples()
 		freq1 /= 2;
 	}
 
-
 	// octave down
 	switch (relativePitch) {
 		case NONE: 			freq2 = freq1; 			break;
@@ -173,16 +172,16 @@ void PhaseDistortion::CalcNextSamples()
 		sampleOut2 = GetPhaseDist(LUTArray[pdLut2], samplePos2 / SAMPLERATE, pd2Scale);
 	}
 
-	// Set DAC output values for when sample interrupt next fires
+	// Set DAC output values for when sample interrupt next fires (NB DAC and channels are reversed: ie DAC1 connects to channel2 and vice versa)
 	if (ringModOn) {
-		DAC->DHR12R1 = static_cast<int32_t>((1 + (sampleOut1 * sampleOut2) * VCALevel) * 2047);			// Ring mod of 1 * 2
+		DAC->DHR12R2 = static_cast<int32_t>((1 + (sampleOut1 * sampleOut2) * VCALevel) * 2047);			// Ring mod of 1 * 2
 	} else {
-		DAC->DHR12R1 = static_cast<int32_t>((1 + sampleOut1 * VCALevel) * 2047);
+		DAC->DHR12R2 = static_cast<int32_t>((1 + sampleOut1 * VCALevel) * 2047);
 	}
 	if (mixOn) {
-		DAC->DHR12R2 = static_cast<int32_t>(((2 + (sampleOut1 + sampleOut2) * VCALevel) / 2) * 2047);	// Mix of 1 + 2
+		DAC->DHR12R1 = static_cast<int32_t>(((2 + (sampleOut1 + sampleOut2) * VCALevel) / 2) * 2047);	// Mix of 1 + 2
 	} else {
-		DAC->DHR12R2 = static_cast<int32_t>((1 + sampleOut2 * VCALevel) * 2047);
+		DAC->DHR12R1 = static_cast<int32_t>((1 + sampleOut2 * VCALevel) * 2047);
 	}
 
 	dacRead = 0;		// Clear ready for next sample flag
