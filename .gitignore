@@ -25,6 +25,7 @@ Hardware_v3/Production_Files/
 *.tlog
 *.obj
 *.log
+*.mk
 
 Libraries/CMSIS/CMSIS END USER LICENCE AGREEMENT.pdf
 pictures/disphaze_back.jpg
@@ -35,3 +36,4 @@ DisPhaze/Debug/makefile
 
 Hardware_v3/_autosave-DisPhaze_Components.kicad_pcb
 
+DisPhazePoly/Debug/makefile
