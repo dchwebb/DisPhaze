@@ -4,6 +4,10 @@
 #include "USB.h"
 #include "CDCHandler.h"
 
+#if (USB_DEBUG)
+#include "uartHandler.h"
+#endif
+
 /*
  * Calibration process:
  *
@@ -62,8 +66,7 @@ int main(void)
 	InitDebugTimer();				// Timer to check available calculation time
 	InitPWMTimer();					// PWM timers for LED control
 
-//	usb.InitUSB();
-//	usb.cdcDataHandler = std::bind(CDCHandler, std::placeholders::_1, std::placeholders::_2);
+	usb.Init();
 
 	EXTI0_IRQHandler();				// Call the Interrupt event handler to set up the octave up/down switch to current position
 	EXTI15_10_IRQHandler();			// Call the Interrupt event handler to set up the ring mod switch to current position
@@ -78,13 +81,14 @@ int main(void)
 			debugWorkTime = TIM5->CNT;
 		}
 
-		// Check for incoming CDC commands
-		if (CmdPending) {
-			if (!CDCCommand(ComCmd)) {
-				usb.SendString("Unrecognised command. Type 'help' for supported commands\n");
-			}
-			CmdPending = false;
+#if (USB_DEBUG)
+		if (uartCmdRdy) {
+			uartCommand();
 		}
+#endif
+
+		// Check for incoming CDC commands
+		usb.cdc.ProcessCommand();
 
 	}
 }

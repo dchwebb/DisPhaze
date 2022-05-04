@@ -11,7 +11,7 @@ class USB;
 
 class CDCHandler : public USBHandler {
 public:
-	CDCHandler(USB* usb, uint8_t inEP, uint8_t outEP) : USBHandler(usb, inEP, outEP) {
+	CDCHandler(USB* usb, uint8_t inEP, uint8_t outEP, int8_t interface) : USBHandler(usb, inEP, outEP, interface) {
 		outBuff = xfer_buff;
 	}
 

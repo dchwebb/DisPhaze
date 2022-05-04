@@ -1,5 +1,5 @@
+//#include <MidiHandler.h>
 #include "USB.h"
-#include "MSCHandler.h"
 
 volatile bool debugStart = true;
 
@@ -19,7 +19,6 @@ void USB::EP0In(const uint8_t* buff, uint32_t size)
 
 void USB::InterruptHandler()						// In Drivers\STM32F4xx_HAL_Driver\Src\stm32f4xx_hal_pcd.c
 {
-
 	int epnum, ep_intr, epint;
 
 	// Handle spurious interrupt
@@ -79,7 +78,12 @@ void USB::InterruptHandler()						// In Drivers\STM32F4xx_HAL_Driver\Src\stm32f4
 						if (devState == DeviceState::Configured && classPendingData) {
 							if ((req.RequestType & USB_REQ_TYPE_MASK) == USB_REQ_TYPE_CLASS) {
 								// Previous OUT interrupt contains instruction (eg host sending CDC LineCoding); next command sends data (Eg LineCoding data)
-								classes[req.Index + 1]->ClassSetupData(req, (uint8_t*)ep0.outBuff);	// req.Index holds interface - assume this is same as class order + 1
+								for (auto c : classes) {
+									if (c->interface == req.Index) {
+										c->ClassSetupData(req, (uint8_t*)ep0.outBuff);
+									}
+								}
+
 							}
 							classPendingData = false;
 							EPStartXfer(Direction::in, 0, 0);
@@ -115,12 +119,14 @@ void USB::InterruptHandler()						// In Drivers\STM32F4xx_HAL_Driver\Src\stm32f4
 					case USB_REQ_RECIPIENT_INTERFACE:
 						if ((req.RequestType & USB_REQ_TYPE_MASK) == USB_REQ_TYPE_CLASS) {		// 0xA1 & 0x60 == 0x20
 
-							// req.Index holds interface - assume this is same as class order + 1
+							// req.Index holds interface - locate which handler this relates to
 							if (req.Length > 0) {
-								classes[req.Index + 1]->ClassSetup(req);
+								for (auto c : classes) {
+									if (c->interface == req.Index) {
+										c->ClassSetup(req);
+									}
+								}
 							} else {
-								// 0x21, 0x22, 0x0, 0x0, 0x0	SetControlLineState 0x21 | 0x22 | 2 | Interface | 0 | None
-								// 0x21, 0x20, 0x0, 0x0, 0x0	SetLineCoding       0x21 | 0x20 | 0 | Interface | 0 | Line Coding Data Structure
 								EPStartXfer(Direction::in, 0, 0);
 							}
 
@@ -349,7 +355,7 @@ void USB::InterruptHandler()						// In Drivers\STM32F4xx_HAL_Driver\Src\stm32f4
 void USB::Init()
 {
 #if (USB_DEBUG)
-	//InitUART();
+	InitUart();
 #endif
 	// USB_OTG_FS GPIO Configuration: PA8: USB_OTG_FS_SOF; PA9: USB_OTG_FS_VBUS; PA10: USB_OTG_FS_ID; PA11: USB_OTG_FS_DM; PA12: USB_OTG_FS_DP
 	RCC->AHB1ENR |= RCC_AHB1ENR_GPIOAEN;
@@ -367,7 +373,6 @@ void USB::Init()
 
 	USB_OTG_FS->GCCFG |= USB_OTG_GCCFG_PWRDWN;			// Activate the transceiver in transmission/reception. When reset, the transceiver is kept in power-down. 0 = USB FS transceiver disabled; 1 = USB FS transceiver enabled
 	USB_OTG_FS->GUSBCFG |= USB_OTG_GUSBCFG_FDMOD;		// Force USB device mode
-	//HAL_Delay(50U);
 
 	// Clear all transmit FIFO address and data lengths - these will be set to correct values below for endpoints 0,1 and 2
 	for (uint8_t i = 0U; i < 15U; i++) {
@@ -478,7 +483,7 @@ void USB::GetDescriptor() {
 		break;
 
 	case USB_DESC_TYPE_CONFIGURATION:
-		return EP0In(MSC_CfgFSDesc, sizeof(MSC_CfgFSDesc));
+		return EP0In(ConfigDesc, sizeof(ConfigDesc));
 		break;
 
 	case USB_DESC_TYPE_BOS:
@@ -533,6 +538,11 @@ void USB::GetDescriptor() {
 
 	    case USBD_IDX_CDC_STR:				// 306
 	    	strSize = StringToUnicode((uint8_t*)USBD_CDC_STRING, USBD_StrDesc);
+	    	return EP0In(USBD_StrDesc, strSize);
+			break;
+
+	    case USBD_IDX_MIDI_STR:				// 307
+	    	strSize = StringToUnicode((uint8_t*)USBD_MIDI_STRING, USBD_StrDesc);
 	    	return EP0In(USBD_StrDesc, strSize);
 			break;
 
@@ -615,8 +625,8 @@ void USB::StdDevReq()
 			if (devState == DeviceState::Addressed) {
 				devState = DeviceState::Configured;
 
-				ActivateEndpoint(MSC_In,   Direction::in,  Bulk);			// Activate MSC in endpoint
-				ActivateEndpoint(MSC_Out,  Direction::out, Bulk);			// Activate MSC out endpoint
+				ActivateEndpoint(Midi_In,   Direction::in,  Bulk);			// Activate MSC in endpoint
+				ActivateEndpoint(Midi_Out,  Direction::out, Bulk);			// Activate MSC out endpoint
 				ActivateEndpoint(CDC_In,   Direction::in,  Bulk);			// Activate CDC in endpoint
 				ActivateEndpoint(CDC_Out,  Direction::out, Bulk);			// Activate CDC out endpoint
 				ActivateEndpoint(CDC_Cmd,  Direction::in,  Interrupt);		// Activate Command IN EP

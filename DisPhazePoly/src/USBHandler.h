@@ -25,10 +25,11 @@ struct usbRequest {
 class USBHandler {
 public:
 	USB* usb;
-	USBHandler(USB* usb, uint8_t inEP, uint8_t outEP) : usb(usb), inEP(inEP), outEP(outEP) {}
+	USBHandler(USB* usb, uint8_t inEP, uint8_t outEP, int8_t interface) : usb(usb), inEP(inEP), outEP(outEP), interface(interface) {}
 
 	uint8_t inEP;
 	uint8_t outEP;
+	int8_t interface;
 
 	uint32_t* outBuff;			// Pointer to end point's OUT (receive from host) buffer [Previously xfer_buff]
 	uint32_t outBuffCount;		// Number of bytes received in OUT packet [Previously xfer_count]
@@ -52,7 +53,7 @@ protected:
 
 class EP0Handler : public USBHandler {
 public:
-	EP0Handler(USB* usb, uint8_t inEP, uint8_t outEP) : USBHandler(usb, inEP, outEP) {
+	EP0Handler(USB* usb, uint8_t inEP, uint8_t outEP, int8_t interface) : USBHandler(usb, inEP, outEP, interface) {
 		outBuff = ep0OutBuff;
 	}
 

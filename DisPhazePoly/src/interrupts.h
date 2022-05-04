@@ -64,7 +64,7 @@ void EXTI9_5_IRQHandler(void)
 
 
 void OTG_FS_IRQHandler(void) {
-	usb.USBInterruptHandler();
+	usb.InterruptHandler();
 }
 
 void NMI_Handler(void) {}
