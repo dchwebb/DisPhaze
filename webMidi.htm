@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+
+<html lang="en">
+
+<head>
+
+	<meta charset="UTF-8">
+	<title>DisPhaze MIDI Tester</title>
+
+	<script src="https://cdn.jsdelivr.net/npm/webmidi@next/dist/iife/webmidi.iife.js"></script>
+
+	<script type="text/javascript">
+		var output = null;
+		
+      // Enable WebMidi.js and trigger the onEnabled() function when ready.
+      WebMidi
+        .enable()
+        .then(onEnabled)
+        .catch(err => alert(err));
+
+		function onEnabled() {
+			if (WebMidi.outputs.length < 1) {
+				 document.body.innerHTML += "No device detected.";
+			} else {
+				 WebMidi.outputs.forEach((device, index) => {
+					document.body.innerHTML += `${index}: ${device.name} <br>`;
+				});
+			}
+
+			for (var out of WebMidi.outputs.values()) {
+				if (out.name == "Mountjoy MIDI") {
+					output = out;
+					document.body.innerHTML+= `Output: ${output.name} <br>`;
+				}
+			}
+		}
+		
+		// Sends MIDI note to requested channel
+		function sendNote(noteValue, channel) {
+			  output.send([0x90 + parseInt(channel - 1), noteValue, 0x7f]);
+			  output.send([0x80 + parseInt(channel - 1), noteValue, 0x40], window.performance.now() + 1000.0);
+				  // note off delay: now + 1000ms
+		}
+
+		// MIDI Note on
+		function noteOn(noteValue, channel) {
+			output.send([0x90 + parseInt(channel - 1), noteValue, 0x7f]);
+		}
+
+		// MIDI note off
+		function noteOff(noteValue, channel) {
+			output.send([0x80 + parseInt(channel - 1), noteValue, 0x40]);
+		}
+	</script>
+
+	</head>
+
+	<body>
+		<h1>DisPhaze MIDI Tester</h1>
+		<button  onclick="sendNote(48, 1);">Send Note</button><br>
+		<button class="topcoat-button-bar__button--large" onclick="noteOn(48, 1);">C On</button>
+		<button class="topcoat-button-bar__button--large" onclick="noteOff(48, 1);">C Off</button>
+		<button class="topcoat-button-bar__button--large" onclick="noteOn(52, 1);">E On</button>
+		<button class="topcoat-button-bar__button--large" onclick="noteOff(52, 1);">E Off</button>
+		<button class="topcoat-button-bar__button--large" onclick="noteOn(55, 1);">G On</button>
+		<button class="topcoat-button-bar__button--large" onclick="noteOff(55, 1);">G Off</button>
+		<button class="topcoat-button-bar__button--large" onclick="noteOn(57, 1);">A On</button>
+		<button class="topcoat-button-bar__button--large" onclick="noteOff(57, 1);">A Off</button>		<button class="topcoat-button-bar__button--large" onclick="noteOn(59, 1);">B On</button>
+		<button class="topcoat-button-bar__button--large" onclick="noteOff(59, 1);">B Off</button>
+	</body>
+
+</html>

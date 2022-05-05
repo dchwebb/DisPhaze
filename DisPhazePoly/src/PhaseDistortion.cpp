@@ -96,11 +96,6 @@ void PhaseDistortion::CalcNextSamples()
 	uint32_t finetuneAdjust = 0;
 	float sampleOut1 = 0.0f, sampleOut2 = 0.0f;
 
-	// Increase note time on
-	for (uint8_t i = 0; i < usb.midi.noteCount; ++i) {
-		++usb.midi.midiNotes[i].timeOn;
-	}
-
 	//	Coarse tuning (octaves) - add some hysteresis to prevent jumping
 	if (coarseTune > ADC_array[ADC_CTune] + 128 || coarseTune < ADC_array[ADC_CTune] - 128) {
 		coarseTune = ADC_array[ADC_CTune];
@@ -153,6 +148,7 @@ void PhaseDistortion::CalcNextSamples()
 	for (uint8_t n = 0; n < polyNotes; ++n) {
 		if (polyphonic) {
 			freq1 = MidiLUT[usb.midi.midiNotes[n].noteValue + finetuneAdjust];
+			++usb.midi.midiNotes[n].timeOn;
 		} else {
 			// Calculate frequencies
 			pitch = ((3 * pitch) + ADC_array[ADC_Pitch]) / 4;				// 1V/Oct input with smoothing
@@ -192,7 +188,11 @@ void PhaseDistortion::CalcNextSamples()
 		}
 
 		// Calculate output as a float from -1 to +1 checking phase distortion and phase offset as required
-		sampleOut1 += GetBlendPhaseDist(pdLut1, sp1 / SAMPLERATE, pd1Scale);
+//		if (polyphonic) {
+//			sampleOut1 += GetPhaseDist(LUTArray[(uint32_t)pdLut1], sp1 / SAMPLERATE, pd1Scale);
+//		} else {
+			sampleOut1 += GetBlendPhaseDist(pdLut1, sp1 / SAMPLERATE, pd1Scale);
+//		}
 
 		if (pd2Resonant) {
 			sampleOut2 += GetResonantWave(sp2 / SAMPLERATE, pd2Scale);
@@ -204,20 +204,17 @@ void PhaseDistortion::CalcNextSamples()
 
 
 
-
-
-
-
 	// Set DAC output values for when sample interrupt next fires (NB DAC and channels are reversed: ie DAC1 connects to channel2 and vice versa)
 	if (ringModOn) {
-		DAC->DHR12R2 = static_cast<int32_t>((1 + (sampleOut1 * sampleOut2) * VCALevel) * 2047);			// Ring mod of 1 * 2
+		DAC->DHR12R2 = static_cast<int32_t>((1.0f + (sampleOut1 * sampleOut2) * VCALevel) * 2047);			// Ring mod of 1 * 2
 	} else {
-		DAC->DHR12R2 = static_cast<int32_t>((1 + sampleOut1 * VCALevel) * 2047);
+		DAC->DHR12R2 = static_cast<int32_t>((1.0f + sampleOut1 * VCALevel) * 2047);
+		//DAC->DHR12R2 = static_cast<int32_t>((1 + FastTanh(sampleOut1 * VCALevel)) * 2047);
 	}
 	if (mixOn) {
-		DAC->DHR12R1 = static_cast<int32_t>(((2 + (sampleOut1 + sampleOut2) * VCALevel) / 2) * 2047);	// Mix of 1 + 2
+		DAC->DHR12R1 = static_cast<int32_t>(((2.0f + (sampleOut1 + sampleOut2) * VCALevel) / 2) * 2047);	// Mix of 1 + 2
 	} else {
-		DAC->DHR12R1 = static_cast<int32_t>((1 + sampleOut2 * VCALevel) * 2047);
+		DAC->DHR12R1 = static_cast<int32_t>((1.0f + sampleOut2 * VCALevel) * 2047);
 	}
 
 	dacRead = 0;		// Clear ready for next sample flag
