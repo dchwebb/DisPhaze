@@ -1,5 +1,6 @@
 #include <MidiHandler.h>
 #include "USB.h"
+#include "LUT.h"
 
 void MidiHandler::DataIn()
 {
@@ -30,9 +31,58 @@ void MidiHandler::DataOut()
 
 
 
-void MidiHandler::midiEvent(const uint32_t* data) {
-
+void MidiHandler::midiEvent(const uint32_t* data)
+{
 	midiData = *(MidiData*)data;
+
+	// Note off - if note is in middle of sequence shuffle rest of notes up the array
+	if (midiData.msg == NoteOff) {
+		bool moveUp = false;
+		for (uint8_t i = 0; i < noteCount; ++i) {
+			if (midiNotes[i].noteValue == midiData.db1) {		// note already in array - overwrite with later notes
+				moveUp = true;
+			} else {
+				if (moveUp) {
+					midiNotes[i - 1] = midiNotes[i];
+				}
+			}
+		}
+		if (moveUp) {
+			--noteCount;
+		}
+	}
+
+	if (midiData.msg == NoteOn) {
+		for (uint8_t i = 0; i < noteCount; ++i) {
+			if (midiNotes[i].noteValue == midiData.db1) {		// note already in array
+				midiNotes[i].timeOn = 0;
+				return;
+			}
+		}
+		midiNotes[noteCount].noteValue = midiData.db1;
+		midiNotes[noteCount].timeOn = 0;
+		midiNotes[noteCount].freq = MidiLUT[midiData.db1];
+		midiNotes[noteCount].samplePos1 = 0;
+		midiNotes[noteCount].samplePos2 = 0;
+		++noteCount;
+
+		if (noteCount > polyCount) {							// Polyphony exceeded - shuffle up
+			for (uint8_t i = 1; i < noteCount; ++i) {
+				midiNotes[i - 1] = midiNotes[i];
+			}
+			--noteCount;
+		}
+	}
+/*
+	if (midiData.msg == NoteOff || midiData.msg == NoteOn) {
+		std::string out = "Note count: " + std::to_string(noteCount) + " [" +
+				std::to_string(midiNotes[0].noteValue) + " " + std::to_string(midiNotes[0].freq) + ", " +
+				std::to_string(midiNotes[1].noteValue) + " " + std::to_string(midiNotes[1].timeOn) + ", " +
+				std::to_string(midiNotes[2].noteValue) + " " + std::to_string(midiNotes[2].timeOn) + ", " +
+				std::to_string(midiNotes[3].noteValue) + " " + std::to_string(midiNotes[3].timeOn) + "]\r";
+		usb->SendString(out.c_str());
+	}
+	*/
 }
 
 void MidiHandler::ClassSetup(usbRequest& req)

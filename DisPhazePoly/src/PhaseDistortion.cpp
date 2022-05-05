@@ -1,4 +1,5 @@
 #include "PhaseDistortion.h"
+#include "USB.h"
 
 extern	bool dacRead;
 extern volatile uint32_t debugWorkTime, debugInterval;
@@ -91,42 +92,21 @@ float PhaseDistortion::GetBlendPhaseDist(const float pdBlend, const float LUTPos
 
 void PhaseDistortion::CalcNextSamples()
 {
-	// Calculate frequencies
-	pitch = ((3 * pitch) + ADC_array[ADC_Pitch]) / 4;				// 1V/Oct input with smoothing
-	fineTune = ((15 * fineTune) + ADC_array[ADC_FTune]) / 16;		// Fine tune with smoothing
-	freq1 = PitchLUT[(pitch + ((2048 - fineTune) / 32)) / 4];		// divide by four as there are 1024 items in DAC CV Voltage to Pitch Freq LUT and 4096 possible DAC voltage values
+	uint8_t polyNotes;
+	uint32_t finetuneAdjust = 0;
+	float sampleOut1 = 0.0f, sampleOut2 = 0.0f;
 
-	//	Coarse tuning - add some hysteresis to prevent jumping
+	// Increase note time on
+	for (uint8_t i = 0; i < usb.midi.noteCount; ++i) {
+		++usb.midi.midiNotes[i].timeOn;
+	}
+
+	//	Coarse tuning (octaves) - add some hysteresis to prevent jumping
 	if (coarseTune > ADC_array[ADC_CTune] + 128 || coarseTune < ADC_array[ADC_CTune] - 128) {
 		coarseTune = ADC_array[ADC_CTune];
 	}
-	if (coarseTune > 3412) {
-		freq1 *= 4;
-	} else if (coarseTune > 2728) {
-		freq1 *= 2;
-	} else if (coarseTune < 682) {
-		freq1 /= 4;
-	} else if (coarseTune < 1364) {
-		freq1 /= 2;
-	}
+	fineTune = ((15 * fineTune) + ADC_array[ADC_FTune]) / 16;		// Fine tune with smoothing
 
-	// octave down
-	switch (relativePitch) {
-		case NONE: 			freq2 = freq1; 			break;
-		case OCTAVEDOWN:	freq2 = freq1 / 2.0f;	break;
-		case OCTAVEUP: 		freq2 = freq1 * 2.0f;	break;
-	}
-
-	// jump forward to the next sample position
-	samplePos1 += freq1;
-	while (samplePos1 >= SAMPLERATE) {
-		samplePos1 -= SAMPLERATE;
-	}
-
-	samplePos2 += freq2;
-	while (samplePos2 >= SAMPLERATE) {
-		samplePos2 -= SAMPLERATE;
-	}
 
 	// Analog selection of PD LUT table allows a smooth transition between LUTs for DAC1 and a stepped transition for DAC2
 	pd1Type = ((31 * pd1Type) + ADC_array[ADC_Osc1Type]) / 32;
@@ -162,15 +142,71 @@ void PhaseDistortion::CalcNextSamples()
 	}
 	TIM4->CCR2 = static_cast<uint32_t>(VCALevel * 4095.0f);								// Set LED PWM level to VCA
 
-	// Calculate output as a float from -1 to +1 checking phase distortion and phase offset as required
-	float sampleOut1 = GetBlendPhaseDist(pdLut1, samplePos1 / SAMPLERATE, pd1Scale);
-
-	float sampleOut2;
-	if (pd2Resonant) {
-		sampleOut2 = GetResonantWave(samplePos2 / SAMPLERATE, pd2Scale);
+	// Start separating polyphonic and monophonic functions
+	if (polyphonic) {
+		polyNotes = usb.midi.noteCount;
+		finetuneAdjust = static_cast<uint32_t>((2048.0f - fineTune) / 340.0f);
 	} else {
-		sampleOut2 = GetPhaseDist(LUTArray[pdLut2], samplePos2 / SAMPLERATE, pd2Scale);
+		polyNotes = 1;
 	}
+
+	for (uint8_t n = 0; n < polyNotes; ++n) {
+		if (polyphonic) {
+			freq1 = MidiLUT[usb.midi.midiNotes[n].noteValue + finetuneAdjust];
+		} else {
+			// Calculate frequencies
+			pitch = ((3 * pitch) + ADC_array[ADC_Pitch]) / 4;				// 1V/Oct input with smoothing
+			freq1 = PitchLUT[(pitch + ((2048 - fineTune) / 32)) / 4];		// divide by four as there are 1024 items in DAC CV Voltage to Pitch Freq LUT and 4096 possible DAC voltage values
+		}
+
+
+		if (coarseTune > 3412) {
+			freq1 *= 4;
+		} else if (coarseTune > 2728) {
+			freq1 *= 2;
+		} else if (coarseTune < 682) {
+			freq1 /= 4;
+		} else if (coarseTune < 1364) {
+			freq1 /= 2;
+		}
+
+		// octave down
+		switch (relativePitch) {
+			case NONE: 			freq2 = freq1; 			break;
+			case OCTAVEDOWN:	freq2 = freq1 / 2.0f;	break;
+			case OCTAVEUP: 		freq2 = freq1 * 2.0f;	break;
+		}
+
+		float& sp1 = polyphonic ? usb.midi.midiNotes[n].samplePos1 : samplePos1;
+		float& sp2 = polyphonic ? usb.midi.midiNotes[n].samplePos2 : samplePos2;
+
+		// jump forward to the next sample position
+		sp1 += freq1;
+		while (sp1 >= SAMPLERATE) {
+			sp1 -= SAMPLERATE;
+		}
+
+		sp2 += freq2;
+		while (sp2 >= SAMPLERATE) {
+			sp2 -= SAMPLERATE;
+		}
+
+		// Calculate output as a float from -1 to +1 checking phase distortion and phase offset as required
+		sampleOut1 += GetBlendPhaseDist(pdLut1, sp1 / SAMPLERATE, pd1Scale);
+
+		if (pd2Resonant) {
+			sampleOut2 += GetResonantWave(sp2 / SAMPLERATE, pd2Scale);
+		} else {
+			sampleOut2 += GetPhaseDist(LUTArray[pdLut2], sp2 / SAMPLERATE, pd2Scale);
+		}
+
+	}
+
+
+
+
+
+
 
 	// Set DAC output values for when sample interrupt next fires (NB DAC and channels are reversed: ie DAC1 connects to channel2 and vice versa)
 	if (ringModOn) {
@@ -185,4 +221,13 @@ void PhaseDistortion::CalcNextSamples()
 	}
 
 	dacRead = 0;		// Clear ready for next sample flag
+}
+
+// Algorithm source: https://varietyofsound.wordpress.com/2011/02/14/efficient-tanh-computation-using-lamberts-continued-fraction/
+float PhaseDistortion::FastTanh(float x)
+{
+	float x2 = x * x;
+	float a = x * (135135.0f + x2 * (17325.0f + x2 * (378.0f + x2)));
+	float b = 135135.0f + x2 * (62370.0f + x2 * (3150.0f + x2 * 28.0f));
+	return a / b;
 }

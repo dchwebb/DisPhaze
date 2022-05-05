@@ -24,8 +24,8 @@ void CreateLUTs()
 {
 	// Generate pitch lookup table
 	for (int p = 0; p < LUTSIZE; ++p) {
-		float power = static_cast<float>(p * 4.0f) / (PITCH_SPREAD + config.tuningSpread);		// Reduce 583 to decrease spread
-		PitchLUT[p] = (PITCH_OFFSET + config.tuningOffset) * std::pow(2.0f, power);				// Increase 2299 to increase pitch
+		float power = static_cast<float>(p * 4.0f) / (PITCH_SPREAD + config.tuningSpread);		// Reduce tuningSpread to decrease spread
+		PitchLUT[p] = (PITCH_OFFSET + config.tuningOffset) * std::pow(2.0f, power);				// Increase tuningOffset to increase pitch
 	}
 
 	// Generate Sine LUT
@@ -33,3 +33,17 @@ void CreateLUTs()
 		SineLUT[s] = sin(s * 2.0f * M_PI / SINLUTSIZE);
 	}
 }
+
+#include <array>
+
+constexpr auto CreateMidiLUT()
+{
+	std::array<float, MIDIPITCHLUTSIZE> array {};
+	for (int i = 0; i < MIDIPITCHLUTSIZE; ++i) {
+		array[i] = 440 * std::pow(2.0, (i - 69.0) / 12.0);
+	}
+	return array;
+}
+
+constexpr std::array<float, MIDIPITCHLUTSIZE> MidiLUT = CreateMidiLUT();
+

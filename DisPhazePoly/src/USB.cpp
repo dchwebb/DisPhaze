@@ -368,7 +368,7 @@ void USB::Init()
 	RCC->AHB2ENR |= RCC_AHB2ENR_OTGFSEN;				// USB OTG FS clock enable
 	RCC->APB2ENR |= RCC_APB2ENR_SYSCFGEN;				// Enable system configuration clock: used to manage external interrupt line connection to GPIOs
 
-	NVIC_SetPriority(OTG_FS_IRQn, 0);
+	NVIC_SetPriority(OTG_FS_IRQn, 2);
 	NVIC_EnableIRQ(OTG_FS_IRQn);
 
 	USB_OTG_FS->GCCFG |= USB_OTG_GCCFG_PWRDWN;			// Activate the transceiver in transmission/reception. When reset, the transceiver is kept in power-down. 0 = USB FS transceiver disabled; 1 = USB FS transceiver enabled

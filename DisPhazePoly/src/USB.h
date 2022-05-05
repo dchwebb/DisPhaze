@@ -92,7 +92,7 @@
 #define HIBYTE(x)  ((uint8_t)((x & 0xFF00U) >> 8U))
 
 
-class USB {
+struct USB {
 	friend class USBHandler;
 public:
 	enum Interface {NoInterface = -1, AudioInterface = 0, MidiInterface = 1, CDCCmdInterface = 2, CDCDataInterface = 3, interfaceCount = 4};

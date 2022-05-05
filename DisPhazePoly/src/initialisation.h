@@ -2,6 +2,7 @@
 
 #include "stm32f4xx.h"
 #include <cstring>
+#include <Array>
 
 #define SAMPLERATE 72000
 #define PITCH_SPREAD -583.0f

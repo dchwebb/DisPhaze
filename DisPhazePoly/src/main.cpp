@@ -51,6 +51,7 @@ extern "C" {						// Use extern C to allow linker to find ISR
 }
 
 
+
 int main(void)
 {
 	SystemInit();					// Activates floating point coprocessor and resets clock

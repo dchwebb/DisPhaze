@@ -10,6 +10,7 @@ struct PhaseDistortion {
 public:
 	bool ringModOn = false;
 	bool mixOn = false;
+	bool polyphonic = true;
 	enum RelativePitch { NONE, OCTAVEDOWN, OCTAVEUP	} relativePitch;		// used to adjust pitch of oscillator 2 relative to oscillator 1
 	static constexpr uint8_t pd1LutCount = 5;
 	static constexpr uint8_t pd2LutCount = 8;
@@ -41,7 +42,7 @@ private:
 	float GetBlendPhaseDist(const float PDBlend, const float LUTPosition, const float scale);
 	float GetResonantWave(const float LUTPosition, const float scale);
 	static float sinLutWrap(float pos);
-
+	float FastTanh(float x);
 };
 
 extern PhaseDistortion phaseDist;
