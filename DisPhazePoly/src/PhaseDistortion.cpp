@@ -150,7 +150,7 @@ void PhaseDistortion::CalcNextSamples()
 	for (uint8_t n = 0; n < polyNotes; ++n) {
 		if (polyphonic) {
 			freq1 = MidiLUT[usb.midi.midiNotes[n].noteValue + finetuneAdjust];
-			++usb.midi.midiNotes[n].timeOn;
+			++usb.midi.midiNotes[n].envTime;
 		} else {
 			// Calculate frequencies
 			pitch = ((3 * pitch) + ADC_array[ADC_Pitch]) / 4;				// 1V/Oct input with smoothing
@@ -201,20 +201,20 @@ void PhaseDistortion::CalcNextSamples()
 
 			switch (usb.midi.midiNotes[n].envelope) {
 			case MidiHandler::env::A:
-				sampleLevel = static_cast<float>(usb.midi.midiNotes[n].timeOn) / envelope.A;
+				sampleLevel = static_cast<float>(usb.midi.midiNotes[n].envTime) / envelope.A;
 
-				if (usb.midi.midiNotes[n].timeOn >= envelope.A) {
-					usb.midi.midiNotes[n].timeOn = 0;
+				if (usb.midi.midiNotes[n].envTime >= envelope.A) {
+					usb.midi.midiNotes[n].envTime = 0;
 					usb.midi.midiNotes[n].envelope = MidiHandler::env::D;
 				}
 				break;
 
 
 			case MidiHandler::env::D:
-				sampleLevel = 1.0f - static_cast<float>(usb.midi.midiNotes[n].timeOn) / envelope.D;
+				sampleLevel = 1.0f - static_cast<float>(usb.midi.midiNotes[n].envTime) / envelope.D;
 
 				if (sampleLevel <= envelope.S) {
-					usb.midi.midiNotes[n].timeOn = 0;
+					usb.midi.midiNotes[n].envTime = 0;
 					usb.midi.midiNotes[n].envelope = MidiHandler::env::S;
 				}
 				break;

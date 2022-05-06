@@ -21,11 +21,10 @@ public:
 	enum env : uint8_t {A = 0, D = 1, S = 2, R = 3};
 
 	struct MidiNote {
-		uint8_t noteValue;
-		uint8_t envelope;		// 0 = a, 1 = D, 2 = S, 3 = R
-		uint32_t timeOn;
-		//float freq;
-		float samplePos1;
+		uint8_t noteValue;		// MIDI note value
+		uint8_t envelope;		// Stage in envelope
+		uint32_t envTime;		// envelope sample counter
+		float samplePos1;		// Current position within cycle
 		float samplePos2;
 	};
 

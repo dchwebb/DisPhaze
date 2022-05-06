@@ -53,16 +53,19 @@ void MidiHandler::midiEvent(const uint32_t* data)
 	}
 
 	if (midiData.msg == NoteOn) {
+		// Check if note is already sounding and reinitialise timing if so
 		for (uint8_t i = 0; i < noteCount; ++i) {
-			if (midiNotes[i].noteValue == midiData.db1) {		// note already in array
-				midiNotes[i].timeOn = 0;
+			if (midiNotes[i].noteValue == midiData.db1) {		// Note already in array
+				midiNotes[noteCount].envelope = A;				// Initialise to attack
+				midiNotes[i].envTime = 0;
 				return;
 			}
 		}
+
+		// Set next note to be received midi note
 		midiNotes[noteCount].noteValue = midiData.db1;
-		midiNotes[noteCount].timeOn = 0;
+		midiNotes[noteCount].envTime = 0;
 		midiNotes[noteCount].envelope = A;						// Initialise to attack
-		//midiNotes[noteCount].freq = MidiLUT[midiData.db1];
 		midiNotes[noteCount].samplePos1 = 0;
 		midiNotes[noteCount].samplePos2 = 0;
 		++noteCount;
@@ -88,13 +91,7 @@ void MidiHandler::midiEvent(const uint32_t* data)
 
 void MidiHandler::ClassSetup(usbRequest& req)
 {
-//	switch (req.Request) {
-//	case BOT_GET_MAX_LUN:
-//		if ((req.Value == 0) && ((req.RequestType & 0x80U) == 0x80U)) {
-//			SetupIn(req.Length, &maxLUN);
-//		}
-//		break;
-//	}
+
 }
 
 
