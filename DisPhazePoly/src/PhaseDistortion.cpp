@@ -1,8 +1,8 @@
 #include "PhaseDistortion.h"
 #include "USB.h"
 
-extern	bool dacRead;
-extern volatile uint32_t debugWorkTime, debugInterval;
+extern bool dacRead;
+//extern volatile uint32_t debugWorkTime, debugInterval;
 
 inline float PhaseDistortion::sinLutWrap(float pos)
 {
@@ -36,7 +36,7 @@ float PhaseDistortion::GetPhaseDist(const float* PdLUT, const float LUTPosition,
 }
 
 
-float PhaseDistortion::GetResonantWave(const float LUTPosition, float scale)
+float PhaseDistortion::GetResonantWave(const float LUTPosition, float scale, const uint8_t pdLut2)
 {
 	// models waves 6-8 of the Casio CZ which are saw/triangle envelopes into which harmonics are added as the phase distortion increases
 	static float lastSample = 0.0f;
@@ -95,6 +95,12 @@ void PhaseDistortion::CalcNextSamples()
 	uint8_t polyNotes;
 	uint32_t finetuneAdjust = 0;
 	float sampleOut1 = 0.0f, sampleOut2 = 0.0f;
+	//float pdLut1 = 0.0f;			// Phase distortion LUT - float as channel 1 allows blending
+	//uint8_t pdLut2 = 0;				// PD LUT used for channel 2
+	//bool pd2Resonant;				// Using resonant wave for channel 2
+	float freq1 = 0.0f;			// Frequency of channel 1
+	float freq2 = 0.0f;
+
 
 	//	Coarse tuning (octaves) - add some hysteresis to prevent jumping
 	if (coarseTune > ADC_array[ADC_CTune] + 128 || coarseTune < ADC_array[ADC_CTune] - 128) {
@@ -105,14 +111,14 @@ void PhaseDistortion::CalcNextSamples()
 
 	// Analog selection of PD LUT table allows a smooth transition between LUTs for DAC1 and a stepped transition for DAC2
 	pd1Type = ((31 * pd1Type) + ADC_array[ADC_Osc1Type]) / 32;
-	pdLut1 = static_cast<float>(pd1Type * (pd1LutCount - 1)) / 4096.0f;
+	float pdLut1 = static_cast<float>(pd1Type * (pd1LutCount - 1)) / 4096.0f;
 
 	// Apply hysteresis on PD 2 discrete LUT selector
 	if (pd2Type > ADC_array[ADC_Osc2Type] + 128 || pd2Type < ADC_array[ADC_Osc2Type] - 128) {
 		pd2Type = ADC_array[ADC_Osc2Type];
 	}
-	pdLut2 = pd2Type * pd2LutCount / 4096;
-	pd2Resonant = (pdLut2 > 4);
+	uint8_t pdLut2 = pd2Type * pd2LutCount / 4096;
+	bool pd2Resonant = (pdLut2 > 4);
 
 
 	// Get PD amount from pot and CV ADCs; Currently seeing 0v as ~3000 and 5V as ~960 (converted to 0.0f - 5.0f)
@@ -195,7 +201,7 @@ void PhaseDistortion::CalcNextSamples()
 //		}
 
 		if (pd2Resonant) {
-			sampleOut2 += GetResonantWave(sp2 / SAMPLERATE, pd2Scale);
+			sampleOut2 += GetResonantWave(sp2 / SAMPLERATE, pd2Scale, pdLut2);
 		} else {
 			sampleOut2 += GetPhaseDist(LUTArray[pdLut2], sp2 / SAMPLERATE, pd2Scale);
 		}

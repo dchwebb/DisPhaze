@@ -4,7 +4,7 @@
 #include <cstring>
 #include <Array>
 
-#define SAMPLERATE 72000
+#define SAMPLERATE 60000
 #define PITCH_SPREAD -583.0f
 #define PITCH_OFFSET 2259.0f
 

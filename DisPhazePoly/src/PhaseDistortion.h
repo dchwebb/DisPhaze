@@ -18,29 +18,47 @@ public:
 	void CalcNextSamples();
 
 private:
-	float pd1Scale = 0.0f;			// Amount of phase distortion
-	float pd2Scale = 0.0f;
 	uint16_t pd1Type = 0;			// Phase distortion type knob position with smoothing
 	uint16_t pd2Type = 0;
-	float pdLut1 = 0.0f;			// Phase distortion LUT - float as channel 1 allows blending
-	uint8_t pdLut2 = 0;				// PD LUT is being used for channel 2
-	bool pd2Resonant;				// Using resonant wave for channel 2
 
-	float VCALevel;
-
-	float freq1 = 440.0f;
-	float freq2 = 440.0f;
+	float pd1Scale = 0.0f;			// Amount of phase distortion with smoothing
+	float pd2Scale = 0.0f;
+	float VCALevel;					// Output level with smoothing
 	float samplePos1 = 0.0f;
 	float samplePos2 = 0.0f;
-	uint16_t pitch;
+	uint16_t pitch;					// Pitch with smoothing
 	int16_t fineTune = 0;
 	int16_t coarseTune = 0;
 
+//	float pd1Scale = 0.0f;			// Amount of phase distortion
+//	float pd2Scale = 0.0f;
+//	uint16_t pd1Type = 0;			// Phase distortion type knob position with smoothing
+//	uint16_t pd2Type = 0;
+//	float pdLut1 = 0.0f;			// Phase distortion LUT - float as channel 1 allows blending
+//	uint8_t pdLut2 = 0;				// PD LUT is being used for channel 2
+//	bool pd2Resonant;				// Using resonant wave for channel 2
+//
+//	float VCALevel;
+//
+//	float freq1 = 440.0f;
+//	float freq2 = 440.0f;
+//	float samplePos1 = 0.0f;
+//	float samplePos2 = 0.0f;
+//	uint16_t pitch;
+//	int16_t fineTune = 0;
+//	int16_t coarseTune = 0;
+
+	struct {
+		uint32_t A = 1000;
+		uint32_t D = 1000;
+		float S = 0.5f;
+		uint32_t R = 500;
+	} envelope;
 
 	float Interpolate(float* LUT, float& LUTPosition);
 	float GetPhaseDist(const float* PdLUT, const float LUTPosition, const float scale);
 	float GetBlendPhaseDist(const float PDBlend, const float LUTPosition, const float scale);
-	float GetResonantWave(const float LUTPosition, const float scale);
+	float GetResonantWave(const float LUTPosition, const float scale, const uint8_t pdLut2);
 	static float sinLutWrap(float pos);
 	float FastTanh(float x);
 };

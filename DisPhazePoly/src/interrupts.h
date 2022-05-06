@@ -7,15 +7,25 @@ void TIM3_IRQHandler(void)
 		DAC->SWTRIGR |= DAC_SWTRIGR_SWTRIG1;		// Tell the DAC to output the next value
 		DAC->SWTRIGR |= DAC_SWTRIGR_SWTRIG2;		// Tell the DAC to output the next value
 
-		if (dacRead) {								// If the buffer has not been refilled increment overrun warning
-			overrun++;
-		}
+//		if (dacRead) {								// If the buffer has not been refilled increment overrun warning
+//			overrun++;
+//		}
 
 		// Debug timing
 		debugInterval = TIM5->CNT;
 		TIM5->EGR |= TIM_EGR_UG;
 
-		dacRead = true;
+		//dacRead = true;
+
+		// Ready for next sample (Calibrating sends out a square wave for tuning so disables normal output)
+		if (!config.calibrating) {
+			phaseDist.CalcNextSamples();
+			debugWorkTime = TIM5->CNT;
+
+			if (debugWorkTime > 1150) {								// If the buffer has not been refilled increment overrun warning
+				overrun++;
+			}
+		}
 	}
 }
 
