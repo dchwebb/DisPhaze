@@ -1,6 +1,6 @@
 #include "PhaseDistortion.h"
 #include "USB.h"
-
+//#include "midiHandler.h"
 extern bool dacRead;
 //extern volatile uint32_t debugWorkTime, debugInterval;
 
@@ -94,12 +94,7 @@ void PhaseDistortion::CalcNextSamples()
 {
 	uint8_t polyNotes;
 	uint32_t finetuneAdjust = 0;
-	float sampleOut1 = 0.0f, sampleOut2 = 0.0f;
-	//float pdLut1 = 0.0f;			// Phase distortion LUT - float as channel 1 allows blending
-	//uint8_t pdLut2 = 0;				// PD LUT used for channel 2
-	//bool pd2Resonant;				// Using resonant wave for channel 2
-	float freq1 = 0.0f;			// Frequency of channel 1
-	float freq2 = 0.0f;
+	float sampleOut1 = 0.0f, sampleOut2 = 0.0f, freq1 = 0.0f, freq2 = 0.0f;
 
 
 	//	Coarse tuning (octaves) - add some hysteresis to prevent jumping
@@ -142,6 +137,7 @@ void PhaseDistortion::CalcNextSamples()
 		VCALevel = ((VCALevel * 31) + (4096.0f - ADC_array[ADC_VCA]) / 4096) / 32;		// Convert ADC for VCA to float between 0 and 1 with damping
 	}
 	TIM4->CCR2 = static_cast<uint32_t>(VCALevel * 4095.0f);								// Set LED PWM level to VCA
+
 
 	// Start separating polyphonic and monophonic functions
 	if (polyphonic) {
@@ -194,17 +190,48 @@ void PhaseDistortion::CalcNextSamples()
 		}
 
 		// Calculate output as a float from -1 to +1 checking phase distortion and phase offset as required
-//		if (polyphonic) {
-//			sampleOut1 += GetPhaseDist(LUTArray[(uint32_t)pdLut1], sp1 / SAMPLERATE, pd1Scale);
-//		} else {
-			sampleOut1 += GetBlendPhaseDist(pdLut1, sp1 / SAMPLERATE, pd1Scale);
-//		}
+		float sample1 = GetBlendPhaseDist(pdLut1, sp1 / SAMPLERATE, pd1Scale);
+		float sample2 = pd2Resonant ?
+				GetResonantWave(sp2 / SAMPLERATE, pd2Scale, pdLut2) :
+				GetPhaseDist(LUTArray[pdLut2], sp2 / SAMPLERATE, pd2Scale);
 
-		if (pd2Resonant) {
-			sampleOut2 += GetResonantWave(sp2 / SAMPLERATE, pd2Scale, pdLut2);
-		} else {
-			sampleOut2 += GetPhaseDist(LUTArray[pdLut2], sp2 / SAMPLERATE, pd2Scale);
+		// Calculate envelope levels of polyphonic voices
+		if (polyphonic) {
+			float sampleLevel = 0.0f;
+
+			switch (usb.midi.midiNotes[n].envelope) {
+			case MidiHandler::env::A:
+				sampleLevel = static_cast<float>(usb.midi.midiNotes[n].timeOn) / envelope.A;
+
+				if (usb.midi.midiNotes[n].timeOn >= envelope.A) {
+					usb.midi.midiNotes[n].timeOn = 0;
+					usb.midi.midiNotes[n].envelope = MidiHandler::env::D;
+				}
+				break;
+
+
+			case MidiHandler::env::D:
+				sampleLevel = 1.0f - static_cast<float>(usb.midi.midiNotes[n].timeOn) / envelope.D;
+
+				if (sampleLevel <= envelope.S) {
+					usb.midi.midiNotes[n].timeOn = 0;
+					usb.midi.midiNotes[n].envelope = MidiHandler::env::S;
+				}
+				break;
+
+
+			case MidiHandler::env::S:
+				sampleLevel = envelope.S;
+				break;
+			}
+
+			// Calculate output as a float from -1 to +1 checking phase distortion and phase offset as required
+			sample1 *= sampleLevel;
+			sample2 *= sampleLevel;
+
 		}
+		sampleOut1 += sample1;
+		sampleOut2 += sample2;
 
 	}
 

@@ -49,9 +49,9 @@ private:
 //	int16_t coarseTune = 0;
 
 	struct {
-		uint32_t A = 1000;
-		uint32_t D = 1000;
-		float S = 0.5f;
+		uint32_t A = 10000;
+		uint32_t D = 10000;
+		float S = 0.05f;
 		uint32_t R = 500;
 	} envelope;
 

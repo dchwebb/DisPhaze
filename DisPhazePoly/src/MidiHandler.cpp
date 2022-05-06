@@ -61,7 +61,8 @@ void MidiHandler::midiEvent(const uint32_t* data)
 		}
 		midiNotes[noteCount].noteValue = midiData.db1;
 		midiNotes[noteCount].timeOn = 0;
-		midiNotes[noteCount].freq = MidiLUT[midiData.db1];
+		midiNotes[noteCount].envelope = A;						// Initialise to attack
+		//midiNotes[noteCount].freq = MidiLUT[midiData.db1];
 		midiNotes[noteCount].samplePos1 = 0;
 		midiNotes[noteCount].samplePos2 = 0;
 		++noteCount;
@@ -76,7 +77,7 @@ void MidiHandler::midiEvent(const uint32_t* data)
 /*
 	if (midiData.msg == NoteOff || midiData.msg == NoteOn) {
 		std::string out = "Note count: " + std::to_string(noteCount) + " [" +
-				std::to_string(midiNotes[0].noteValue) + " " + std::to_string(midiNotes[0].freq) + ", " +
+				std::to_string(midiNotes[0].noteValue) + " " + std::to_string(midiNotes[0].timeOn) + ", " +
 				std::to_string(midiNotes[1].noteValue) + " " + std::to_string(midiNotes[1].timeOn) + ", " +
 				std::to_string(midiNotes[2].noteValue) + " " + std::to_string(midiNotes[2].timeOn) + ", " +
 				std::to_string(midiNotes[3].noteValue) + " " + std::to_string(midiNotes[3].timeOn) + "]\r";

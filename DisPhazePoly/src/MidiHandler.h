@@ -18,11 +18,13 @@ public:
 	void ClassSetupData(usbRequest& req, const uint8_t* data) override;
 
 	enum MIDIType {Unknown = 0, NoteOn = 0x9, NoteOff = 0x8, PolyPressure = 0xA, ControlChange = 0xB, ProgramChange = 0xC, ChannelPressure = 0xD, PitchBend = 0xE, System = 0xF };
+	enum env : uint8_t {A = 0, D = 1, S = 2, R = 3};
 
 	struct MidiNote {
 		uint8_t noteValue;
+		uint8_t envelope;		// 0 = a, 1 = D, 2 = S, 3 = R
 		uint32_t timeOn;
-		float freq;
+		//float freq;
 		float samplePos1;
 		float samplePos2;
 	};

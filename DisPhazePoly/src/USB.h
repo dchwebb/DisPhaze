@@ -1,9 +1,9 @@
 #pragma once
 
-#include <MidiHandler.h>
 #include "initialisation.h"
 #include "USBHandler.h"
 #include "CDCHandler.h"
+#include <MidiHandler.h>
 #include <functional>
 #include <cstring>
 
