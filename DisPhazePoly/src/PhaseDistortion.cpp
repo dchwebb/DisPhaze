@@ -146,11 +146,12 @@ void PhaseDistortion::CalcNextSamples()
 	}
 
 	for (uint8_t n = 0; n < polyNotes; ++n) {
+
+		// Calculate frequencies
 		if (polyphonic) {
 			freq1 = MidiLUT[usb.midi.midiNotes[n].noteValue + finetuneAdjust];
 			++usb.midi.midiNotes[n].envTime;
 		} else {
-			// Calculate frequencies
 			pitch = ((3 * pitch) + ADC_array[ADC_Pitch]) / 4;				// 1V/Oct input with smoothing
 			freq1 = PitchLUT[(pitch + ((2048 - fineTune) / 32)) / 4];		// divide by four as there are 1024 items in DAC CV Voltage to Pitch Freq LUT and 4096 possible DAC voltage values
 		}

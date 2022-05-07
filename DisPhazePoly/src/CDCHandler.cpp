@@ -44,21 +44,62 @@ void CDCHandler::ProcessCommand()
 	if (cmdPending) {
 		std::string cmd = std::string(comCmd);
 		if (cmd.compare("help\n") == 0) {
-			usb->SendString("Mountjoy MSC_CDC - supported commands:\n\n"
-					"help      -  Shows this information\n"
+			usb->SendString("Mountjoy DisPhaze Poly - supported commands:\n\n"
+					"help           -  Shows this information\n"
+					"info           -  Display current settings\n"
+					"poly           -  Switches between polyphonic and monophonic mode\n"
+					"attack:xxxx    -  Set polyphonic attack time in samples\n"
+					"decay:xxxx     -  Set decay time in samples\n"
+					"sustain:x.xx   -  Set sustain 0.0 - 1.0\n"
+					"release:xxxx   -  Set release time in samples\n"
 			);
+
+		} else if (cmd.compare("info\n") == 0) {
+
+			usb->SendString("Polyphonic mode: " + std::string(phaseDist.polyphonic ? "on\r\n": "off\r\n") +
+					"Envelope: A:" + std::to_string(phaseDist.envelope.A) +
+					", D: " + std::to_string(phaseDist.envelope.D) +
+					", S: 0." + std::to_string(static_cast<uint8_t>(100.0f * phaseDist.envelope.S)) +
+					", R: " + std::to_string(phaseDist.envelope.R) +
+					"\n\r");
 
 		} else if (cmd.compare("poly\n") == 0) {
 			phaseDist.polyphonic = !phaseDist.polyphonic;
-			usb->SendString("Polyphonic mode:" + std::string(phaseDist.polyphonic ? "on\n": "off\n"));
+			usb->SendString("Polyphonic mode: " + std::string(phaseDist.polyphonic ? "on\r\n": "off\r\n"));
 
-		} else if (cmd.compare(0, 8, "sustain:") == 0) {		// Envelope sustain amount
+		} else if (cmd.compare(0, 7, "attack:") == 0) {			// Envelope attack time in samples
 			uint16_t val = ParseInt(cmd, ':', 1, 65535);
 			if (val > 0) {
 				phaseDist.envelope.A = val;
 				//config.SaveConfig();
 			}
-			usb->SendString("Sustain set to: " + std::to_string(phaseDist.envelope.A) + "\r\n");
+			usb->SendString("Attack set to: " + std::to_string(phaseDist.envelope.A) + " samples\r\n");
+
+		} else if (cmd.compare(0, 6, "decay:") == 0) {			// Envelope decay time in samples
+			uint16_t val = ParseInt(cmd, ':', 1, 65535);
+			if (val > 0) {
+				phaseDist.envelope.D = val;
+				//config.SaveConfig();
+			}
+			usb->SendString("Decay set to: " + std::to_string(phaseDist.envelope.D) + " samples\r\n");
+
+		} else if (cmd.compare(0, 8, "sustain:") == 0) {		// Envelope sustain amount
+			float val = ParseFloat(cmd, ':', 0.0f, 1.0f);
+			if (val > 0.0f) {
+				phaseDist.envelope.S = val;
+				//config.SaveConfig();
+			}
+			std::string s = std::to_string(static_cast<uint8_t>(100.0f * phaseDist.envelope.S));		// FIXME - using to_string on float crashes for some reason
+			usb->SendString("Sustain set to: 0." + s + "\r\n");
+
+		} else if (cmd.compare(0, 8, "release:") == 0) {		// Envelope release time in samples
+			uint16_t val = ParseInt(cmd, ':', 1, 65535);
+			if (val > 0) {
+				phaseDist.envelope.R = val;
+				//config.SaveConfig();
+			}
+			usb->SendString("Release set to: " + std::to_string(phaseDist.envelope.R) + " samples\r\n");
+
 		} else {
 			usb->SendString("Unrecognised command. Type 'help' for supported commands\n");
 		}
