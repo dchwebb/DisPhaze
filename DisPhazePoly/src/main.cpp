@@ -66,6 +66,7 @@ int main(void)
 	InitADC();						// Configure ADC for analog controls
 	InitDebugTimer();				// Timer to check available calculation time
 	InitPWMTimer();					// PWM timers for LED control
+	InitMidiUART();
 
 	usb.Init();
 

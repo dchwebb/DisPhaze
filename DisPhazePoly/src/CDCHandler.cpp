@@ -1,5 +1,6 @@
 #include "USB.h"
 #include "CDCHandler.h"
+#include "PhaseDistortion.h"
 
 void CDCHandler::DataIn()
 {
@@ -46,6 +47,18 @@ void CDCHandler::ProcessCommand()
 			usb->SendString("Mountjoy MSC_CDC - supported commands:\n\n"
 					"help      -  Shows this information\n"
 			);
+
+		} else if (cmd.compare("poly\n") == 0) {
+			phaseDist.polyphonic = !phaseDist.polyphonic;
+			usb->SendString("Polyphonic mode:" + std::string(phaseDist.polyphonic ? "on\n": "off\n"));
+
+		} else if (cmd.compare(0, 8, "sustain:") == 0) {		// Envelope sustain amount
+			uint16_t val = ParseInt(cmd, ':', 1, 65535);
+			if (val > 0) {
+				phaseDist.envelope.A = val;
+				//config.SaveConfig();
+			}
+			usb->SendString("Sustain set to: " + std::to_string(phaseDist.envelope.A) + "\r\n");
 		} else {
 			usb->SendString("Unrecognised command. Type 'help' for supported commands\n");
 		}
@@ -54,3 +67,28 @@ void CDCHandler::ProcessCommand()
 }
 
 
+int32_t CDCHandler::ParseInt(const std::string cmd, const char precedingChar, int low = 0, int high = 0) {
+	int32_t val = -1;
+	int8_t pos = cmd.find(precedingChar);		// locate position of character preceding
+	if (pos >= 0 && std::strspn(cmd.substr(pos + 1).c_str(), "0123456789-") > 0) {
+		val = stoi(cmd.substr(pos + 1));
+	}
+	if (high > low && (val > high || val < low)) {
+		usb->SendString("Must be a value between " + std::to_string(low) + " and " + std::to_string(high) + "\r\n");
+		return low - 1;
+	}
+	return val;
+}
+
+float CDCHandler::ParseFloat(const std::string cmd, const char precedingChar, float low = 0.0, float high = 0.0) {
+	float val = -1.0f;
+	int8_t pos = cmd.find(precedingChar);		// locate position of character preceding
+	if (pos >= 0 && std::strspn(cmd.substr(pos + 1).c_str(), "0123456789.") > 0) {
+		val = stof(cmd.substr(pos + 1));
+	}
+	if (high > low && (val > high || val < low)) {
+		usb->SendString("Must be a value between " + std::to_string(low) + " and " + std::to_string(high) + "\r\n");
+		return low - 1.0f;
+	}
+	return val;
+}

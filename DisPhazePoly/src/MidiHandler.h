@@ -2,7 +2,7 @@
 
 #include "initialisation.h"
 #include "USBHandler.h"
-
+#define MIDIQUEUESIZE 20
 
 class USB;
 
@@ -16,6 +16,8 @@ public:
 	void DataOut() override;
 	void ClassSetup(usbRequest& req) override;
 	void ClassSetupData(usbRequest& req, const uint8_t* data) override;
+	void RemoveNote(uint8_t note);
+	void serialHandler(uint32_t data);
 
 	enum MIDIType {Unknown = 0, NoteOn = 0x9, NoteOff = 0x8, PolyPressure = 0xA, ControlChange = 0xB, ProgramChange = 0xC, ChannelPressure = 0xD, PitchBend = 0xE, System = 0xF };
 	enum env : uint8_t {A = 0, D = 1, S = 2, R = 3};
@@ -32,7 +34,8 @@ public:
 	std::array<MidiNote, polyCount + 1>midiNotes;			// Add one too many notes to the array to allow easier shuffling of polyphony
 	uint8_t noteCount = 0;									// Number of notes currently sounding
 private:
-	void midiEvent(const uint32_t* data);
+	void midiEvent(const uint32_t data);
+	void QueueInc();
 
 	uint32_t xfer_buff[64];									// OUT Data filled in RxLevel Interrupt
 
@@ -50,8 +53,12 @@ private:
 			uint8_t db1;
 			uint8_t db2;
 		};
-	} midiData;
+	};
 
+	uint8_t Queue[MIDIQUEUESIZE];			// hold incoming serial MIDI bytes
+	uint8_t QueueRead = 0;
+	uint8_t QueueWrite = 0;
+	uint8_t QueueSize = 0;
 
 	uint8_t sysEx[32];
 	uint8_t sysExCount = 0;

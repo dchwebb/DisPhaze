@@ -17,6 +17,13 @@ public:
 
 	void CalcNextSamples();
 
+	struct {
+		uint32_t A = 10000;
+		uint32_t D = 10000;
+		float S = 0.5f;
+		uint32_t R = 5000;
+	} envelope;
+
 private:
 	uint16_t pd1Type = 0;			// Phase distortion type knob position with smoothing
 	uint16_t pd2Type = 0;
@@ -29,13 +36,6 @@ private:
 	uint16_t pitch;					// Pitch with smoothing
 	int16_t fineTune = 0;
 	int16_t coarseTune = 0;
-
-	struct {
-		uint32_t A = 10000;
-		uint32_t D = 10000;
-		float S = 0.05f;
-		uint32_t R = 500;
-	} envelope;
 
 	float Interpolate(float* LUT, float& LUTPosition);
 	float GetPhaseDist(const float* PdLUT, const float LUTPosition, const float scale);

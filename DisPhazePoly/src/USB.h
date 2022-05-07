@@ -103,6 +103,7 @@ public:
 	void Init();
 	void SendData(const uint8_t *data, uint16_t len, uint8_t endpoint);
 	void SendString(const char* s);
+	void SendString(std::string s);
 
 	EP0Handler ep0 = EP0Handler(this, 0, 0, NoInterface);
 	MidiHandler midi = MidiHandler(this, USB::Midi_In, USB::Midi_Out, MidiInterface);

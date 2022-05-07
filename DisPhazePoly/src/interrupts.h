@@ -22,7 +22,7 @@ void TIM3_IRQHandler(void)
 			phaseDist.CalcNextSamples();
 			debugWorkTime = TIM5->CNT;
 
-			if (debugWorkTime > 1150) {								// If the buffer has not been refilled increment overrun warning
+			if (debugWorkTime > 1384) {								// If the buffer has not been refilled increment overrun warning
 				overrun++;
 			}
 		}
@@ -75,6 +75,13 @@ void EXTI9_5_IRQHandler(void)
 
 void OTG_FS_IRQHandler(void) {
 	usb.InterruptHandler();
+}
+
+// MIDI Decoder
+void UART4_IRQHandler(void) {
+	if (UART4->SR | USART_SR_RXNE) {
+		usb.midi.serialHandler(UART4->DR); 				// accessing DR automatically resets the receive flag
+	}
 }
 
 void NMI_Handler(void) {}

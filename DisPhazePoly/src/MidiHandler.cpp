@@ -11,7 +11,7 @@ void MidiHandler::DataOut()
 {
 	// Handle incoming midi command here
 	if (outBuffCount == 4) {
-		midiEvent(outBuff);
+		midiEvent(*outBuff);
 
 	} else if (outBuff[1] == 0xF0 && outBuffCount > 3) {		// Sysex
 		// sysEx will be padded when supplied by usb - add only actual sysEx message bytes to array
@@ -31,32 +31,25 @@ void MidiHandler::DataOut()
 
 
 
-void MidiHandler::midiEvent(const uint32_t* data)
+void MidiHandler::midiEvent(const uint32_t data)
 {
-	midiData = *(MidiData*)data;
+	auto midiData = MidiData(data);
 
 	// Note off - if note is in middle of sequence shuffle rest of notes up the array
 	if (midiData.msg == NoteOff) {
-		bool moveUp = false;
 		for (uint8_t i = 0; i < noteCount; ++i) {
-			if (midiNotes[i].noteValue == midiData.db1) {		// note already in array - overwrite with later notes
-				moveUp = true;
-			} else {
-				if (moveUp) {
-					midiNotes[i - 1] = midiNotes[i];
-				}
+			if (midiNotes[i].noteValue == midiData.db1) {		// note found - set to release
+				midiNotes[i].envelope = R;
+				midiNotes[i].envTime = 0;
 			}
-		}
-		if (moveUp) {
-			--noteCount;
 		}
 	}
 
 	if (midiData.msg == NoteOn) {
 		// Check if note is already sounding and reinitialise timing if so
 		for (uint8_t i = 0; i < noteCount; ++i) {
-			if (midiNotes[i].noteValue == midiData.db1) {		// Note already in array
-				midiNotes[noteCount].envelope = A;				// Initialise to attack
+			if (midiNotes[i].noteValue == midiData.db1) {		// Note already playing - reinitialise to Attack
+				midiNotes[noteCount].envelope = A;
 				midiNotes[i].envTime = 0;
 				return;
 			}
@@ -87,6 +80,65 @@ void MidiHandler::midiEvent(const uint32_t* data)
 		usb->SendString(out.c_str());
 	}
 	*/
+}
+
+
+void MidiHandler::serialHandler(uint32_t data) {
+	Queue[QueueWrite] = data;
+	QueueSize++;
+	QueueWrite = (QueueWrite + 1) % MIDIQUEUESIZE;
+
+	MIDIType type = static_cast<MIDIType>(Queue[QueueRead] >> 4);
+	uint8_t channel = Queue[QueueRead] & 0x0F;
+
+	//NoteOn = 0x9, NoteOff = 0x8, PolyPressure = 0xA, ControlChange = 0xB, ProgramChange = 0xC, ChannelPressure = 0xD, PitchBend = 0xE, System = 0xF
+	while ((QueueSize > 2 && (type == NoteOn || type == NoteOff || type == PolyPressure ||  type == ControlChange ||  type == PitchBend)) ||
+			(QueueSize > 1 && (type == ProgramChange || type == ChannelPressure))) {
+
+		MidiData event;
+		event.chn = channel;
+		event.msg = (uint8_t)type;
+
+		QueueInc();
+		event.db1 = Queue[QueueRead];
+		QueueInc();
+		if (type == ProgramChange || type == ChannelPressure) {
+			event.db2 = 0;
+		} else {
+			event.db2 = Queue[QueueRead];
+			QueueInc();
+		}
+
+		midiEvent(event.data);
+
+		type = static_cast<MIDIType>(Queue[QueueRead] >> 4);
+		channel = Queue[QueueRead] & 0x0F;
+	}
+
+	// Clock
+	if (QueueSize > 0 && Queue[QueueRead] == 0xF8) {
+		midiEvent(0xF800);
+		QueueInc();
+	}
+
+	//	handle unknown data in queue
+	if (QueueSize > 2 && type != 0x9 && type != 0x8 && type != 0xD && type != 0xE) {
+		QueueInc();
+	}
+}
+
+
+inline void MidiHandler::QueueInc() {
+	QueueSize--;
+	QueueRead = (QueueRead + 1) % MIDIQUEUESIZE;
+}
+
+// Called when the release phase of a note has ended to remove from polyphony array
+void MidiHandler::RemoveNote(uint8_t note) {
+	for (uint8_t i = note; i < noteCount; ++i) {
+		midiNotes[i] = midiNotes[i + 1];
+	}
+	--noteCount;
 }
 
 void MidiHandler::ClassSetup(usbRequest& req)

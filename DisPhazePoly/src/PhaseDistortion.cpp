@@ -1,8 +1,8 @@
 #include "PhaseDistortion.h"
 #include "USB.h"
-//#include "midiHandler.h"
+
 extern bool dacRead;
-//extern volatile uint32_t debugWorkTime, debugInterval;
+//volatile uint8_t debugNotes;
 
 inline float PhaseDistortion::sinLutWrap(float pos)
 {
@@ -24,18 +24,6 @@ float PhaseDistortion::Interpolate(float* LUT, float& LUTPosition)
 }
 
 
-// Generate a phase distorted sine wave - pass LUT containing PD offsets, LUT position as a fraction of the wave cycle and a scaling factor
-float PhaseDistortion::GetPhaseDist(const float* PdLUT, const float LUTPosition, const float scale)
-{
-	float phaseDist = PdLUT[static_cast<int32_t>(LUTPosition * LUTSIZE)] * SINLUTSIZE * scale;
-
-	// Add main wave position to phase distortion position and ensure in bounds
-	float pos = sinLutWrap((LUTPosition * SINLUTSIZE) + phaseDist);
-
-	return SineLUT[static_cast<uint32_t>(pos)];
-}
-
-
 float PhaseDistortion::GetResonantWave(const float LUTPosition, float scale, const uint8_t pdLut2)
 {
 	// models waves 6-8 of the Casio CZ which are saw/triangle envelopes into which harmonics are added as the phase distortion increases
@@ -45,8 +33,6 @@ float PhaseDistortion::GetResonantWave(const float LUTPosition, float scale, con
 
 	// offset to 3/4 of the way through the sine wave so each cycle starts at the flat top of the wave
 	constexpr float sineOffset = static_cast<float>(3 * (SINLUTSIZE / 4));
-
-	float pos = sinLutWrap(((LUTPosition * SINLUTSIZE) * scale) + sineOffset);
 
 	// Scale the amplitude of the cycle from 1 to 0 to create a saw tooth type envelope on each cycle
 	float ampMod = 1.0f;
@@ -58,6 +44,7 @@ float PhaseDistortion::GetResonantWave(const float LUTPosition, float scale, con
 		ampMod = (LUTPosition * 2.0f);
 	}
 
+	float pos = sinLutWrap(((LUTPosition * SINLUTSIZE) * scale) + sineOffset);
 	float sineSample = SineLUT[static_cast<uint32_t>(pos)];
 	sineSample = (sineSample + 1.0f) * ampMod;		// Offset so all positive and then apply amplitude envelope to create sawtooth
 
@@ -65,6 +52,17 @@ float PhaseDistortion::GetResonantWave(const float LUTPosition, float scale, con
 	return lastSample;
 }
 
+
+// Generate a phase distorted sine wave - pass LUT containing PD offsets, LUT position as a fraction of the wave cycle and a scaling factor
+float PhaseDistortion::GetPhaseDist(const float* PdLUT, const float LUTPosition, const float scale)
+{
+	float phaseDist = PdLUT[static_cast<int32_t>(LUTPosition * LUTSIZE)] * SINLUTSIZE * scale;
+
+	// Add main wave position to phase distortion position and ensure in bounds
+	float pos = sinLutWrap((LUTPosition * SINLUTSIZE) + phaseDist);
+
+	return SineLUT[static_cast<uint32_t>(pos)];
+}
 
 
 // Generate a phase distorted sine wave - pass LUT containing PD offsets, LUT position as a fraction of the wave cycle and a scaling factor
@@ -96,6 +94,7 @@ void PhaseDistortion::CalcNextSamples()
 	uint32_t finetuneAdjust = 0;
 	float sampleOut1 = 0.0f, sampleOut2 = 0.0f, freq1 = 0.0f, freq2 = 0.0f;
 
+	//debugNotes = usb.midi.noteCount;
 
 	//	Coarse tuning (octaves) - add some hysteresis to prevent jumping
 	if (coarseTune > ADC_array[ADC_CTune] + 128 || coarseTune < ADC_array[ADC_CTune] - 128) {
@@ -127,7 +126,6 @@ void PhaseDistortion::CalcNextSamples()
 		pd2Scale = ((pd2Scale * 31) + tmpPD2Scale) / 32;
 	}
 
-
 	// Get VCA levels (filtering out very low level VCA signals)
 	if (ADC_array[ADC_VCA] > 4070) {
 		VCALevel = 0.0f;
@@ -156,7 +154,6 @@ void PhaseDistortion::CalcNextSamples()
 			pitch = ((3 * pitch) + ADC_array[ADC_Pitch]) / 4;				// 1V/Oct input with smoothing
 			freq1 = PitchLUT[(pitch + ((2048 - fineTune) / 32)) / 4];		// divide by four as there are 1024 items in DAC CV Voltage to Pitch Freq LUT and 4096 possible DAC voltage values
 		}
-
 
 		if (coarseTune > 3412) {
 			freq1 *= 4;
@@ -223,33 +220,54 @@ void PhaseDistortion::CalcNextSamples()
 			case MidiHandler::env::S:
 				sampleLevel = envelope.S;
 				break;
+
+			case MidiHandler::env::R:
+				sampleLevel = envelope.S - static_cast<float>(usb.midi.midiNotes[n].envTime) / envelope.R;
+
+				if (sampleLevel <= 0.0f) {
+					usb.midi.RemoveNote(n);
+				}
+				break;
 			}
 
 			// Calculate output as a float from -1 to +1 checking phase distortion and phase offset as required
+			if (ringModOn)			sample1 *= sample2;
+			if (mixOn) 				sample2 += sample1;
+
 			sample1 *= sampleLevel;
 			sample2 *= sampleLevel;
 
+		} else {
+			if (ringModOn)			sample1 *= sample2;
+			if (mixOn) 				sample2 += sample1;
+
+			sample1 *= VCALevel;
+			sample2 *= VCALevel;
 		}
+
+
 		sampleOut1 += sample1;
 		sampleOut2 += sample2;
 
 	}
 
+	// Set DAC output values for when sample interrupt next fires (NB DAC and channels are reversed: ie DAC1 connects to channel2 and vice versa)
+	DAC->DHR12R2 = static_cast<int32_t>((1.0f + FastTanh(sampleOut1)) * 2047.0f);
+	DAC->DHR12R1 = static_cast<int32_t>((1.0f + FastTanh(sampleOut2)) * 2047.0f);
 
-
+/*
 	// Set DAC output values for when sample interrupt next fires (NB DAC and channels are reversed: ie DAC1 connects to channel2 and vice versa)
 	if (ringModOn) {
 		DAC->DHR12R2 = static_cast<int32_t>((1.0f + (sampleOut1 * sampleOut2) * VCALevel) * 2047);			// Ring mod of 1 * 2
 	} else {
-		DAC->DHR12R2 = static_cast<int32_t>((1.0f + sampleOut1 * VCALevel) * 2047);
-		//DAC->DHR12R2 = static_cast<int32_t>((1 + FastTanh(sampleOut1 * VCALevel)) * 2047);
+		DAC->DHR12R2 = static_cast<int32_t>((1.0f + FastTanh(sampleOut1 * VCALevel)) * 2047);
 	}
 	if (mixOn) {
 		DAC->DHR12R1 = static_cast<int32_t>(((2.0f + (sampleOut1 + sampleOut2) * VCALevel) / 2) * 2047);	// Mix of 1 + 2
 	} else {
 		DAC->DHR12R1 = static_cast<int32_t>((1.0f + sampleOut2 * VCALevel) * 2047);
 	}
-
+*/
 	dacRead = 0;		// Clear ready for next sample flag
 }
 

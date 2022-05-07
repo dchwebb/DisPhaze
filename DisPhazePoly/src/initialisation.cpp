@@ -73,7 +73,7 @@ void InitDAC()
 
 	DAC->CR |= DAC_CR_EN1;							// Enable DAC using PA4 (DAC_OUT1)
 	DAC->CR |= DAC_CR_BOFF1;						// Enable DAC channel output buffer to reduce the output impedance
-	DAC->CR |= DAC_CR_TEN1;							// DAC 1 enable trigger
+	DAC->CR |= DAC_CR_TEN1;							// DAC 1 enable trigger - allows samples to be loaded into DAC then sent on interrupt
 	DAC->CR |= DAC_CR_TSEL1;						// Set trigger to software (0b111: Software trigger)
 
 	DAC->CR |= DAC_CR_EN2;							// Enable DAC using PA5 (DAC_OUT2)
@@ -358,3 +358,24 @@ void InitPWMTimer()
 }
 
 
+void InitMidiUART() {
+	// PC11 UART4_RX
+
+	RCC->APB1ENR |= RCC_APB1ENR_UART4EN;			// UART4 clock enable
+
+	GPIOC->MODER |= GPIO_MODER_MODER11_1;			// Set alternate function on PC11
+	GPIOC->AFR[1] |= 0b1000 << 12;					// Alternate function on PC11 for UART4_RX is 1000: AF8
+
+	int Baud = (SystemCoreClock / 4) / (16 * 31250);
+	UART4->BRR |= Baud << 4;						// Baud Rate (called USART_BRR_DIV_Mantissa) = (Sys Clock: 168MHz / APB1 Prescaler DIV4: 42MHz) / (16 * 31250) = 84
+	UART4->CR1 &= ~USART_CR1_M;						// Clear bit to set 8 bit word length
+	UART4->CR1 |= USART_CR1_RE;						// Receive enable
+
+	// Set up interrupts
+	UART4->CR1 |= USART_CR1_RXNEIE;
+	NVIC_SetPriority(UART4_IRQn, 3);				// Lower is higher priority
+	NVIC_EnableIRQ(UART4_IRQn);
+
+	UART4->CR1 |= USART_CR1_UE;						// USART Enable
+
+}

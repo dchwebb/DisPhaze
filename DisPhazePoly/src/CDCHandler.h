@@ -35,4 +35,7 @@ private:
 	enum {SetLineCoding = 0x20, GetLineCoding = 0x21};						// See CDC documentation rev 1.2 p.30
 	enum {HtoD_Class_Interface = 0x21, DtoH_Class_Interface = 0xA1};		// A1 = [1|01|00001] Device to host | Class | Interface;
 	uint32_t xfer_buff[64];
+
+	int32_t ParseInt(const std::string cmd, const char precedingChar, int low, int high);
+	float ParseFloat(const std::string cmd, const char precedingChar, float low, float high);
 };
