@@ -36,14 +36,22 @@ void CreateLUTs()
 
 #include <array>
 
+constexpr float midiLUTFirstNote = 21.0f;			// 21 = 27.5Hz (A0)
+constexpr float midiLUTNotes = 100.0f;				// 121 = 8869.84Hz (C#9)
+
 constexpr auto CreateMidiLUT()
 {
-	std::array<float, MIDIPITCHLUTSIZE> array {};
-	for (int i = 0; i < MIDIPITCHLUTSIZE; ++i) {
-		array[i] = 440 * std::pow(2.0, (i - 69.0) / 12.0);
+	// Generate MIDI note to pitch lookup - this uses fractional MIDI note numbers to allow for pitchbends, fine tuning etc
+
+	std::array<float, midiLUTSize> array {};
+	for (int i = 0; i < midiLUTSize; ++i) {
+		float n = midiLUTFirstNote + ((float)i / (float)midiLUTSize) * midiLUTNotes;
+		array[i] = 440.0f * std::pow(2.0f, (n - 69.0f) / 12.0f);
 	}
 	return array;
 }
 
-constexpr std::array<float, MIDIPITCHLUTSIZE> MidiLUT = CreateMidiLUT();
+
+
+constexpr std::array<float, midiLUTSize> MidiLUT = CreateMidiLUT();
 

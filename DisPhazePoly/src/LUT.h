@@ -7,7 +7,7 @@
 // LUT sizes are probably all going to be constant
 #define LUTSIZE 1024
 #define SINLUTSIZE 16384
-#define MIDIPITCHLUTSIZE 127
+#define midiLUTSize 4096
 
 extern const float PDSquareLUT[LUTSIZE];
 extern const float PDSawLUT[LUTSIZE];
@@ -21,6 +21,8 @@ extern const float* LUTArray[7];
 
 extern float SineLUT[SINLUTSIZE];
 extern float PitchLUT[LUTSIZE];
-extern const std::array<float, MIDIPITCHLUTSIZE> MidiLUT;
+extern const std::array<float, midiLUTSize> MidiLUT;
+extern const float midiLUTFirstNote;
+extern const float midiLUTNotes;
 
 void CreateLUTs();

@@ -23,7 +23,8 @@ public:
 	enum env : uint8_t {A = 0, D = 1, S = 2, R = 3};
 
 	struct MidiNote {
-		uint8_t noteValue;		// MIDI note value
+		uint8_t origNote;		// MIDI note value
+		float noteValue;		// MIDI note value adjusted with pitch bend
 		uint8_t envelope;		// Stage in envelope
 		uint32_t envTime;		// envelope sample counter
 		float samplePos1;		// Current position within cycle
@@ -38,6 +39,9 @@ private:
 	void QueueInc();
 
 	uint32_t xfer_buff[64];									// OUT Data filled in RxLevel Interrupt
+
+	float pitchBend = 0.0f;									// Current pitchbend amount
+	const float pitchBendSemiTones = 2.0f;					// Number of semitones for a full pitchbend
 
 	// Struct for holding incoming USB MIDI data
 	union MidiData {

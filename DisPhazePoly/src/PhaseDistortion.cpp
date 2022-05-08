@@ -91,7 +91,7 @@ float PhaseDistortion::GetBlendPhaseDist(const float pdBlend, const float LUTPos
 void PhaseDistortion::CalcNextSamples()
 {
 	uint8_t polyNotes;
-	uint32_t finetuneAdjust = 0;
+	float finetuneAdjust = 0.0f;
 	float sampleOut1 = 0.0f, sampleOut2 = 0.0f, freq1 = 0.0f, freq2 = 0.0f;
 
 	//debugNotes = usb.midi.noteCount;
@@ -100,7 +100,7 @@ void PhaseDistortion::CalcNextSamples()
 	if (coarseTune > ADC_array[ADC_CTune] + 128 || coarseTune < ADC_array[ADC_CTune] - 128) {
 		coarseTune = ADC_array[ADC_CTune];
 	}
-	fineTune = ((15 * fineTune) + ADC_array[ADC_FTune]) / 16;		// Fine tune with smoothing
+	fineTune = ((31 * fineTune) + ADC_array[ADC_FTune]) / 32;		// Fine tune with smoothing
 
 
 	// Analog selection of PD LUT table allows a smooth transition between LUTs for DAC1 and a stepped transition for DAC2
@@ -140,7 +140,7 @@ void PhaseDistortion::CalcNextSamples()
 	// Start separating polyphonic and monophonic functions
 	if (polyphonic) {
 		polyNotes = usb.midi.noteCount;
-		finetuneAdjust = static_cast<uint32_t>((2048.0f - fineTune) / 340.0f);
+		finetuneAdjust = (2048.0f - fineTune) / 340.0f;
 	} else {
 		polyNotes = 1;
 	}
@@ -149,7 +149,11 @@ void PhaseDistortion::CalcNextSamples()
 
 		// Calculate frequencies
 		if (polyphonic) {
-			freq1 = MidiLUT[usb.midi.midiNotes[n].noteValue + finetuneAdjust];
+			//freq1 = MidiLUT[usb.midi.midiNotes[n].noteValue + finetuneAdjust];
+
+			float lutIndex = (usb.midi.midiNotes[n].noteValue + finetuneAdjust - midiLUTFirstNote) * midiLUTSize / midiLUTNotes;
+			freq1 = MidiLUT[static_cast<uint32_t>(lutIndex)];
+
 			++usb.midi.midiNotes[n].envTime;
 		} else {
 			pitch = ((3 * pitch) + ADC_array[ADC_Pitch]) / 4;				// 1V/Oct input with smoothing
