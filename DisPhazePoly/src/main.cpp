@@ -77,12 +77,6 @@ int main(void)
 	while (1) {
 		config.Calibrate();			// Checks if calibrate button has been pressed and runs calibration routine if so
 
-//		// Ready for next sample (Calibrating sends out a square wave for tuning so disables normal output)
-//		if (dacRead && !config.calibrating) {
-//			phaseDist.CalcNextSamples();
-//			debugWorkTime = TIM5->CNT;
-//		}
-
 #if (USB_DEBUG)
 		if (uartCmdRdy) {
 			uartCommand();

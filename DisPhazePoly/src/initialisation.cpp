@@ -373,7 +373,7 @@ void InitMidiUART() {
 
 	// Set up interrupts
 	UART4->CR1 |= USART_CR1_RXNEIE;
-	NVIC_SetPriority(UART4_IRQn, 3);				// Lower is higher priority
+	NVIC_SetPriority(UART4_IRQn, 2);				// Lower is higher priority
 	NVIC_EnableIRQ(UART4_IRQn);
 
 	UART4->CR1 |= USART_CR1_UE;						// USART Enable

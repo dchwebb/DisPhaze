@@ -57,7 +57,7 @@ void MidiHandler::midiEvent(const uint32_t data)
 
 		// Set next note to be received midi note
 		midiNotes[noteCount].origNote = midiData.db1;
-		midiNotes[noteCount].noteValue = static_cast<float>(midiData.db1) + pitchBend;
+		midiNotes[noteCount].noteValue = static_cast<float>(midiData.db1);
 		midiNotes[noteCount].envTime = 0;
 		midiNotes[noteCount].envelope = A;						// Initialise to attack
 		midiNotes[noteCount].samplePos1 = 0;
@@ -73,12 +73,7 @@ void MidiHandler::midiEvent(const uint32_t data)
 	}
 
 	if (midiData.msg == PitchBend) {
-
-		pitchBend = (float)((midiData.db1 + (midiData.db2 << 7) - 8192) / 8192.0f) * pitchBendSemiTones;
-
-		for (uint8_t i = 0; i < noteCount; ++i) {
-			midiNotes[i].noteValue = static_cast<float>(midiNotes[i].origNote) + pitchBend;
-		}
+		pitchBend = static_cast<uint32_t>(midiData.db1) + (midiData.db2 << 7);
 	}
 
 /*
@@ -94,7 +89,8 @@ void MidiHandler::midiEvent(const uint32_t data)
 }
 
 
-void MidiHandler::serialHandler(uint32_t data) {
+void MidiHandler::serialHandler(uint32_t data)
+{
 	Queue[QueueWrite] = data;
 	QueueSize++;
 	QueueWrite = (QueueWrite + 1) % MIDIQUEUESIZE;

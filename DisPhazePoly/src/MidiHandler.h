@@ -2,7 +2,7 @@
 
 #include "initialisation.h"
 #include "USBHandler.h"
-#define MIDIQUEUESIZE 20
+#define MIDIQUEUESIZE 50
 
 class USB;
 
@@ -34,14 +34,14 @@ public:
 	inline static constexpr uint8_t polyCount = 4;
 	std::array<MidiNote, polyCount + 1>midiNotes;			// Add one too many notes to the array to allow easier shuffling of polyphony
 	uint8_t noteCount = 0;									// Number of notes currently sounding
+	uint16_t pitchBend = 0;									// Pitchbend amount in raw format (0 - 16384)
+	const float pitchBendSemiTones = 12.0f;					// Number of semitones for a full pitchbend
+
 private:
 	void midiEvent(const uint32_t data);
 	void QueueInc();
 
 	uint32_t xfer_buff[64];									// OUT Data filled in RxLevel Interrupt
-
-	float pitchBend = 0.0f;									// Current pitchbend amount
-	const float pitchBendSemiTones = 2.0f;					// Number of semitones for a full pitchbend
 
 	// Struct for holding incoming USB MIDI data
 	union MidiData {

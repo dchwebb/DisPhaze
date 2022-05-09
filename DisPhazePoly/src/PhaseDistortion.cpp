@@ -140,7 +140,8 @@ void PhaseDistortion::CalcNextSamples()
 	// Start separating polyphonic and monophonic functions
 	if (polyphonic) {
 		polyNotes = usb.midi.noteCount;
-		finetuneAdjust = (2048.0f - fineTune) / 340.0f;
+		float pb = usb.midi.pitchBendSemiTones * ((usb.midi.pitchBend - 8192) / 8192.0f);		// convert raw pitchbend to midi note number
+		finetuneAdjust = pb + (2048.0f - fineTune) / 340.0f;
 	} else {
 		polyNotes = 1;
 	}
