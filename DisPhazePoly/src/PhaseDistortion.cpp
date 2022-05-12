@@ -2,7 +2,8 @@
 #include "USB.h"
 
 extern bool dacRead;
-//volatile uint8_t debugNotes;
+int32_t minOutput = 9999;
+int32_t maxOutput = 0;
 
 inline float PhaseDistortion::sinLutWrap(float pos)
 {
@@ -94,8 +95,6 @@ void PhaseDistortion::CalcNextSamples()
 	float finetuneAdjust = 0.0f;
 	float sampleOut1 = 0.0f, sampleOut2 = 0.0f, freq1 = 0.0f, freq2 = 0.0f;
 
-	//debugNotes = usb.midi.noteCount;
-
 	//	Coarse tuning (octaves) - add some hysteresis to prevent jumping
 	if (coarseTune > ADC_array[ADC_CTune] + 128 || coarseTune < ADC_array[ADC_CTune] - 128) {
 		coarseTune = ADC_array[ADC_CTune];
@@ -119,12 +118,13 @@ void PhaseDistortion::CalcNextSamples()
 	float tmpPD1Scale = static_cast<float>(std::min((3800 - ADC_array[ADC_PD1CV]) + ADC_array[ADC_PD1Pot], 5000)) / 1000.0f;	// Convert PD amount for OSC1
 	pd1Scale = std::max(((pd1Scale * 31) + tmpPD1Scale) / 32, 0.0f);
 
-	float tmpPD2Scale = static_cast<float>(std::min((4096 - ADC_array[ADC_PD2CV]) + ADC_array[ADC_PD2Pot], 5000)) / 1000.0f;	// Convert PD amount for OSC2
+	float tmpPD2Scale = static_cast<float>(std::min((4090 - ADC_array[ADC_PD2CV]) + ADC_array[ADC_PD2Pot], 5000)) / 1000.0f;	// Convert PD amount for OSC2
 	if (pd2Resonant) {
 		pd2Scale = (pd2Scale * 0.995f) + (tmpPD2Scale * 0.005f);		// Heavily damp PD2 scale if using resonant waves to reduce jitter noise
 	} else {
 		pd2Scale = ((pd2Scale * 31) + tmpPD2Scale) / 32;
 	}
+
 
 	// Get VCA levels (filtering out very low level VCA signals)
 	if (ADC_array[ADC_VCA] > 4070) {
@@ -137,25 +137,25 @@ void PhaseDistortion::CalcNextSamples()
 	TIM4->CCR2 = static_cast<uint32_t>(VCALevel * 4095.0f);								// Set LED PWM level to VCA
 
 
-	// Start separating polyphonic and monophonic functions
+	// Set up polyphonic and monophonic functions
 	if (polyphonic) {
 		polyNotes = usb.midi.noteCount;
 		float pb = usb.midi.pitchBendSemiTones * ((usb.midi.pitchBend - 8192) / 8192.0f);		// convert raw pitchbend to midi note number
-		finetuneAdjust = pb + (2048.0f - fineTune) / 340.0f;
+		finetuneAdjust = pb - (2048.0f - fineTune) / 512.0f;
 	} else {
 		polyNotes = 1;
 	}
 
+	int8_t removeNote = -1;		// To enable removeal of notes that have completed release envelope
 	for (uint8_t n = 0; n < polyNotes; ++n) {
+		auto& midiNote = usb.midi.midiNotes[n];
 
 		// Calculate frequencies
 		if (polyphonic) {
-			//freq1 = MidiLUT[usb.midi.midiNotes[n].noteValue + finetuneAdjust];
-
-			float lutIndex = (usb.midi.midiNotes[n].noteValue + finetuneAdjust - midiLUTFirstNote) * midiLUTSize / midiLUTNotes;
+			float lutIndex = (midiNote.noteValue + finetuneAdjust - midiLUTFirstNote) * midiLUTSize / midiLUTNotes;
 			freq1 = MidiLUT[static_cast<uint32_t>(lutIndex)];
 
-			++usb.midi.midiNotes[n].envTime;
+			++midiNote.envTime;
 		} else {
 			pitch = ((3 * pitch) + ADC_array[ADC_Pitch]) / 4;				// 1V/Oct input with smoothing
 			freq1 = PitchLUT[(pitch + ((2048 - fineTune) / 32)) / 4];		// divide by four as there are 1024 items in DAC CV Voltage to Pitch Freq LUT and 4096 possible DAC voltage values
@@ -178,8 +178,8 @@ void PhaseDistortion::CalcNextSamples()
 			case OCTAVEUP: 		freq2 = freq1 * 2.0f;	break;
 		}
 
-		float& sp1 = polyphonic ? usb.midi.midiNotes[n].samplePos1 : samplePos1;
-		float& sp2 = polyphonic ? usb.midi.midiNotes[n].samplePos2 : samplePos2;
+		float& sp1 = polyphonic ? midiNote.samplePos1 : samplePos1;
+		float& sp2 = polyphonic ? midiNote.samplePos2 : samplePos2;
 
 		// jump forward to the next sample position
 		sp1 += freq1;
@@ -197,91 +197,121 @@ void PhaseDistortion::CalcNextSamples()
 		float sample2 = pd2Resonant ?
 				GetResonantWave(sp2 / SAMPLERATE, pd2Scale, pdLut2) :
 				GetPhaseDist(LUTArray[pdLut2], sp2 / SAMPLERATE, pd2Scale);
+		if (ringModOn)			sample1 *= sample2;
+		if (mixOn) 				sample2 += sample1;
+
 
 		// Calculate envelope levels of polyphonic voices
 		if (polyphonic) {
 			float sampleLevel = 0.0f;
-
-			switch (usb.midi.midiNotes[n].envelope) {
+			switch (midiNote.envelope) {
 			case MidiHandler::env::A:
-				sampleLevel = static_cast<float>(usb.midi.midiNotes[n].envTime) / envelope.A;
+				sampleLevel = static_cast<float>(midiNote.envTime) / envelope.A;
+				midiNote.releaseLevel = sampleLevel;
 
-				if (usb.midi.midiNotes[n].envTime >= envelope.A) {
-					usb.midi.midiNotes[n].envTime = 0;
-					usb.midi.midiNotes[n].envelope = MidiHandler::env::D;
+				if (midiNote.envTime >= envelope.A) {
+					midiNote.envTime = 0;
+					midiNote.envelope = MidiHandler::env::D;
 				}
 				break;
 
 
 			case MidiHandler::env::D:
-				sampleLevel = 1.0f - static_cast<float>(usb.midi.midiNotes[n].envTime) / envelope.D;
+				sampleLevel = 1.0f - static_cast<float>(midiNote.envTime) / envelope.D;
+				midiNote.releaseLevel = sampleLevel;
 
 				if (sampleLevel <= envelope.S) {
-					usb.midi.midiNotes[n].envTime = 0;
-					usb.midi.midiNotes[n].envelope = MidiHandler::env::S;
+					midiNote.envTime = 0;
+					midiNote.envelope = MidiHandler::env::S;
 				}
 				break;
 
 
 			case MidiHandler::env::S:
+
 				sampleLevel = envelope.S;
+
 				break;
 
 			case MidiHandler::env::R:
-				sampleLevel = envelope.S - static_cast<float>(usb.midi.midiNotes[n].envTime) / envelope.R;
+				sampleLevel = midiNote.releaseLevel - static_cast<float>(midiNote.envTime) / envelope.R;
 
 				if (sampleLevel <= 0.0f) {
-					usb.midi.RemoveNote(n);
+					sampleLevel = 0.0f;
+					removeNote = n;
 				}
 				break;
 			}
 
-			// Calculate output as a float from -1 to +1 checking phase distortion and phase offset as required
-			if (ringModOn)			sample1 *= sample2;
-			if (mixOn) 				sample2 += sample1;
-
-			sample1 *= sampleLevel;
+			sample1 *= sampleLevel;		// Scale sample output level based on envelope
 			sample2 *= sampleLevel;
 
+//			if (midiNote.noteValue == 72.0f) {
+//				DAC->DHR12R1 = static_cast<int32_t>((sampleLevel) * 4095.0f);
+//			}
 		} else {
-			if (ringModOn)			sample1 *= sample2;
-			if (mixOn) 				sample2 += sample1;
-
 			sample1 *= VCALevel;
 			sample2 *= VCALevel;
 		}
 
-
 		sampleOut1 += sample1;
 		sampleOut2 += sample2;
-
 	}
 
+	if (removeNote >= 0) {
+		usb.midi.RemoveNote(removeNote);
+	}
+
+
+	int32_t o1 = static_cast<int32_t>((1.0f + Compress(sampleOut1)) * 2047.0f);
+	int32_t o2 = static_cast<int32_t>((1.0f + Compress(sampleOut2)) * 2047.0f);
+	DAC->DHR12R2 = o1;
+	DAC->DHR12R1 = o2;
+
+	if (o1 > maxOutput) maxOutput = o1;
+	if (o1 < minOutput) minOutput = o1;
+	if (o2 > maxOutput) maxOutput = o2;
+	if (o2 < minOutput) minOutput = o2;
 	// Set DAC output values for when sample interrupt next fires (NB DAC and channels are reversed: ie DAC1 connects to channel2 and vice versa)
-	DAC->DHR12R2 = static_cast<int32_t>((1.0f + FastTanh(sampleOut1)) * 2047.0f);
-	DAC->DHR12R1 = static_cast<int32_t>((1.0f + FastTanh(sampleOut2)) * 2047.0f);
+//	DAC->DHR12R2 = static_cast<int32_t>((1.0f + Compress(sampleOut1)) * 2047.0f);
+//	DAC->DHR12R1 = static_cast<int32_t>((1.0f + Compress(sampleOut2)) * 2047.0f);
 
-/*
-	// Set DAC output values for when sample interrupt next fires (NB DAC and channels are reversed: ie DAC1 connects to channel2 and vice versa)
-	if (ringModOn) {
-		DAC->DHR12R2 = static_cast<int32_t>((1.0f + (sampleOut1 * sampleOut2) * VCALevel) * 2047);			// Ring mod of 1 * 2
-	} else {
-		DAC->DHR12R2 = static_cast<int32_t>((1.0f + FastTanh(sampleOut1 * VCALevel)) * 2047);
-	}
-	if (mixOn) {
-		DAC->DHR12R1 = static_cast<int32_t>(((2.0f + (sampleOut1 + sampleOut2) * VCALevel) / 2) * 2047);	// Mix of 1 + 2
-	} else {
-		DAC->DHR12R1 = static_cast<int32_t>((1.0f + sampleOut2 * VCALevel) * 2047);
-	}
-*/
-	dacRead = 0;		// Clear ready for next sample flag
 }
 
-// Algorithm source: https://varietyofsound.wordpress.com/2011/02/14/efficient-tanh-computation-using-lamberts-continued-fraction/
-float PhaseDistortion::FastTanh(float x)
+
+uint32_t overload =0;
+
+
+// Fast Tanh Algorithm source: https://varietyofsound.wordpress.com/2011/02/14/efficient-tanh-computation-using-lamberts-continued-fraction/
+float PhaseDistortion::Compress(float x)
 {
+	const float compStart = 0.70f;
+
+	x = 0.40f * x;
+
+	float absX = std::fabs(x);
+	if (absX < compStart) {
+		return x;
+	} else if (x >= 1.4f) {
+		++overload;
+		return 1.0f;
+	} else if (x <= -1.4f) {
+		return -1.0f;
+		++overload;
+	} else  {
+		float comp = 1.0f - (absX - compStart) * 0.41f;
+		return std::clamp(comp * x, -1.0f, 1.0f);
+	}
+
+
+	//return std::clamp(0.65f * x, -1.0f, 1.0f);
+
+
+	/*
+	// Algorithm to approximate tanh compression
 	float x2 = x * x;
 	float a = x * (135135.0f + x2 * (17325.0f + x2 * (378.0f + x2)));
 	float b = 135135.0f + x2 * (62370.0f + x2 * (3150.0f + x2 * 28.0f));
 	return a / b;
+	*/
 }

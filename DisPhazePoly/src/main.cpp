@@ -30,7 +30,12 @@
  * PD2_POT
  */
 
-// FIXME - octave switch currently on interrupt - probably more efficient to do in sample loop
+/* FIXME
+ * Octave switch currently on interrupt - probably more efficient to do in sample loop
+ * Envelope release based on current output value
+ */
+
+
 
 Config config;
 PhaseDistortion phaseDist;
@@ -83,8 +88,7 @@ int main(void)
 		}
 #endif
 
-		// Check for incoming CDC commands
-		usb.cdc.ProcessCommand();
+		usb.cdc.ProcessCommand();	// Check for incoming CDC commands
 
 	}
 }

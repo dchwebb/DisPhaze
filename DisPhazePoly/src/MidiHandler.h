@@ -29,12 +29,13 @@ public:
 		uint32_t envTime;		// envelope sample counter
 		float samplePos1;		// Current position within cycle
 		float samplePos2;
+		float releaseLevel;		// Store level when hitting release phase
 	};
 
 	inline static constexpr uint8_t polyCount = 4;
 	std::array<MidiNote, polyCount + 1>midiNotes;			// Add one too many notes to the array to allow easier shuffling of polyphony
 	uint8_t noteCount = 0;									// Number of notes currently sounding
-	uint16_t pitchBend = 0;									// Pitchbend amount in raw format (0 - 16384)
+	uint16_t pitchBend = 8192;								// Pitchbend amount in raw format (0 - 16384)
 	const float pitchBendSemiTones = 12.0f;					// Number of semitones for a full pitchbend
 
 private:

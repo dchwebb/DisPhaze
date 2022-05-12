@@ -37,3 +37,6 @@ DisPhaze/Debug/makefile
 Hardware_v3/_autosave-DisPhaze_Components.kicad_pcb
 
 DisPhazePoly/Debug/makefile
+*.BAK
+Phase_calc/comp.xls
+Phase_calc/compression_test.FXP

@@ -35,7 +35,7 @@ void MidiHandler::midiEvent(const uint32_t data)
 {
 	auto midiData = MidiData(data);
 
-	// Note off - if note is in middle of sequence shuffle rest of notes up the array
+	// Note off - set envelope to release
 	if (midiData.msg == NoteOff) {
 		for (uint8_t i = 0; i < noteCount; ++i) {
 			if (midiNotes[i].noteValue == midiData.db1) {		// note found - set to release

@@ -42,7 +42,7 @@ private:
 	float GetBlendPhaseDist(const float PDBlend, const float LUTPosition, const float scale);
 	float GetResonantWave(const float LUTPosition, const float scale, const uint8_t pdLut2);
 	static float sinLutWrap(float pos);
-	float FastTanh(float x);
+	float Compress(float x);
 };
 
 extern PhaseDistortion phaseDist;
