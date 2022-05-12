@@ -83,7 +83,7 @@ void InitDAC()
 }
 
 
-void InitSwitches()
+void InitGPIO()
 {
 	// MODER: 00: Input (default), 01: Output, 10: Alternate function, 11: Analog
 
@@ -103,7 +103,7 @@ void InitSwitches()
 
 	// PB5 Action button
 	GPIOB->MODER &= ~(GPIO_MODER_MODER5);			// input mode is default
-	GPIOB->PUPDR |= GPIO_PUPDR_PUPDR5_1;			// Set pin to pull up:  01 Pull-up; 10 Pull-down; 11 Reserved
+	GPIOB->PUPDR |= GPIO_PUPDR_PUPDR5_1;			// Set pin to pull down:  01 Pull-up; 10 Pull-down; 11 Reserved
 
 	// Set up PA0 and PC3 for octave up and down switch
 	GPIOA->MODER &= ~(GPIO_MODER_MODER0);			// input mode is default

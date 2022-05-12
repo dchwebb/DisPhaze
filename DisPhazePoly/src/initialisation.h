@@ -27,10 +27,14 @@ enum ADC_Controls {
 };
 
 
+#define GreenLED TIM4->CCR2
+#define RedLED   TIM2->CCR2
+#define ActionBtn (GPIOB->IDR & GPIO_IDR_IDR_5) == GPIO_IDR_IDR_5
+
 void SystemClock_Config();
 void InitSysTick(uint32_t ticks, uint32_t calib);
 void InitDAC();
-void InitSwitches();
+void InitGPIO();
 void InitTimer();
 void InitADC();
 void InitDebugTimer();

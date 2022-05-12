@@ -1,9 +1,7 @@
 #include "PhaseDistortion.h"
 #include "USB.h"
 
-extern bool dacRead;
-int32_t minOutput = 9999;
-int32_t maxOutput = 0;
+
 
 inline float PhaseDistortion::sinLutWrap(float pos)
 {
@@ -88,12 +86,25 @@ float PhaseDistortion::GetBlendPhaseDist(const float pdBlend, const float LUTPos
 }
 
 
+volatile uint32_t shortPressCnt = 0;
+volatile uint32_t longPressCnt = 0;
 
 void PhaseDistortion::CalcNextSamples()
 {
 	uint8_t polyNotes;
 	float finetuneAdjust = 0.0f;
 	float sampleOut1 = 0.0f, sampleOut2 = 0.0f, freq1 = 0.0f, freq2 = 0.0f;
+
+//	if ((GPIOB->IDR & GPIO_IDR_IDR_5) == GPIO_IDR_IDR_5) {
+//		++actionBtnTime;
+//	} else {
+//		if (actionBtnTime > 20000) {		// Short press
+//			++longPressCnt;
+//		} else if (actionBtnTime > 10) {		// long press
+//			++shortPressCnt;
+//		}
+//		actionBtnTime = 0;
+//	}
 
 	//	Coarse tuning (octaves) - add some hysteresis to prevent jumping
 	if (coarseTune > ADC_array[ADC_CTune] + 128 || coarseTune < ADC_array[ADC_CTune] - 128) {
@@ -126,16 +137,6 @@ void PhaseDistortion::CalcNextSamples()
 	}
 
 
-	// Get VCA levels (filtering out very low level VCA signals)
-	if (ADC_array[ADC_VCA] > 4070) {
-		VCALevel = 0.0f;
-	} else if (ADC_array[ADC_VCA] < 30) {
-		VCALevel = 1.0f;
-	} else {
-		VCALevel = ((VCALevel * 31) + (4096.0f - ADC_array[ADC_VCA]) / 4096) / 32;		// Convert ADC for VCA to float between 0 and 1 with damping
-	}
-	TIM4->CCR2 = static_cast<uint32_t>(VCALevel * 4095.0f);								// Set LED PWM level to VCA
-
 
 	// Set up polyphonic and monophonic functions
 	if (polyphonic) {
@@ -143,10 +144,22 @@ void PhaseDistortion::CalcNextSamples()
 		float pb = usb.midi.pitchBendSemiTones * ((usb.midi.pitchBend - 8192) / 8192.0f);		// convert raw pitchbend to midi note number
 		finetuneAdjust = pb - (2048.0f - fineTune) / 512.0f;
 	} else {
+		// Get VCA levels (filtering out very low level VCA signals)
+		if (ADC_array[ADC_VCA] > 4070) {
+			VCALevel = 0.0f;
+		} else if (ADC_array[ADC_VCA] < 30) {
+			VCALevel = 1.0f;
+		} else {
+			VCALevel = ((VCALevel * 31) + (4096.0f - ADC_array[ADC_VCA]) / 4096) / 32;		// Convert ADC for VCA to float between 0 and 1 with damping
+		}
+		GreenLED = static_cast<uint32_t>(VCALevel * 4095.0f);								// Set LED PWM level to VCA
+
 		polyNotes = 1;
 	}
 
 	int8_t removeNote = -1;		// To enable removeal of notes that have completed release envelope
+	float polyLevel = 0;		// Get maximum level of polyphonic notes to display on LED
+
 	for (uint8_t n = 0; n < polyNotes; ++n) {
 		auto& midiNote = usb.midi.midiNotes[n];
 
@@ -246,9 +259,8 @@ void PhaseDistortion::CalcNextSamples()
 			sample1 *= sampleLevel;		// Scale sample output level based on envelope
 			sample2 *= sampleLevel;
 
-//			if (midiNote.noteValue == 72.0f) {
-//				DAC->DHR12R1 = static_cast<int32_t>((sampleLevel) * 4095.0f);
-//			}
+			polyLevel += sampleLevel;
+
 		} else {
 			sample1 *= VCALevel;
 			sample2 *= VCALevel;
@@ -263,23 +275,18 @@ void PhaseDistortion::CalcNextSamples()
 	}
 
 
-	int32_t o1 = static_cast<int32_t>((1.0f + Compress(sampleOut1)) * 2047.0f);
-	int32_t o2 = static_cast<int32_t>((1.0f + Compress(sampleOut2)) * 2047.0f);
-	DAC->DHR12R2 = o1;
-	DAC->DHR12R1 = o2;
-
-	if (o1 > maxOutput) maxOutput = o1;
-	if (o1 < minOutput) minOutput = o1;
-	if (o2 > maxOutput) maxOutput = o2;
-	if (o2 < minOutput) minOutput = o2;
 	// Set DAC output values for when sample interrupt next fires (NB DAC and channels are reversed: ie DAC1 connects to channel2 and vice versa)
-//	DAC->DHR12R2 = static_cast<int32_t>((1.0f + Compress(sampleOut1)) * 2047.0f);
-//	DAC->DHR12R1 = static_cast<int32_t>((1.0f + Compress(sampleOut2)) * 2047.0f);
+	DAC->DHR12R2 = static_cast<int32_t>((1.0f + Compress(sampleOut1)) * 2047.0f);
+	DAC->DHR12R1 = static_cast<int32_t>((1.0f + Compress(sampleOut2)) * 2047.0f);
 
+	// Set poly level output
+	if (polyphonic) {
+		RedLED = static_cast<uint32_t>((polyLevel * 4095.0f) / usb.midi.polyCount);
+	}
 }
 
 
-uint32_t overload =0;
+uint32_t overload = 0;
 
 
 // Fast Tanh Algorithm source: https://varietyofsound.wordpress.com/2011/02/14/efficient-tanh-computation-using-lamberts-continued-fraction/

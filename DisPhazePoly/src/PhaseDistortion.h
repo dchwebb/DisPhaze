@@ -37,6 +37,8 @@ private:
 	int16_t fineTune = 0;
 	int16_t coarseTune = 0;
 
+	uint32_t actionBtnTime = 0;		// Duration of action button press
+
 	float Interpolate(float* LUT, float& LUTPosition);
 	float GetPhaseDist(const float* PdLUT, const float LUTPosition, const float scale);
 	float GetBlendPhaseDist(const float PDBlend, const float LUTPosition, const float scale);
