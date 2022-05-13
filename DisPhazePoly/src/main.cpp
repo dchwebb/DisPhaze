@@ -35,6 +35,7 @@
  * Envelope release calculate start value on note off
  * Note on resets level to 0 even if note sounding in release phase
  * Revisit compression routine setting global level with release
+ * Note stealing - apply short note cutoff rather than just setting level to 0
  */
 
 
@@ -67,7 +68,7 @@ int main(void)
 
 	config.RestoreConfig();			// Restore calibration settings from flash memory
 	CreateLUTs();					// Create pitch and sine wave look up tables
-	InitGPIO();					// Configure switches for Ring mod, mix and octave selection
+	InitGPIO();						// Configure switches for Ring mod, mix and octave selection
 	InitDAC();						// DAC1 Output on PA4 (Pin 20); DAC2 Output on PA5 (Pin 21)
 	InitTimer();					// Sample output timer 3 - fires interrupt to trigger sample output from DAC
 	InitADC();						// Configure ADC for analog controls

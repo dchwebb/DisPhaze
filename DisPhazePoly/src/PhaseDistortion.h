@@ -38,6 +38,19 @@ private:
 	int16_t coarseTune = 0;
 
 	uint32_t actionBtnTime = 0;		// Duration of action button press
+	bool detectEnv = false;			// Activated with action button to detect envelope on VCA input
+
+	enum class envDetectState {waitStart, Attack, Decay, Suspend, Release};
+	struct {
+		envDetectState state;
+		uint32_t currentLevel;
+		uint32_t AttackTime;
+		uint32_t DecayTime;
+		uint32_t SustainTime;
+		uint32_t SustainLevel;
+		uint32_t ReleaseTime;
+		uint32_t stateCount;
+	} envDetect;
 
 	float Interpolate(float* LUT, float& LUTPosition);
 	float GetPhaseDist(const float* PdLUT, const float LUTPosition, const float scale);

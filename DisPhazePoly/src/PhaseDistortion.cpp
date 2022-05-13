@@ -95,16 +95,53 @@ void PhaseDistortion::CalcNextSamples()
 	float finetuneAdjust = 0.0f;
 	float sampleOut1 = 0.0f, sampleOut2 = 0.0f, freq1 = 0.0f, freq2 = 0.0f;
 
-//	if ((GPIOB->IDR & GPIO_IDR_IDR_5) == GPIO_IDR_IDR_5) {
-//		++actionBtnTime;
-//	} else {
-//		if (actionBtnTime > 20000) {		// Short press
-//			++longPressCnt;
-//		} else if (actionBtnTime > 10) {		// long press
-//			++shortPressCnt;
-//		}
-//		actionBtnTime = 0;
-//	}
+
+	// Check status of action button
+	if ((GPIOB->IDR & GPIO_IDR_IDR_12) == 0) {
+		++actionBtnTime;
+	} else {
+		if (actionBtnTime > 30000) {			// Short press
+			++longPressCnt;
+		} else if (actionBtnTime > 20) {		// long press
+			++shortPressCnt;
+
+			// Activate envelope detection mode
+			if (polyphonic) {
+				detectEnv = !detectEnv;
+				if (!detectEnv) {
+					envDetect.state = envDetectState::waitStart;
+				}
+			}
+		}
+		actionBtnTime = 0;
+	}
+
+
+	// Envelope detection - NB VCA is inverted
+	if (detectEnv) {
+		uint32_t lvl = 4096 - ADC_array[ADC_VCA];
+		switch  (envDetect.state) {
+		case envDetectState::waitStart:
+			if (ADC_array[ADC_VCA] < 10) {
+				envDetect.state = envDetectState::Attack;
+				envDetect.AttackTime = 0;
+				envDetect.stateCount = 0;
+				envDetect.currentLevel = lvl;
+			}
+			break;
+		case envDetectState::Attack:
+
+			++envDetect.AttackTime;
+
+			// Count envelope not increasing
+			if (lvl < envDetect.currentLevel) {
+				++envDetect.stateCount;
+			}
+
+			break;
+		}
+	}
+
 
 	//	Coarse tuning (octaves) - add some hysteresis to prevent jumping
 	if (coarseTune > ADC_array[ADC_CTune] + 128 || coarseTune < ADC_array[ADC_CTune] - 128) {
@@ -152,8 +189,6 @@ void PhaseDistortion::CalcNextSamples()
 		} else {
 			VCALevel = ((VCALevel * 31) + (4096.0f - ADC_array[ADC_VCA]) / 4096) / 32;		// Convert ADC for VCA to float between 0 and 1 with damping
 		}
-		GreenLED = static_cast<uint32_t>(VCALevel * 4095.0f);								// Set LED PWM level to VCA
-
 		polyNotes = 1;
 	}
 
@@ -279,12 +314,27 @@ void PhaseDistortion::CalcNextSamples()
 	DAC->DHR12R2 = static_cast<int32_t>((1.0f + Compress(sampleOut1)) * 2047.0f);
 	DAC->DHR12R1 = static_cast<int32_t>((1.0f + Compress(sampleOut2)) * 2047.0f);
 
-	// Set poly level output
-	if (polyphonic) {
-		RedLED = static_cast<uint32_t>((polyLevel * 4095.0f) / usb.midi.polyCount);
+	// Set LED based envelope detection or poly level output
+	if (detectEnv) {
+		switch  (envDetect.state) {
+		case envDetectState::waitStart:
+			RedLED = 4095;
+			GreenLED = 0;
+			break;
+		case envDetectState::Attack:
+			RedLED = 0;
+			GreenLED = 4095;
+			break;
+		}
+
+	} else {
+		if (polyphonic) {
+			RedLED = static_cast<uint32_t>((polyLevel * 4095.0f) / usb.midi.polyCount);
+		} else {
+			GreenLED = static_cast<uint32_t>(VCALevel * 4095.0f);								// Set LED PWM level to VCA
+		}
 	}
 }
-
 
 uint32_t overload = 0;
 
