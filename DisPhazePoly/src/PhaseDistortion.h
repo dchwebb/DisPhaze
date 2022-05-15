@@ -40,16 +40,19 @@ private:
 	uint32_t actionBtnTime = 0;		// Duration of action button press
 	bool detectEnv = false;			// Activated with action button to detect envelope on VCA input
 
-	enum class envDetectState {waitStart, Attack, Decay, Suspend, Release};
+	enum class envDetectState {waitZero, waitAttack, Attack, Decay, Sustain, Release};
 	struct {
 		envDetectState state;
-		uint32_t currentLevel;
+		uint32_t oldLevel;
+		uint32_t maxLevel;
 		uint32_t AttackTime;
 		uint32_t DecayTime;
 		uint32_t SustainTime;
 		uint32_t SustainLevel;
 		uint32_t ReleaseTime;
 		uint32_t stateCount;
+		float maxDelta;
+		float smoothDelta;
 	} envDetect;
 
 	float Interpolate(float* LUT, float& LUTPosition);
@@ -58,6 +61,7 @@ private:
 	float GetResonantWave(const float LUTPosition, const float scale, const uint8_t pdLut2);
 	static float sinLutWrap(float pos);
 	float Compress(float x);
+	void DetectEnvelope();
 };
 
 extern PhaseDistortion phaseDist;

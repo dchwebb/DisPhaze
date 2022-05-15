@@ -5,21 +5,21 @@ extern bool dacRead;
 void Config::Calibrate() 			// Checks if calibrate button has been pressed and runs calibration routine if so
 {
 	// Toggle calibration mode when button pressed using simple debouncer
-	if (READ_BIT(GPIOB->IDR, GPIO_IDR_IDR_5)) {
-		calibBtn++;
-
-		if (calibBtn == 200) {
-			calibrating = !calibrating;
-
-			// write calibration settings to flash (These are applied when CreateLUTs() is run on startup)
-			if (!calibrating) {
-				SaveConfig();
-				CreateLUTs();
-			}
-		}
-	} else {
-		calibBtn = 0;
-	}
+//	if (READ_BIT(GPIOB->IDR, GPIO_IDR_IDR_5)) {
+//		calibBtn++;
+//
+//		if (calibBtn == 200) {
+//			calibrating = !calibrating;
+//
+//			// write calibration settings to flash (These are applied when CreateLUTs() is run on startup)
+//			if (!calibrating) {
+//				SaveConfig();
+//				CreateLUTs();
+//			}
+//		}
+//	} else {
+//		calibBtn = 0;
+//	}
 
 
 	if (calibrating) {
