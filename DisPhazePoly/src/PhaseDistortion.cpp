@@ -94,6 +94,7 @@ void PhaseDistortion::DetectEnvelope()
 {
 	uint32_t lvl = 4096 - ADC_array[ADC_VCA];
 	envDetect.smoothLevel = ((15 * envDetect.smoothLevel) + lvl) / 16;
+	VCALevel = envDetect.smoothLevel / 4096.0f;
 	lastSamples[lastSampPos++] = envDetect.smoothLevel;
 
 	switch  (envDetect.state) {
@@ -164,7 +165,9 @@ void PhaseDistortion::DetectEnvelope()
 			if (envDetect.stateCount > 50) {
 				envDetect.state = envDetectState::Sustain;
 				envDetect.SustainTime = 0;
+				envDetect.SustainStable = false;
 				envDetect.SustainLevel = envDetect.smoothLevel;
+				envDetect.SustainStableLevel = envDetect.smoothLevel;
 				envDetect.stateCount = 0;
 				DAC->DHR12R1 = 4095;		// debug
 			}
@@ -185,20 +188,32 @@ void PhaseDistortion::DetectEnvelope()
 	case envDetectState::Sustain:
 		RedLED = 0;
 		GreenLED = 4095;
-		++envDetect.SustainTime;
 
-		// Average sustain level
-		envDetect.SustainLevel = (envDetect.SustainLevel * 15 + envDetect.smoothLevel) / 16;
-
-		if (envDetect.SustainTime > 4000 && (int32_t)envDetect.SustainLevel - (int32_t)envDetect.smoothLevel > 10) {
-			++envDetect.stateCount;
-
-			if (envDetect.stateCount > 20) {
-				envDetect.state = envDetectState::Release;
-				envDetect.ReleaseTime = 0;
-				envDetect.stateCount = 0;
+		// Every 2000 samples check if the sustain level is unchanged. If so then lock that value to enable detection of slow releases
+		if (envDetect.SustainTime == 2000) {
+			if (envDetect.SustainStableLevel - (int32_t)envDetect.smoothLevel > 2) {
+				envDetect.SustainTime = 0;
+			} else {
+				envDetect.state = envDetectState::SustainStable;
 				DAC->DHR12R1 = 0;		// debug
 			}
+			envDetect.SustainStableLevel = envDetect.SustainLevel;
+		} else {
+			++envDetect.SustainTime;
+		}
+
+		envDetect.SustainLevel = (envDetect.SustainLevel * 15 + envDetect.smoothLevel) / 16;		// Average sustain level
+		break;
+
+	case envDetectState::SustainStable:
+		RedLED = 3000;
+		GreenLED = 4095;
+
+		if (envDetect.SustainStableLevel - (int32_t)envDetect.smoothLevel > 40) {
+			envDetect.state = envDetectState::Release;
+			envDetect.ReleaseTime = 0;
+			envDetect.stateCount = 0;
+			DAC->DHR12R1 = 4095;		// debug
 		} else {
 			envDetect.stateCount = 0;
 		}
@@ -208,6 +223,8 @@ void PhaseDistortion::DetectEnvelope()
 	case envDetectState::Release:
 
 		++envDetect.ReleaseTime;
+		RedLED = 4095;
+		GreenLED = 0;
 
 		if (envDetect.smoothLevel < 10) {
 			++envDetect.stateCount;
@@ -374,7 +391,7 @@ void PhaseDistortion::CalcNextSamples()
 
 
 		// Calculate envelope levels of polyphonic voices
-		if (polyphonic) {
+		if (polyphonic && !detectEnv) {
 			float sampleLevel = 0.0f;
 			switch (midiNote.envelope) {
 			case MidiHandler::env::A:
