@@ -43,16 +43,17 @@ private:
 	enum class envDetectState {waitZero, waitAttack, Attack, Decay, Sustain, Release};
 	struct {
 		envDetectState state;
-		uint32_t oldLevel;
+		uint32_t stateCount;
+
+		uint32_t smoothLevel;
 		uint32_t maxLevel;
+		uint32_t minLevel;
+
 		uint32_t AttackTime;
 		uint32_t DecayTime;
 		uint32_t SustainTime;
 		uint32_t SustainLevel;
 		uint32_t ReleaseTime;
-		uint32_t stateCount;
-		float maxDelta;
-		float smoothDelta;
 	} envDetect;
 
 	float Interpolate(float* LUT, float& LUTPosition);
