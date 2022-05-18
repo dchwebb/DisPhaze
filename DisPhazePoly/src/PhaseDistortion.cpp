@@ -96,13 +96,14 @@ void PhaseDistortion::DetectEnvelope()
 	envDetect.smoothLevel = ((15 * envDetect.smoothLevel) + lvl) / 16;
 	VCALevel = envDetect.smoothLevel / 4096.0f;
 	lastSamples[lastSampPos++] = envDetect.smoothLevel;
+	++envDetect.counter;
 
 	switch  (envDetect.state) {
 	case envDetectState::waitZero:			// Wait until level settles around 0
 		RedLED = 4095;
 		GreenLED = 0;
 
-		//DAC->DHR12R1 = 0;			// debug
+		DAC->DHR12R1 = 0;			// debug
 
 		if (lvl < 10) {
 			++envDetect.stateCount;
@@ -120,7 +121,6 @@ void PhaseDistortion::DetectEnvelope()
 	case envDetectState::waitAttack:
 
 		// Flash red LED until starting
-		++envDetect.counter;
 		if (envDetect.counter & (1 << 14)) {
 			RedLED = 0;
 		} else {
@@ -137,8 +137,9 @@ void PhaseDistortion::DetectEnvelope()
 				envDetect.AttackTime = 0;
 				envDetect.stateCount = 0;
 				envDetect.maxLevel = 0;
+				envDetect.counter = 0;
 
-				//DAC->DHR12R1 = 4095;		// debug
+				DAC->DHR12R1 = 4095;		// debug
 			}
 		} else {
 			envDetect.stateCount = 0;
@@ -148,22 +149,28 @@ void PhaseDistortion::DetectEnvelope()
 	case envDetectState::Attack:
 
 		++envDetect.AttackTime;
-		envDetect.maxLevel = std::max(envDetect.maxLevel, envDetect.smoothLevel);
 
-		// Count envelope not increasing
-		if (envDetect.smoothLevel + 10 < envDetect.maxLevel && envDetect.maxLevel > 2000) {
-			++envDetect.stateCount;
-			if (envDetect.stateCount > 8) {
+		// Count envelope decreasing - either switch to decay or release if stuck on high level for long time
+		if (envDetect.smoothLevel < envDetect.maxLevel - 30) {
+			if (envDetect.levelTime - envDetect.counter > 2000) {
+				envDetect.DecayTime = 0;
+				envDetect.SustainStableLevel = envDetect.maxLevel;
+				envDetect.state = envDetectState::Release;
+			} else {
 				envDetect.state = envDetectState::Decay;
 				envDetect.DecayTime = 0;
 				envDetect.stateCount = 0;
 				envDetect.minLevel = envDetect.smoothLevel;
-				//DAC->DHR12R1 = 0;		// debug
+				DAC->DHR12R1 = 0;		// debug
 			}
 		} else {
 			envDetect.stateCount = 0;
 		}
 
+		if (envDetect.smoothLevel > envDetect.maxLevel) {
+			envDetect.maxLevel = envDetect.smoothLevel;
+			envDetect.levelTime = envDetect.counter;
+		}
 		break;
 
 	case envDetectState::Decay:
@@ -177,16 +184,18 @@ void PhaseDistortion::DetectEnvelope()
 		if (envDetect.smoothLevel >= envDetect.minLevel) {
 			++envDetect.stateCount;
 
-			if (envDetect.stateCount > 50) {
-				envDetect.state = envDetectState::Sustain;
+			if (envDetect.stateCount > 2000) {
+				envDetect.DecayTime = envDetect.levelTime;
+				envDetect.state = envDetectState::SustainStable;
 				envDetect.SustainTime = 0;
 				envDetect.SustainLevel = envDetect.smoothLevel;
 				envDetect.SustainStableLevel = envDetect.smoothLevel;
-				//DAC->DHR12R1 = 4095;		// debug
+				DAC->DHR12R1 = 4095;		// debug
 			}
 		} else {
 			envDetect.stateCount = 0;
 			envDetect.minLevel = envDetect.smoothLevel;
+			envDetect.levelTime = envDetect.DecayTime;
 		}
 
 
@@ -209,7 +218,7 @@ void PhaseDistortion::DetectEnvelope()
 				envDetect.SustainTime = 0;
 			} else {
 				envDetect.state = envDetectState::SustainStable;
-				//DAC->DHR12R1 = 0;		// debug
+				DAC->DHR12R1 = 0;		// debug
 			}
 			envDetect.SustainStableLevel = envDetect.SustainLevel;
 		} else {
@@ -228,7 +237,9 @@ void PhaseDistortion::DetectEnvelope()
 			envDetect.state = envDetectState::Release;
 			envDetect.ReleaseTime = 0;
 			envDetect.stateCount = 0;
-			//DAC->DHR12R1 = 4095;		// debug
+			envDetect.stateCount2 = 0;
+			envDetect.minLevel = envDetect.smoothLevel;
+			DAC->DHR12R1 = 4095;		// debug
 		}
 
 		break;
@@ -238,6 +249,21 @@ void PhaseDistortion::DetectEnvelope()
 		++envDetect.ReleaseTime;
 		RedLED = 4095;
 		GreenLED = 0;
+
+		// With very slow envelopes can hit the release phase early - attempt to detect
+		if (envDetect.smoothLevel >= envDetect.minLevel) {
+			if (envDetect.smoothLevel > 100) {
+				++envDetect.stateCount2;
+				if (envDetect.stateCount2 > 1000) {
+					envDetect.state = envDetectState::SustainStable;
+					envDetect.SustainStableLevel = envDetect.smoothLevel;
+					DAC->DHR12R1 = 0;		// debug
+				}
+			}
+		} else {
+			envDetect.stateCount2 = 0;
+			envDetect.minLevel = envDetect.smoothLevel;
+		}
 
 		if (envDetect.smoothLevel < 10) {
 			++envDetect.stateCount;
@@ -259,7 +285,7 @@ void PhaseDistortion::DetectEnvelope()
 		envelope.S = envDetect.SustainStableLevel / 4095.0f;		// FIXME - should be divided by maximum level reached
 		envelope.R = envDetect.ReleaseTime;
 
-		//DAC->DHR12R1 = 4095;		// debug
+		DAC->DHR12R1 = 4095;		// debug
 	}
 
 }
@@ -475,9 +501,9 @@ void PhaseDistortion::CalcNextSamples()
 	DAC->DHR12R2 = static_cast<int32_t>((1.0f + Compress(sampleOut1)) * 2047.0f);
 
 	// Debug - remove if
-	//if (!detectEnv) {
+	if (!detectEnv) {
 	DAC->DHR12R1 = static_cast<int32_t>((1.0f + Compress(sampleOut2)) * 2047.0f);
-	//}
+	}
 	// Set LED based envelope detection or poly level output
 	if (!detectEnv) {
 		if (polyphonic) {

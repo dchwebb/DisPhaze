@@ -44,11 +44,13 @@ private:
 	struct {
 		envDetectState state;
 		uint32_t stateCount;
-		uint32_t counter;			// For flashing LEDs, handling decay to zero etc
+		uint32_t stateCount2;
+		int32_t counter;			// For flashing LEDs, handling decay to zero etc
 
-		uint32_t smoothLevel;
-		uint32_t maxLevel;
-		uint32_t minLevel;
+		int32_t smoothLevel;
+		int32_t maxLevel;
+		int32_t minLevel;
+		int32_t levelTime;
 
 		uint32_t AttackTime;
 		uint32_t DecayTime;
