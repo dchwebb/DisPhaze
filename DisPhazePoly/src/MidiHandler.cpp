@@ -40,7 +40,7 @@ void MidiHandler::midiEvent(const uint32_t data)
 		for (uint8_t i = 0; i < noteCount; ++i) {
 			if (midiNotes[i].noteValue == midiData.db1) {		// note found - set to release
 				midiNotes[i].envelope = R;
-				midiNotes[i].envTime = 0;
+				midiNotes[i].envTime = -1;
 			}
 		}
 	}
@@ -50,7 +50,7 @@ void MidiHandler::midiEvent(const uint32_t data)
 		for (uint8_t i = 0; i < noteCount; ++i) {
 			if (midiNotes[i].noteValue == midiData.db1) {		// Note already playing - reinitialise to Attack
 				midiNotes[noteCount].envelope = A;
-				midiNotes[i].envTime = 0;
+				midiNotes[i].envTime = -1;
 				return;
 			}
 		}
@@ -58,7 +58,7 @@ void MidiHandler::midiEvent(const uint32_t data)
 		// Set next note to be received midi note
 		midiNotes[noteCount].origNote = midiData.db1;
 		midiNotes[noteCount].noteValue = static_cast<float>(midiData.db1);
-		midiNotes[noteCount].envTime = 0;
+		midiNotes[noteCount].envTime = -1;
 		midiNotes[noteCount].envelope = A;						// Initialise to attack
 		midiNotes[noteCount].samplePos1 = 0;
 		midiNotes[noteCount].samplePos2 = 0;
