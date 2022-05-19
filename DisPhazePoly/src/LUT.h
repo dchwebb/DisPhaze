@@ -7,7 +7,7 @@
 // LUT sizes are probably all going to be constant
 #define LUTSIZE 1024
 #define SINLUTSIZE 16384
-#define midiLUTSize 4096
+#define midiLUTSize 16384		// Size of MIDI to pitch LUT
 
 extern const float PDSquareLUT[LUTSIZE];
 extern const float PDSawLUT[LUTSIZE];

@@ -20,7 +20,7 @@ public:
 	void serialHandler(uint32_t data);
 
 	enum MIDIType {Unknown = 0, NoteOn = 0x9, NoteOff = 0x8, PolyPressure = 0xA, ControlChange = 0xB, ProgramChange = 0xC, ChannelPressure = 0xD, PitchBend = 0xE, System = 0xF };
-	enum env : uint8_t {A = 0, D = 1, S = 2, R = 3};
+	enum env : uint8_t {A = 0, D = 1, S = 2, R = 3, FR = 4};			// FR = fast release
 
 	struct MidiNote {
 		uint8_t origNote;		// MIDI note value
@@ -32,8 +32,8 @@ public:
 		float releaseLevel;		// Store level when hitting release phase
 	};
 
-	inline static constexpr uint8_t polyCount = 4;
-	std::array<MidiNote, polyCount + 1>midiNotes;			// Add one too many notes to the array to allow easier shuffling of polyphony
+	inline static constexpr uint8_t polyCount = 5;
+	std::array<MidiNote, polyCount * 2>midiNotes;			// Double notes to the array to allow easier shuffling of polyphony and Fast release notes
 	uint8_t noteCount = 0;									// Number of notes currently sounding
 	uint16_t pitchBend = 8192;								// Pitchbend amount in raw format (0 - 16384)
 	const float pitchBendSemiTones = 12.0f;					// Number of semitones for a full pitchbend

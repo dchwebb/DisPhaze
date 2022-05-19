@@ -58,18 +58,25 @@ void MidiHandler::midiEvent(const uint32_t data)
 		// Set next note to be received midi note
 		midiNotes[noteCount].origNote = midiData.db1;
 		midiNotes[noteCount].noteValue = static_cast<float>(midiData.db1);
-		midiNotes[noteCount].envTime = -1;
 		midiNotes[noteCount].envelope = A;						// Initialise to attack
+		midiNotes[noteCount].envTime = -1;
 		midiNotes[noteCount].samplePos1 = 0;
 		midiNotes[noteCount].samplePos2 = 0;
+
 		++noteCount;
 
-		if (noteCount > polyCount) {							// Polyphony exceeded - shuffle up
-			for (uint8_t i = 1; i < noteCount; ++i) {
+		if (noteCount > polyCount) {							// Polyphony exceeded
+			midiNotes[0].envelope = FR;							// Fast release envelope
+			midiNotes[0].envTime = -1;
+			/*
+			for (uint8_t i = 1; i < noteCount; ++i) {			// Shuffle up
 				midiNotes[i - 1] = midiNotes[i];
 			}
 			--noteCount;
+			*/
 		}
+
+
 	}
 
 	if (midiData.msg == PitchBend) {

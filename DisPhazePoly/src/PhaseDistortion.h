@@ -2,6 +2,7 @@
 
 #include "initialisation.h"
 #include "LUT.h"
+#include "MidiHandler.h"
 #include <algorithm>
 
 
@@ -18,10 +19,11 @@ public:
 	void CalcNextSamples();
 
 	struct {
-		uint32_t A = 10000;
+		int32_t A = 10000;
 		uint32_t D = 10000;
 		float S = 0.5f;
 		uint32_t R = 5000;
+		uint32_t FR = 3;
 	} envelope;
 
 private:

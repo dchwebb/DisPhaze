@@ -86,22 +86,28 @@ float PhaseDistortion::GetBlendPhaseDist(const float pdBlend, const float LUTPos
 }
 
 // little routine to generate a pulse on channel 2 at each envelope detection change
+#ifdef DEBUG_ENV_DETECT
 bool debugState = false;
 void DebugState() {
-	DAC->DHR12R1 = debugState ? 4095 : 0;
-	debugState = !debugState;
+//	DAC->DHR12R1 = debugState ? 4095 : 0;
+//	debugState = !debugState;
 }
-
 uint32_t lastSamples[256];		// debug
 uint8_t lastSampPos = 0;		// debug
+#else
+#define DebugState()
+#endif
 
 void PhaseDistortion::DetectEnvelope()
 {
 	uint32_t lvl = 4096 - ADC_array[ADC_VCA];
 	envDetect.smoothLevel = ((15 * envDetect.smoothLevel) + lvl) / 16;
-	VCALevel = envDetect.smoothLevel / 4096.0f;
-	lastSamples[lastSampPos++] = envDetect.smoothLevel;		// debug
+	VCALevel = envDetect.smoothLevel / 4096.0f;				// While envelope detection is ongoing any output level will be set by incoming envelope
 	++envDetect.counter;
+
+#ifdef DEBUG_ENV_DETECT
+	lastSamples[lastSampPos++] = envDetect.smoothLevel;		// debug
+#endif
 
 	switch  (envDetect.state) {
 	case envDetectState::waitZero:			// Wait until level settles around 0
@@ -322,7 +328,7 @@ void PhaseDistortion::CalcNextSamples()
 	if (coarseTune > ADC_array[ADC_CTune] + 128 || coarseTune < ADC_array[ADC_CTune] - 128) {
 		coarseTune = ADC_array[ADC_CTune];
 	}
-	fineTune = ((31 * fineTune) + ADC_array[ADC_FTune]) / 32;		// Fine tune with smoothing
+	fineTune = ((15 * fineTune) + ADC_array[ADC_FTune]) / 16;		// Fine tune with smoothing
 
 
 	// Analog selection of PD LUT table allows a smooth transition between LUTs for DAC1 and a stepped transition for DAC2
@@ -337,11 +343,11 @@ void PhaseDistortion::CalcNextSamples()
 	bool pd2Resonant = (pdLut2 > 4);
 
 
-	// Get PD amount from pot and CV ADCs; Currently seeing 0v as ~3000 and 5V as ~960 (converted to 0.0f - 5.0f)
-	float tmpPD1Scale = static_cast<float>(std::min((3800 - ADC_array[ADC_PD1CV]) + ADC_array[ADC_PD1Pot], 5000)) / 1000.0f;	// Convert PD amount for OSC1
+	// Get PD amount from pot and CV ADCs; Currently seeing 0v as ~3000 and 5V as ~960 (converted to 0-5 for monophonic, 0-1.66 for polyphonic)
+	float tmpPD1Scale = static_cast<float>(std::min((3800 - ADC_array[ADC_PD1CV]) + ADC_array[ADC_PD1Pot], 5000)) / (polyphonic ? 3000.0f : 1000.0f);
 	pd1Scale = std::max(((pd1Scale * 31) + tmpPD1Scale) / 32, 0.0f);
 
-	float tmpPD2Scale = static_cast<float>(std::min((4090 - ADC_array[ADC_PD2CV]) + ADC_array[ADC_PD2Pot], 5000)) / 1000.0f;	// Convert PD amount for OSC2
+	float tmpPD2Scale = static_cast<float>(std::min((4090 - ADC_array[ADC_PD2CV]) + ADC_array[ADC_PD2Pot], 5000)) / (polyphonic ? 3000.0f : 1000.0f);
 	if (pd2Resonant) {
 		pd2Scale = (pd2Scale * 0.995f) + (tmpPD2Scale * 0.005f);		// Heavily damp PD2 scale if using resonant waves to reduce jitter noise
 	} else {
@@ -354,7 +360,7 @@ void PhaseDistortion::CalcNextSamples()
 	if (polyphonic) {
 		polyNotes = usb.midi.noteCount;
 		float pb = usb.midi.pitchBendSemiTones * ((usb.midi.pitchBend - 8192) / 8192.0f);		// convert raw pitchbend to midi note number
-		finetuneAdjust = pb - (2048.0f - fineTune) / 512.0f;
+		finetuneAdjust = pb - (2048.0f - fineTune) / 1024.0f;
 	} else {
 		// Get VCA levels (filtering out very low level VCA signals)
 		if (ADC_array[ADC_VCA] > 4070) {
@@ -424,13 +430,15 @@ void PhaseDistortion::CalcNextSamples()
 
 		// Calculate envelope levels of polyphonic voices
 		if (polyphonic && !detectEnv) {
+			++midiNote.envTime;
 			float sampleLevel = 0.0f;
+
 			switch (midiNote.envelope) {
 			case MidiHandler::env::A:
 				sampleLevel = static_cast<float>(midiNote.envTime) / envelope.A;
 				midiNote.releaseLevel = sampleLevel;
 
-				if (midiNote.envTime >= static_cast<int32_t>(envelope.A)) {
+				if (midiNote.envTime >= envelope.A) {
 					midiNote.envTime = -1;
 					midiNote.envelope = MidiHandler::env::D;
 				}
@@ -449,14 +457,19 @@ void PhaseDistortion::CalcNextSamples()
 
 
 			case MidiHandler::env::S:
-
 				sampleLevel = envelope.S;
-
 				break;
 
 			case MidiHandler::env::R:
 				sampleLevel = midiNote.releaseLevel - static_cast<float>(midiNote.envTime) / envelope.R;
+				if (sampleLevel <= 0.0f) {
+					sampleLevel = 0.0f;
+					removeNote = n;
+				}
+				break;
 
+			case MidiHandler::env::FR:
+				sampleLevel = midiNote.releaseLevel - static_cast<float>(midiNote.envTime) / envelope.FR;
 				if (sampleLevel <= 0.0f) {
 					sampleLevel = 0.0f;
 					removeNote = n;
@@ -464,11 +477,10 @@ void PhaseDistortion::CalcNextSamples()
 				break;
 			}
 
-			sample1 *= sampleLevel;		// Scale sample output level based on envelope
+			sample1 *= sampleLevel;			// Scale sample output level based on envelope
 			sample2 *= sampleLevel;
 
-			polyLevel += sampleLevel;
-			++midiNote.envTime;
+			polyLevel += sampleLevel;		// For LED display
 
 		} else {
 			sample1 *= VCALevel;
@@ -487,10 +499,16 @@ void PhaseDistortion::CalcNextSamples()
 	// Set DAC output values for when sample interrupt next fires (NB DAC and channels are reversed: ie DAC1 connects to channel2 and vice versa)
 	DAC->DHR12R2 = static_cast<int32_t>((1.0f + Compress(sampleOut1)) * 2047.0f);
 
-	// Debug - remove if
+#ifdef DEBUG_ENV_DETECT			// channel 2 is used to send out pulses to indicate envelope detection transitions
 	if (!detectEnv) {
+#endif
+
 	DAC->DHR12R1 = static_cast<int32_t>((1.0f + Compress(sampleOut2)) * 2047.0f);
+
+#ifdef DEBUG_ENV_DETECT
 	}
+#endif
+
 	// Set LED based envelope detection or poly level output
 	if (!detectEnv) {
 		if (polyphonic) {
@@ -501,8 +519,9 @@ void PhaseDistortion::CalcNextSamples()
 	}
 }
 
-uint32_t overload = 0;
 
+
+uint32_t overload = 0;
 
 // Fast Tanh Algorithm source: https://varietyofsound.wordpress.com/2011/02/14/efficient-tanh-computation-using-lamberts-continued-fraction/
 float PhaseDistortion::Compress(float x)
