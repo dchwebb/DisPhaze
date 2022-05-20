@@ -299,9 +299,11 @@ void PhaseDistortion::CalcNextSamples()
 	if ((GPIOB->IDR & GPIO_IDR_IDR_12) == 0) {
 		++actionBtnTime;
 	} else {
-		if (actionBtnTime > 30000) {			// long press
+		if (actionBtnTime > 30000) {			// long press = switch polyphonic/monophonic
 			++longPressCnt;
-		} else if (actionBtnTime > 20) {		// Short press
+
+			polyphonic = !polyphonic;
+		} else if (actionBtnTime > 20) {		// Short press = activate envelope detection
 			++shortPressCnt;
 
 			// Activate envelope detection mode
@@ -495,15 +497,21 @@ void PhaseDistortion::CalcNextSamples()
 		usb.midi.RemoveNote(removeNote);
 	}
 
+	if (polyphonic) {
+		sampleOut1 = Compress(sampleOut1, 0);
+		sampleOut2 = Compress(sampleOut2, 1);
+
+	}
+
 
 	// Set DAC output values for when sample interrupt next fires (NB DAC and channels are reversed: ie DAC1 connects to channel2 and vice versa)
-	DAC->DHR12R2 = static_cast<int32_t>((1.0f + Compress(sampleOut1)) * 2047.0f);
+	DAC->DHR12R2 = static_cast<int32_t>((1.0f + sampleOut1) * 2047.0f);
 
 #ifdef DEBUG_ENV_DETECT			// channel 2 is used to send out pulses to indicate envelope detection transitions
 	if (!detectEnv) {
 #endif
 
-	DAC->DHR12R1 = static_cast<int32_t>((1.0f + Compress(sampleOut2)) * 2047.0f);
+	DAC->DHR12R1 = static_cast<int32_t>((1.0f + sampleOut2) * 2047.0f);
 
 #ifdef DEBUG_ENV_DETECT
 	}
@@ -520,13 +528,22 @@ void PhaseDistortion::CalcNextSamples()
 }
 
 
-
+uint32_t compTimer = 0;
 uint32_t overload = 0;
+uint32_t compHold = 1000;
+uint32_t compRelease = 1000;
+float compLevel[2] = {0.0f, 0.0f};
+float compTarget[2] = {0.0f, 0.0f};
 
 // Fast Tanh Algorithm source: https://varietyofsound.wordpress.com/2011/02/14/efficient-tanh-computation-using-lamberts-continued-fraction/
-float PhaseDistortion::Compress(float x)
+float PhaseDistortion::Compress(float x, uint8_t channel)
 {
 	const float compStart = 0.70f;
+
+	// Ramp down compression level once hold time has finished
+	if (compLevel[channel] > 0.0f && compTime > compHold) {
+		compLevel[channel] = compTarget[channel] * (compRelease / compTime);
+	}
 
 	x = 0.40f * x;
 
