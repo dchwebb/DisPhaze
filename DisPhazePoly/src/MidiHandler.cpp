@@ -155,6 +155,7 @@ void MidiHandler::RemoveNote(uint8_t note) {
 	--noteCount;
 }
 
+
 void MidiHandler::ClassSetup(usbRequest& req)
 {
 

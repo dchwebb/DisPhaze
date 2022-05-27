@@ -285,8 +285,8 @@ void PhaseDistortion::DetectEnvelope()
 }
 
 
-volatile uint32_t shortPressCnt = 0;
-volatile uint32_t longPressCnt = 0;
+
+uint32_t overload = 0;
 
 void PhaseDistortion::CalcNextSamples()
 {
@@ -300,11 +300,9 @@ void PhaseDistortion::CalcNextSamples()
 		++actionBtnTime;
 	} else {
 		if (actionBtnTime > 30000) {			// long press = switch polyphonic/monophonic
-			++longPressCnt;
-
 			polyphonic = !polyphonic;
+
 		} else if (actionBtnTime > 20) {		// Short press = activate envelope detection
-			++shortPressCnt;
 
 			// Activate envelope detection mode
 			if (polyphonic) {
@@ -319,6 +317,12 @@ void PhaseDistortion::CalcNextSamples()
 		actionBtnTime = 0;
 	}
 
+	// If note processing is taking too long kill oldest note
+	extern uint32_t debugWorkTime;
+	if (debugWorkTime > 1700) {
+		usb.midi.RemoveNote(0);
+		++overload;
+	}
 
 	// Envelope detection - NB VCA is inverted
 	if (detectEnv) {
@@ -528,48 +532,76 @@ void PhaseDistortion::CalcNextSamples()
 }
 
 
-uint32_t compTimer = 0;
-uint32_t overload = 0;
-uint32_t compHold = 1000;
-uint32_t compRelease = 1000;
-float compLevel[2] = {0.0f, 0.0f};
-float compTarget[2] = {0.0f, 0.0f};
+static const float defaultLevel = 0.4f;
+static const uint32_t compHold = 5000;
+static const float compRelease = 0.00001f;			// Larger = faster release, smaller = slower
+float compLevel[2] = {defaultLevel, defaultLevel};
+float compTimer[2] = {0.0f, 0.0f};
 
-// Fast Tanh Algorithm source: https://varietyofsound.wordpress.com/2011/02/14/efficient-tanh-computation-using-lamberts-continued-fraction/
-float PhaseDistortion::Compress(float x, uint8_t channel)
+constexpr float a0 = 0.55f;
+constexpr float b1 = 1.0f - a0;
+float oldLevel[2] = {0.0f, 0.0f};
+
+
+
+float PhaseDistortion::Compress(float level, uint8_t channel)
 {
-	const float compStart = 0.70f;
+//	level = a0 * level + oldLevel[channel] * b1;
+//	oldLevel[channel] = level;
 
-	// Ramp down compression level once hold time has finished
-	if (compLevel[channel] > 0.0f && compTime > compHold) {
-		compLevel[channel] = compTarget[channel] * (compRelease / compTime);
+	float absLevel = std::fabs(level);
+
+	// If current level will result in an output > 1.0f initiate compression to force this to maximum level
+	if (absLevel * compLevel[channel] > 1.0f) {
+		compState[channel] = CompState::hold;
+		compLevel[channel] = 1.0f / absLevel;
+		compTimer[channel] = 0.0f;
+	} else {
+		// Start release phase once hold time has finished
+		switch (compState[channel]) {
+		case CompState::hold:
+			if (compTimer[channel] >= compHold) {
+				compState[channel] = CompState::release;
+				compTimer[channel] = 1.0f;
+			} else {
+				++compTimer[channel];
+			}
+			break;
+
+		// Ramp down compression level
+		case CompState::release:
+			++compTimer[channel];
+			compLevel[channel] = compLevel[channel] + compRelease;
+			if (compLevel[channel] >= defaultLevel) {
+				compLevel[channel] = defaultLevel;
+				compState[channel] = CompState::none;
+			}
+			break;
+
+		case CompState::none:
+			break;
+		}
 	}
+	return compLevel[channel] * level;
 
-	x = 0.40f * x;
-
-	float absX = std::fabs(x);
+	/*
+	float absX = std::fabs(level);
 	if (absX < compStart) {
-		return x;
-	} else if (x >= 1.4f) {
+		return level;
+	} else if (level >= 1.4f) {
 		++overload;
 		return 1.0f;
-	} else if (x <= -1.4f) {
+	} else if (level <= -1.4f) {
 		return -1.0f;
 		++overload;
 	} else  {
 		float comp = 1.0f - (absX - compStart) * 0.41f;
-		return std::clamp(comp * x, -1.0f, 1.0f);
+		return std::clamp(comp * level, -1.0f, 1.0f);
 	}
 
 
 	//return std::clamp(0.65f * x, -1.0f, 1.0f);
 
 
-	/*
-	// Algorithm to approximate tanh compression
-	float x2 = x * x;
-	float a = x * (135135.0f + x2 * (17325.0f + x2 * (378.0f + x2)));
-	float b = 135135.0f + x2 * (62370.0f + x2 * (3150.0f + x2 * 28.0f));
-	return a / b;
 	*/
 }

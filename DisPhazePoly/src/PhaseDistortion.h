@@ -60,6 +60,9 @@ private:
 		uint32_t ReleaseTime;
 	} envDetect;
 
+	enum class CompState {none, hold, release};
+	CompState compState[2] = {CompState::none, CompState::none};
+
 	float Interpolate(float* LUT, float& LUTPosition);
 	float GetPhaseDist(const float* PdLUT, const float LUTPosition, const float scale);
 	float GetBlendPhaseDist(const float PDBlend, const float LUTPosition, const float scale);
