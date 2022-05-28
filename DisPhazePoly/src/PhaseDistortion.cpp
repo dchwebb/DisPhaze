@@ -275,9 +275,12 @@ void PhaseDistortion::DetectEnvelope()
 		GreenLED = 0;
 		RedLED = 0;
 		envelope.A = std::max(envDetect.AttackTime, 1UL);
+		envelope.AMult = 1.0f / envelope.A;
 		envelope.D = std::max(envDetect.DecayTime, 1UL);
+		envelope.DMult = 1.0f / envelope.D;
 		envelope.S = static_cast<float>(envDetect.SustainLevel) / static_cast<float>(envDetect.maxLevel);
 		envelope.R = std::max(envDetect.ReleaseTime, 1UL);
+		envelope.RMult = 1.0f / envelope.R;
 
 		DebugState();
 	}
@@ -317,12 +320,6 @@ void PhaseDistortion::CalcNextSamples()
 		actionBtnTime = 0;
 	}
 
-	// If note processing is taking too long kill oldest note
-	extern uint32_t debugWorkTime;
-	if (debugWorkTime > 1700) {
-		usb.midi.RemoveNote(0);
-		++overload;
-	}
 
 	// Envelope detection - NB VCA is inverted
 	if (detectEnv) {
@@ -361,12 +358,19 @@ void PhaseDistortion::CalcNextSamples()
 	}
 
 
-
 	// Set up polyphonic and monophonic functions
 	if (polyphonic) {
+		// If note processing is taking too long kill oldest note
+		extern uint32_t debugWorkTime;
+		if (debugWorkTime > 1650) {
+			usb.midi.RemoveNote(0);
+			++overload;
+		}
+
 		polyNotes = usb.midi.noteCount;
 		float pb = usb.midi.pitchBendSemiTones * ((usb.midi.pitchBend - 8192) / 8192.0f);		// convert raw pitchbend to midi note number
 		finetuneAdjust = pb - (2048.0f - fineTune) / 1024.0f;
+
 	} else {
 		// Get VCA levels (filtering out very low level VCA signals)
 		if (ADC_array[ADC_VCA] > 4070) {
@@ -441,7 +445,7 @@ void PhaseDistortion::CalcNextSamples()
 
 			switch (midiNote.envelope) {
 			case MidiHandler::env::A:
-				sampleLevel = static_cast<float>(midiNote.envTime) / envelope.A;
+				sampleLevel = static_cast<float>(midiNote.envTime) * envelope.AMult;
 				midiNote.releaseLevel = sampleLevel;
 
 				if (midiNote.envTime >= envelope.A) {
@@ -450,9 +454,8 @@ void PhaseDistortion::CalcNextSamples()
 				}
 				break;
 
-
 			case MidiHandler::env::D:
-				sampleLevel = 1.0f - static_cast<float>(midiNote.envTime) / envelope.D;
+				sampleLevel = 1.0f - static_cast<float>(midiNote.envTime) * envelope.DMult;
 				midiNote.releaseLevel = sampleLevel;
 
 				if (sampleLevel <= envelope.S) {
@@ -461,13 +464,12 @@ void PhaseDistortion::CalcNextSamples()
 				}
 				break;
 
-
 			case MidiHandler::env::S:
 				sampleLevel = envelope.S;
 				break;
 
 			case MidiHandler::env::R:
-				sampleLevel = midiNote.releaseLevel - static_cast<float>(midiNote.envTime) / envelope.R;
+				sampleLevel = midiNote.releaseLevel - static_cast<float>(midiNote.envTime) * envelope.RMult;
 				if (sampleLevel <= 0.0f) {
 					sampleLevel = 0.0f;
 					removeNote = n;
@@ -475,7 +477,7 @@ void PhaseDistortion::CalcNextSamples()
 				break;
 
 			case MidiHandler::env::FR:
-				sampleLevel = midiNote.releaseLevel - static_cast<float>(midiNote.envTime) / envelope.FR;
+				sampleLevel = midiNote.releaseLevel - static_cast<float>(midiNote.envTime) * envelope.FRMult;
 				if (sampleLevel <= 0.0f) {
 					sampleLevel = 0.0f;
 					removeNote = n;
@@ -536,7 +538,7 @@ static const float defaultLevel = 0.4f;
 static const uint32_t compHold = 5000;
 static const float compRelease = 0.00001f;			// Larger = faster release, smaller = slower
 float compLevel[2] = {defaultLevel, defaultLevel};
-float compTimer[2] = {0.0f, 0.0f};
+uint16_t compTimer[2] = {0, 0};
 
 constexpr float a0 = 0.55f;
 constexpr float b1 = 1.0f - a0;
@@ -546,8 +548,8 @@ float oldLevel[2] = {0.0f, 0.0f};
 
 float PhaseDistortion::Compress(float level, uint8_t channel)
 {
-//	level = a0 * level + oldLevel[channel] * b1;
-//	oldLevel[channel] = level;
+	level = a0 * level + oldLevel[channel] * b1;
+	oldLevel[channel] = level;
 
 	float absLevel = std::fabs(level);
 
@@ -557,20 +559,16 @@ float PhaseDistortion::Compress(float level, uint8_t channel)
 		compLevel[channel] = 1.0f / absLevel;
 		compTimer[channel] = 0.0f;
 	} else {
-		// Start release phase once hold time has finished
 		switch (compState[channel]) {
 		case CompState::hold:
-			if (compTimer[channel] >= compHold) {
+			++compTimer[channel];
+			if (compTimer[channel] >= compHold) {					// Start release phase once hold time has finished
 				compState[channel] = CompState::release;
-				compTimer[channel] = 1.0f;
-			} else {
-				++compTimer[channel];
 			}
 			break;
 
 		// Ramp down compression level
 		case CompState::release:
-			++compTimer[channel];
 			compLevel[channel] = compLevel[channel] + compRelease;
 			if (compLevel[channel] >= defaultLevel) {
 				compLevel[channel] = defaultLevel;
@@ -583,25 +581,4 @@ float PhaseDistortion::Compress(float level, uint8_t channel)
 		}
 	}
 	return compLevel[channel] * level;
-
-	/*
-	float absX = std::fabs(level);
-	if (absX < compStart) {
-		return level;
-	} else if (level >= 1.4f) {
-		++overload;
-		return 1.0f;
-	} else if (level <= -1.4f) {
-		return -1.0f;
-		++overload;
-	} else  {
-		float comp = 1.0f - (absX - compStart) * 0.41f;
-		return std::clamp(comp * level, -1.0f, 1.0f);
-	}
-
-
-	//return std::clamp(0.65f * x, -1.0f, 1.0f);
-
-
-	*/
 }

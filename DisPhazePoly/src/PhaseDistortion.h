@@ -24,6 +24,11 @@ public:
 		float S = 0.5f;
 		uint32_t R = 5000;
 		uint32_t FR = 3;
+
+		float AMult = 1.0f / A;
+		float DMult = 1.0f / D;
+		float RMult = 1.0f / R;
+		float FRMult = 1.0f / FR;
 	} envelope;
 
 private:

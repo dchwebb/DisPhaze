@@ -38,7 +38,7 @@ void MidiHandler::midiEvent(const uint32_t data)
 	// Note off - set envelope to release
 	if (midiData.msg == NoteOff) {
 		for (uint8_t i = 0; i < noteCount; ++i) {
-			if (midiNotes[i].noteValue == midiData.db1) {		// note found - set to release
+			if (midiNotes[i].noteValue == midiData.db1 && midiNotes[i].envelope != R) {		// note found - set to release
 				midiNotes[i].envelope = R;
 				midiNotes[i].envTime = -1;
 			}
@@ -48,8 +48,9 @@ void MidiHandler::midiEvent(const uint32_t data)
 	if (midiData.msg == NoteOn) {
 		// Check if note is already sounding and reinitialise timing if so
 		for (uint8_t i = 0; i < noteCount; ++i) {
+
 			if (midiNotes[i].noteValue == midiData.db1) {		// Note already playing - reinitialise to Attack
-				midiNotes[noteCount].envelope = A;
+				midiNotes[i].envelope = A;
 				midiNotes[i].envTime = -1;
 				return;
 			}
