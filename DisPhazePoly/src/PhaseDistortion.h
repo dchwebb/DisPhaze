@@ -17,6 +17,7 @@ public:
 	static constexpr uint8_t pd2LutCount = 8;
 
 	void CalcNextSamples();
+	float GetLevel(MidiHandler::MidiNote& midiNote);
 
 	struct {
 		int32_t A = 10000;
@@ -30,6 +31,18 @@ public:
 		float RMult = 1.0f / R;
 		float FRMult = 1.0f / FR;
 	} envelope;
+
+	// Polyphonic Output smoothing filter
+	struct {
+		float b1 = 0.15;		// filter coefficients: filter cutoff = (−ln(b1) / 2π) * (sample_rate / 2) = ~6.6kHz
+		float a0 = 1.0f - b1;
+		float oldLevel[2] = {0.0f, 0.0f};
+
+		void SetDecay(float d) {
+			b1 = d;
+			a0 = 1.0f - d;
+		}
+	} filter;
 
 private:
 	uint16_t pd1Type = 0;			// Phase distortion type knob position with smoothing
@@ -65,8 +78,16 @@ private:
 		uint32_t ReleaseTime;
 	} envDetect;
 
+	// Compressor/Limiter settings
 	enum class CompState {none, hold, release};
 	CompState compState[2] = {CompState::none, CompState::none};
+	static constexpr uint16_t compHold = 5000;				// Hold time in samples before limiter is released
+	static constexpr float compRelease = 0.00001f;			// Larger = faster release, smaller = slower
+	static constexpr float defaultLevel = 0.4f;				// Default compressor level
+	float compLevel[2] = {defaultLevel, defaultLevel};		// Compressor level adjusted for input
+	uint16_t compHoldTimer[2] = {0, 0};							// Compressor hold counter
+
+
 
 	float Interpolate(float* LUT, float& LUTPosition);
 	float GetPhaseDist(const float* PdLUT, const float LUTPosition, const float scale);

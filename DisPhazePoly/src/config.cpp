@@ -69,8 +69,12 @@ void Config::SetConfig(configValues &cv)
 	cv.spread = tuningSpread;
 }
 
+constexpr float midiLUTFirstNote = 21.0f;			// 21 = 27.5Hz (A0)
+constexpr float midiLUTNotes = 100.0f;				// 121 = 8869.84Hz (C#9)
+constexpr uint32_t midiLUTSize = 16384;				// Size of MIDI to pitch LUT
+float* MidiLUT = ADDR_FLASH_SECTOR_6;
 
-// Restore calibration settings from flash memory
+// Restore calibration settings from flash memory and create MIDI to pitch LUT if needed
 void Config::RestoreConfig()
 {
 	// create temporary copy of settings from memory to check if they are valid
@@ -81,6 +85,29 @@ void Config::RestoreConfig()
 		tuningOffset = cv.offset;
 		tuningSpread = cv.spread;
 	}
+
+	// Check if MIDI to pitch LUT has been created - this is done here to avoid having to Flash each time program is built
+	if (MidiLUT[0] != 440.0f * std::pow(2.0f, (midiLUTFirstNote - 69.0f) / 12.0f)) {
+		FlashUnlock();							// Unlock Flash memory for writing
+		FLASH->SR = FLASH_ALL_ERRORS;			// Clear error flags in Status Register
+		FlashEraseSector(6);					// Erase sector 6 (has to be erased before write)
+
+		// if the previous operation is completed, proceed to program the new data
+		FLASH->CR &= FLASH_CR_PSIZE_Msk;
+		FLASH->CR |= FLASH_PSIZE_WORD;			// Set programming size to a word
+		FLASH->CR |= FLASH_CR_PG;				// Set programming bit
+
+		for (uint32_t i = 0; i < midiLUTSize; ++i) {
+			float n = midiLUTFirstNote + ((float)i / (float)midiLUTSize) * midiLUTNotes;
+			MidiLUT[i] = 440.0f * std::pow(2.0f, (n - 69.0f) / 12.0f);
+
+			FlashWaitForLastOperation();
+		}
+
+		FLASH->CR &= ~FLASH_CR_PG;				// Disable programming bit
+		FlashLock();							// Lock the Flash memory
+	}
+
 }
 
 

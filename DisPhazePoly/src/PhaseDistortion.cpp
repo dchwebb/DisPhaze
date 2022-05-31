@@ -361,11 +361,11 @@ void PhaseDistortion::CalcNextSamples()
 	// Set up polyphonic and monophonic functions
 	if (polyphonic) {
 		// If note processing is taking too long kill oldest note
-		extern uint32_t debugWorkTime;
-		if (debugWorkTime > 1650) {
-			usb.midi.RemoveNote(0);
-			++overload;
-		}
+//		extern uint32_t debugWorkTime;
+//		if (debugWorkTime > 1750) {
+//			usb.midi.RemoveNote(0);
+//			++overload;
+//		}
 
 		polyNotes = usb.midi.noteCount;
 		float pb = usb.midi.pitchBendSemiTones * ((usb.midi.pitchBend - 8192) / 8192.0f);		// convert raw pitchbend to midi note number
@@ -445,8 +445,7 @@ void PhaseDistortion::CalcNextSamples()
 
 			switch (midiNote.envelope) {
 			case MidiHandler::env::A:
-				sampleLevel = static_cast<float>(midiNote.envTime) * envelope.AMult;
-				midiNote.releaseLevel = sampleLevel;
+				sampleLevel = midiNote.envTime * envelope.AMult;
 
 				if (midiNote.envTime >= envelope.A) {
 					midiNote.envTime = -1;
@@ -455,8 +454,7 @@ void PhaseDistortion::CalcNextSamples()
 				break;
 
 			case MidiHandler::env::D:
-				sampleLevel = 1.0f - static_cast<float>(midiNote.envTime) * envelope.DMult;
-				midiNote.releaseLevel = sampleLevel;
+				sampleLevel = 1.0f - midiNote.envTime * envelope.DMult;
 
 				if (sampleLevel <= envelope.S) {
 					midiNote.envTime = -1;
@@ -469,7 +467,7 @@ void PhaseDistortion::CalcNextSamples()
 				break;
 
 			case MidiHandler::env::R:
-				sampleLevel = midiNote.releaseLevel - static_cast<float>(midiNote.envTime) * envelope.RMult;
+				sampleLevel = midiNote.releaseLevel - midiNote.envTime * envelope.RMult;
 				if (sampleLevel <= 0.0f) {
 					sampleLevel = 0.0f;
 					removeNote = n;
@@ -477,7 +475,7 @@ void PhaseDistortion::CalcNextSamples()
 				break;
 
 			case MidiHandler::env::FR:
-				sampleLevel = midiNote.releaseLevel - static_cast<float>(midiNote.envTime) * envelope.FRMult;
+				sampleLevel = midiNote.releaseLevel - midiNote.envTime * envelope.FRMult;
 				if (sampleLevel <= 0.0f) {
 					sampleLevel = 0.0f;
 					removeNote = n;
@@ -534,22 +532,41 @@ void PhaseDistortion::CalcNextSamples()
 }
 
 
-static const float defaultLevel = 0.4f;
-static const uint32_t compHold = 5000;
-static const float compRelease = 0.00001f;			// Larger = faster release, smaller = slower
-float compLevel[2] = {defaultLevel, defaultLevel};
-uint16_t compTimer[2] = {0, 0};
 
-constexpr float a0 = 0.55f;
-constexpr float b1 = 1.0f - a0;
-float oldLevel[2] = {0.0f, 0.0f};
+float PhaseDistortion::GetLevel(MidiHandler::MidiNote& midiNote)
+{
+	switch (midiNote.envelope) {
+	case MidiHandler::env::A:
+		return midiNote.envTime * envelope.AMult;
+		break;
+
+	case MidiHandler::env::D:
+		return 1.0f - midiNote.envTime * envelope.DMult;
+		break;
+
+	case MidiHandler::env::S:
+		return envelope.S;
+		break;
+
+	case MidiHandler::env::R:
+		return midiNote.releaseLevel - midiNote.envTime * envelope.RMult;
+		break;
+
+	case MidiHandler::env::FR:
+		return midiNote.releaseLevel - midiNote.envTime * envelope.FRMult;
+		break;
+
+	default:
+		return 0.0f;
+	}
+}
 
 
 
 float PhaseDistortion::Compress(float level, uint8_t channel)
 {
-	level = a0 * level + oldLevel[channel] * b1;
-	oldLevel[channel] = level;
+	level = filter.a0 * level + filter.oldLevel[channel] * filter.b1;
+	filter.oldLevel[channel] = level;
 
 	float absLevel = std::fabs(level);
 
@@ -557,12 +574,12 @@ float PhaseDistortion::Compress(float level, uint8_t channel)
 	if (absLevel * compLevel[channel] > 1.0f) {
 		compState[channel] = CompState::hold;
 		compLevel[channel] = 1.0f / absLevel;
-		compTimer[channel] = 0.0f;
+		compHoldTimer[channel] = 0.0f;
 	} else {
 		switch (compState[channel]) {
 		case CompState::hold:
-			++compTimer[channel];
-			if (compTimer[channel] >= compHold) {					// Start release phase once hold time has finished
+			++compHoldTimer[channel];
+			if (compHoldTimer[channel] >= compHold) {					// Start release phase once hold time has finished
 				compState[channel] = CompState::release;
 			}
 			break;

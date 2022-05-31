@@ -4,7 +4,8 @@
 #include "PhaseDistortion.h"
 
 #define CONFIG_VERSION 1
-#define ADDR_FLASH_SECTOR_10    reinterpret_cast<uint32_t*>(0x080C0000) // Base address of Sector 10, 128 Kbytes
+#define ADDR_FLASH_SECTOR_6    reinterpret_cast<float*>(0x08040000)		// Base address of Sector 6, 128 Kbytes
+#define ADDR_FLASH_SECTOR_10   reinterpret_cast<uint32_t*>(0x080C0000)	// Base address of Sector 10, 128 Kbytes
 #define FLASH_PSIZE_WORD        ((uint32_t)0x00000200)
 #define FLASH_ALL_ERRORS (FLASH_SR_EOP | FLASH_SR_SOP |FLASH_SR_WRPERR | FLASH_SR_PGAERR |FLASH_SR_PGPERR | FLASH_SR_PGSERR)
 

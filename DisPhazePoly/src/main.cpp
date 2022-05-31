@@ -32,10 +32,8 @@
 
 /* FIXME
  * Octave switch currently on interrupt - probably more efficient to do in sample loop
- * Envelope release calculate start value on note off
- * Note on resets level to 0 even if note sounding in release phase
- * Revisit compression routine setting global level with release
- * Note stealing - apply short note cutoff rather than just setting level to 0
+ * Higher precision PD and MIDI pitch LUTs
+ * Better note killing algorithm - zero crossings, look for release notes etc
  */
 
 
@@ -66,7 +64,7 @@ int main(void)
 	SystemClock_Config();			// Configure the clock and PLL
 	SystemCoreClockUpdate();		// Update SystemCoreClock (system clock frequency) derived from settings of oscillators, prescalers and PLL
 
-	config.RestoreConfig();			// Restore calibration settings from flash memory
+	config.RestoreConfig();			// Restore calibration settings from flash memory and create MIDI to pitch LUT if needed
 	CreateLUTs();					// Create pitch and sine wave look up tables
 	InitGPIO();						// Configure switches for Ring mod, mix and octave selection
 	InitDAC();						// DAC1 Output on PA4 (Pin 20); DAC2 Output on PA5 (Pin 21)

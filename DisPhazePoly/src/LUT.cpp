@@ -34,6 +34,7 @@ void CreateLUTs()
 	}
 }
 
+/*
 #include <array>
 
 constexpr float midiLUTFirstNote = 21.0f;			// 21 = 27.5Hz (A0)
@@ -54,4 +55,4 @@ constexpr auto CreateMidiLUT()
 
 
 constexpr std::array<float, midiLUTSize> MidiLUT = CreateMidiLUT();
-
+*/

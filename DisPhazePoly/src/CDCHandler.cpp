@@ -52,15 +52,18 @@ void CDCHandler::ProcessCommand()
 					"decay:xxxx     -  Set decay time in samples\n"
 					"sustain:x.xx   -  Set sustain 0.0 - 1.0\n"
 					"release:xxxx   -  Set release time in samples\n"
+					"filter:x.xx    -  Set filter level 0.0 - 1.0\n"
 			);
 
 		} else if (cmd.compare("info\n") == 0) {
 
 			usb->SendString("Polyphonic mode: " + std::string(phaseDist.polyphonic ? "on\r\n": "off\r\n") +
-					"Envelope: A:" + std::to_string(phaseDist.envelope.A) +
+					"Filter level: 0." + std::to_string(static_cast<uint8_t>(100.0f * phaseDist.filter.b1)) +
+					"\r\nEnvelope: A:" + std::to_string(phaseDist.envelope.A) +
 					", D: " + std::to_string(phaseDist.envelope.D) +
 					", S: 0." + std::to_string(static_cast<uint8_t>(100.0f * phaseDist.envelope.S)) +
 					", R: " + std::to_string(phaseDist.envelope.R) +
+
 					"\n\r");
 
 		} else if (cmd.compare("poly\n") == 0) {
@@ -99,6 +102,14 @@ void CDCHandler::ProcessCommand()
 				//config.SaveConfig();
 			}
 			usb->SendString("Release set to: " + std::to_string(phaseDist.envelope.R) + " samples\r\n");
+
+		} else if (cmd.compare(0, 7, "filter:") == 0) {			// Filter decay time
+			float val = ParseFloat(cmd, ':', 0.0f, 1.0f);
+			if (val > 0.0f) {
+				phaseDist.filter.SetDecay(val);
+			}
+			std::string s = std::to_string(static_cast<uint8_t>(100.0f * phaseDist.filter.b1));		// FIXME - using to_string on float crashes for some reason
+			usb->SendString("Filter decay set to: 0." + s + "\r\n");
 
 		} else {
 			usb->SendString("Unrecognised command. Type 'help' for supported commands\n");
