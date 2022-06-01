@@ -39,9 +39,7 @@ void MidiHandler::midiEvent(const uint32_t data)
 	if (midiData.msg == NoteOff) {
 		for (uint8_t i = 0; i < noteCount; ++i) {
 			if (midiNotes[i].noteValue == midiData.db1 && midiNotes[i].envelope != R) {		// note found - set to release
-				midiNotes[i].releaseLevel = phaseDist.GetLevel(midiNotes[i]);
 				midiNotes[i].envelope = R;
-				midiNotes[i].envTime = -1.0f;
 			}
 		}
 	}
@@ -51,8 +49,6 @@ void MidiHandler::midiEvent(const uint32_t data)
 		for (uint8_t i = 0; i < noteCount; ++i) {
 
 			if (midiNotes[i].noteValue == midiData.db1) {		// Note already playing - reinitialise to Attack
-				float level = phaseDist.GetLevel(midiNotes[i]);
-				midiNotes[i].envTime = level / phaseDist.envelope.AMult;		// Calculate corresponding envelope time so attack starts from current level
 				midiNotes[i].envelope = A;
 				return;
 			}
@@ -62,16 +58,15 @@ void MidiHandler::midiEvent(const uint32_t data)
 		midiNotes[noteCount].origNote = midiData.db1;
 		midiNotes[noteCount].noteValue = static_cast<float>(midiData.db1);
 		midiNotes[noteCount].envelope = A;						// Initialise to attack
-		midiNotes[noteCount].envTime = -1.0f;
+		midiNotes[noteCount].currentLevel = 0.0f;
 		midiNotes[noteCount].samplePos1 = 0;
 		midiNotes[noteCount].samplePos2 = 0;
 
 		++noteCount;
 
 		if (noteCount > polyCount) {							// Polyphony exceeded
-			midiNotes[0].releaseLevel = phaseDist.GetLevel(midiNotes[0]);
 			midiNotes[0].envelope = FR;							// Fast release envelope
-			midiNotes[0].envTime = -1.0f;
+			//RemoveNote(0);
 		}
 	}
 

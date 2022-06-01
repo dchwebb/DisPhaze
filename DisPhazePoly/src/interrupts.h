@@ -21,10 +21,6 @@ void TIM3_IRQHandler(void)
 		if (!config.calibrating) {
 			phaseDist.CalcNextSamples();
 			debugWorkTime = TIM5->CNT;
-
-			if (debugWorkTime > 1400) {								// If the buffer has not been refilled increment overrun warning
-				overrun++;
-			}
 		}
 	}
 }

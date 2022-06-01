@@ -17,19 +17,18 @@ public:
 	static constexpr uint8_t pd2LutCount = 8;
 
 	void CalcNextSamples();
-	float GetLevel(MidiHandler::MidiNote& midiNote);
 
 	struct {
 		int32_t A = 10000;
 		uint32_t D = 10000;
 		float S = 0.5f;
 		uint32_t R = 5000;
-		uint32_t FR = 3;
+		uint32_t FR = 20;
 
-		float AMult = 1.0f / A;
-		float DMult = 1.0f / D;
-		float RMult = 1.0f / R;
-		float FRMult = 1.0f / FR;
+		float AInc = 1.0f / A;
+		float DInc = 1.0f / D;
+		float RInc = 1.0f / R;
+		float FRInc = 1.0f / FR;
 	} envelope;
 
 	// Polyphonic Output smoothing filter
