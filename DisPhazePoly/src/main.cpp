@@ -32,8 +32,10 @@
 
 /* FIXME
  * Octave switch currently on interrupt - probably more efficient to do in sample loop
- * Higher precision PD and MIDI pitch LUTs
  * Better note killing algorithm - zero crossings, look for release notes etc
+ * Config saving for envelopes
+ * Colours on Envelope detection (green for sustain phase); possibly envelope detect PD??
+ * Auto detect whether input is MIDI or Pitch; monophonic mode available on MIDI input
  */
 
 

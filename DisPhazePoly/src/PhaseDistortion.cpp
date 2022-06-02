@@ -88,6 +88,7 @@ float PhaseDistortion::GetBlendPhaseDist(const float pdBlend, const float LUTPos
 
 
 uint32_t overload = 0;
+volatile uint32_t timingTestStart = 0;
 volatile uint32_t timingTest = 0;
 
 void PhaseDistortion::CalcNextSamples()
@@ -185,7 +186,6 @@ void PhaseDistortion::CalcNextSamples()
 	int8_t removeNote = -1;		// To enable removal of notes that have completed release envelope
 	float polyLevel = 0;		// Get maximum level of polyphonic notes to display on LED
 
-	timingTest = TIM5->CNT;
 
 	for (uint8_t n = 0; n < polyNotes; ++n) {
 		auto& midiNote = usb.midi.midiNotes[n];
@@ -241,49 +241,53 @@ void PhaseDistortion::CalcNextSamples()
 
 		// Calculate envelope levels of polyphonic voices
 		if (polyphonic && !detectEnv) {
+			//timingTestStart = TIM5->CNT;
+
 
 			switch (midiNote.envelope) {
 			case MidiHandler::env::A:
-				midiNote.currentLevel += envelope.AInc;
+				midiNote.vcaLevel += envelope.AInc;
 
-				if (midiNote.currentLevel >= 1.0f) {
+				if (midiNote.vcaLevel >= 1.0f) {
 					midiNote.envelope = MidiHandler::env::D;
 				}
 				break;
 
 			case MidiHandler::env::D:
-				midiNote.currentLevel -= envelope.DInc;
+				midiNote.vcaLevel -= envelope.DInc;
 
-				if (midiNote.currentLevel <= envelope.S) {
+				if (midiNote.vcaLevel <= envelope.S) {
 					midiNote.envelope = MidiHandler::env::S;
 				}
 				break;
 
 			case MidiHandler::env::S:
-				midiNote.currentLevel = envelope.S;
+				midiNote.vcaLevel = envelope.S;
 				break;
 
 			case MidiHandler::env::R:
-				midiNote.currentLevel -= envelope.RInc;
-				if (midiNote.currentLevel <= 0.0f) {
-					midiNote.currentLevel = 0.0f;
+				midiNote.vcaLevel -= envelope.RInc;
+				if (midiNote.vcaLevel <= 0.0f) {
+					midiNote.vcaLevel = 0.0f;
 					removeNote = n;
 				}
 				break;
 
 			case MidiHandler::env::FR:
-				midiNote.currentLevel -= envelope.FRInc;
-				if (midiNote.currentLevel <= 0.0f) {
-					midiNote.currentLevel = 0.0f;
+				midiNote.vcaLevel -= envelope.FRInc;
+				if (midiNote.vcaLevel <= 0.0f) {
+					midiNote.vcaLevel = 0.0f;
 					removeNote = n;
 				}
 				break;
 			}
 
-			sample1 *= midiNote.currentLevel;			// Scale sample output level based on envelope
-			sample2 *= midiNote.currentLevel;
+			//timingTest = TIM5->CNT - timingTestStart;
 
-			polyLevel += midiNote.currentLevel;		// For LED display
+			sample1 *= midiNote.vcaLevel;			// Scale sample output level based on envelope
+			sample2 *= midiNote.vcaLevel;
+
+			polyLevel += midiNote.vcaLevel;		// For LED display
 
 		} else {
 			sample1 *= VCALevel;
@@ -559,12 +563,11 @@ void PhaseDistortion::DetectEnvelope()
 		GreenLED = 0;
 		RedLED = 0;
 		envelope.A = std::max(envDetect.AttackTime, 1UL);
-		envelope.AInc = 1.0f / envelope.A;
 		envelope.D = std::max(envDetect.DecayTime, 1UL);
-		envelope.DInc = 1.0f / envelope.D;
 		envelope.S = static_cast<float>(envDetect.SustainLevel) / static_cast<float>(envDetect.maxLevel);
 		envelope.R = std::max(envDetect.ReleaseTime, 1UL);
-		envelope.RInc = 1.0f / envelope.R;
+
+		envelope.UpdateIncrements();
 
 		DebugState();
 	}

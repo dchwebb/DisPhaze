@@ -26,11 +26,10 @@ public:
 		uint8_t origNote;		// MIDI note value
 		float noteValue;		// MIDI note value adjusted with pitch bend
 		uint8_t envelope;		// Stage in envelope
-		//float envTime;			// envelope sample counter
 		float samplePos1;		// Current position within cycle
 		float samplePos2;
-		//float releaseLevel;		// Store level when hitting release phase
-		float currentLevel;		// Store level
+		float vcaLevel;			// Store amplitude envelope level
+		float pdLevel;			// Store Phase distortion envelope level
 	};
 
 	inline static constexpr uint8_t polyCount = 5;

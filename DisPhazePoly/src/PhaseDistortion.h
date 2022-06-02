@@ -18,17 +18,34 @@ public:
 
 	void CalcNextSamples();
 
-	struct {
-		int32_t A = 10000;
-		uint32_t D = 10000;
+	struct Env {
+		// Constructor calculates increment values based on default envelope settings
+		Env() {
+			UpdateIncrements();
+		}
+
+		int32_t A = 1000;
+		uint32_t D = 4000;
 		float S = 0.5f;
 		uint32_t R = 5000;
 		uint32_t FR = 20;
 
-		float AInc = 1.0f / A;
-		float DInc = 1.0f / D;
-		float RInc = 1.0f / R;
-		float FRInc = 1.0f / FR;
+		int32_t A_pd = 2000;
+		uint32_t DR_pd = 7000;
+
+		// Incremental variables for adding to current level based on envelope position
+		float AInc, DInc, RInc, FRInc, A_pd_Inc, D_pd_Inc;
+
+		// For computational efficiency envelope times in samples are converted to addition increments
+		void UpdateIncrements() {
+			AInc = 1.0f / A;
+			DInc = 1.0f / D;
+			RInc = 1.0f / R;
+			FRInc = 1.0f / FR;
+			A_pd_Inc = 1.0f / A_pd;
+			D_pd_Inc = 1.0f / DR_pd;
+		}
+
 	} envelope;
 
 	// Polyphonic Output smoothing filter
