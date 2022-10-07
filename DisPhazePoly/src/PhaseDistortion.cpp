@@ -163,7 +163,8 @@ void PhaseDistortion::CalcNextSamples()
 		// If note processing is taking too long kill oldest note
 		extern uint32_t debugWorkTime;
 		if (debugWorkTime > 1850) {
-			usb.midi.RemoveNote(0);
+			//usb.midi.RemoveNote(0);
+			usb.midi.midiNotes[0].envelope = MidiHandler::env::FR;
 			++overload;
 		}
 
@@ -230,11 +231,33 @@ void PhaseDistortion::CalcNextSamples()
 			sp2 -= SAMPLERATE;
 		}
 
+
+		// Calculate Phase Distortion envelope scaling (Attack and Decay phase scaling the PD amount from CV and pot)
+		switch (midiNote.pdEnvelope) {
+		case MidiHandler::pdEnv::A:
+			midiNote.pdLevel += envelope.A_pd_Inc;
+			if (midiNote.pdLevel >= 1.0f) {
+				midiNote.pdEnvelope = MidiHandler::pdEnv::D;
+			}
+			break;
+		case MidiHandler::pdEnv::D:
+			midiNote.pdLevel -= envelope.D_pd_Inc;
+			if (midiNote.pdLevel <= 0.0f) {
+				midiNote.pdLevel = 0.0f;
+				midiNote.pdEnvelope = MidiHandler::pdEnv::Off;
+			}
+			break;
+		default:
+			break;
+		}
+
+
+
 		// Calculate output as a float from -1 to +1 checking phase distortion and phase offset as required
-		float sample1 = GetBlendPhaseDist(pdLut1, sp1 / SAMPLERATE, pd1Scale);
+		float sample1 = GetBlendPhaseDist(pdLut1, sp1 / SAMPLERATE, pd1Scale * midiNote.pdLevel);
 		float sample2 = pd2Resonant ?
-				GetResonantWave(sp2 / SAMPLERATE, pd2Scale, pdLut2) :
-				GetPhaseDist(LUTArray[pdLut2], sp2 / SAMPLERATE, pd2Scale);
+				GetResonantWave(sp2 / SAMPLERATE, pd2Scale * midiNote.pdLevel, pdLut2) :
+				GetPhaseDist(LUTArray[pdLut2], sp2 / SAMPLERATE, pd2Scale * midiNote.pdLevel);
 		if (ringModOn)			sample1 *= sample2;
 		if (mixOn) 				sample2 += sample1;
 
@@ -243,10 +266,10 @@ void PhaseDistortion::CalcNextSamples()
 		if (polyphonic && !detectEnv) {
 			//timingTestStart = TIM5->CNT;
 
-
 			switch (midiNote.envelope) {
 			case MidiHandler::env::A:
 				midiNote.vcaLevel += envelope.AInc;
+
 
 				if (midiNote.vcaLevel >= 1.0f) {
 					midiNote.envelope = MidiHandler::env::D;

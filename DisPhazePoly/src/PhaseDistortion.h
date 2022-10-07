@@ -24,14 +24,14 @@ public:
 			UpdateIncrements();
 		}
 
-		int32_t A = 1000;
+		uint32_t A = 1000;
 		uint32_t D = 4000;
 		float S = 0.5f;
 		uint32_t R = 5000;
 		uint32_t FR = 20;
 
-		int32_t A_pd = 2000;
-		uint32_t DR_pd = 7000;
+		uint32_t A_pd = 500;
+		uint32_t D_pd = 75000;
 
 		// Incremental variables for adding to current level based on envelope position
 		float AInc, DInc, RInc, FRInc, A_pd_Inc, D_pd_Inc;
@@ -43,7 +43,7 @@ public:
 			RInc = 1.0f / R;
 			FRInc = 1.0f / FR;
 			A_pd_Inc = 1.0f / A_pd;
-			D_pd_Inc = 1.0f / DR_pd;
+			D_pd_Inc = 1.0f / D_pd;
 		}
 
 	} envelope;
@@ -97,9 +97,9 @@ private:
 	// Compressor/Limiter settings
 	enum class CompState {none, hold, release};
 	CompState compState[2] = {CompState::none, CompState::none};
-	static constexpr uint16_t compHold = 5000;				// Hold time in samples before limiter is released
-	static constexpr float compRelease = 0.00001f;			// Larger = faster release, smaller = slower
-	static constexpr float defaultLevel = 0.4f;				// Default compressor level
+	static constexpr uint16_t compHold = 6000;				// Hold time in samples before limiter is released
+	static constexpr float compRelease = 0.000005f;			// Larger = faster release, smaller = slower
+	static constexpr float defaultLevel = 0.35f;				// Default compressor level
 	float compLevel[2] = {defaultLevel, defaultLevel};		// Compressor level adjusted for input
 	uint16_t compHoldTimer[2] = {0, 0};							// Compressor hold counter
 

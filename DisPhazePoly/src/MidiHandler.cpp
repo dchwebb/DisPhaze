@@ -50,6 +50,7 @@ void MidiHandler::midiEvent(const uint32_t data)
 
 			if (midiNotes[i].noteValue == midiData.db1) {		// Note already playing - reinitialise to Attack
 				midiNotes[i].envelope = A;
+				midiNotes[i].pdEnvelope = pdEnv::A;
 				return;
 			}
 		}
@@ -57,8 +58,10 @@ void MidiHandler::midiEvent(const uint32_t data)
 		// Set next note to be received midi note
 		midiNotes[noteCount].origNote = midiData.db1;
 		midiNotes[noteCount].noteValue = static_cast<float>(midiData.db1);
-		midiNotes[noteCount].envelope = A;						// Initialise to attack
+		midiNotes[noteCount].envelope = A;						// Initialise VCA envelope to attack
+		midiNotes[noteCount].pdEnvelope = pdEnv::A;				// Initialise PD envelope to attack
 		midiNotes[noteCount].vcaLevel = 0.0f;
+		midiNotes[noteCount].pdLevel = 0.0f;
 		midiNotes[noteCount].samplePos1 = 0;
 		midiNotes[noteCount].samplePos2 = 0;
 

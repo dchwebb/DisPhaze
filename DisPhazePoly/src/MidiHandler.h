@@ -21,11 +21,13 @@ public:
 
 	enum MIDIType {Unknown = 0, NoteOn = 0x9, NoteOff = 0x8, PolyPressure = 0xA, ControlChange = 0xB, ProgramChange = 0xC, ChannelPressure = 0xD, PitchBend = 0xE, System = 0xF };
 	enum env : uint8_t {A = 0, D = 1, S = 2, R = 3, FR = 4};			// FR = fast release
+	enum class pdEnv : uint8_t {A, D, Off};
 
 	struct MidiNote {
-		uint8_t origNote;		// MIDI note value
 		float noteValue;		// MIDI note value adjusted with pitch bend
-		uint8_t envelope;		// Stage in envelope
+		uint8_t origNote;		// MIDI note value
+		uint8_t envelope;		// Stage in vca envelope
+		pdEnv pdEnvelope;		// Stage in phase distortion envelope
 		float samplePos1;		// Current position within cycle
 		float samplePos2;
 		float vcaLevel;			// Store amplitude envelope level
