@@ -59,8 +59,8 @@ int main(void)
 	InitADC();						// Configure ADC for analog controls
 	InitDebugTimer();				// Timer to check available calculation time
 
-	usb.InitUSB();
-	usb.cdcDataHandler = std::bind(CDCHandler, std::placeholders::_1, std::placeholders::_2);
+//	usb.InitUSB();
+//	usb.cdcDataHandler = std::bind(CDCHandler, std::placeholders::_1, std::placeholders::_2);
 
 	EXTI15_10_IRQHandler();			// Call the Interrupt event handler to set up the octave up/down switch to current position
 	EXTI9_5_IRQHandler();			// Call the Interrupt event handler to set up the mix switch to current position

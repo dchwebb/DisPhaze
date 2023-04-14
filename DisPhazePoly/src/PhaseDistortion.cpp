@@ -26,7 +26,7 @@ float PhaseDistortion::Interpolate(float* LUT, float& LUTPosition)
 float PhaseDistortion::GetResonantWave(const float LUTPosition, float scale, const uint8_t pdLut2)
 {
 	// models waves 6-8 of the Casio CZ which are saw/triangle envelopes into which harmonics are added as the phase distortion increases
-	static float lastSample = 0.0f;
+	//static float lastSample = 0.0f;
 
 	scale = ((scale / 5.0f) * 23.0f) + 1.0f;		// Sets number of sine waves per cycle: scale input 0-5 to 1-24 (original only went to 16)
 
