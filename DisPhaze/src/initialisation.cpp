@@ -1,8 +1,8 @@
 #include "initialisation.h"
 #include <algorithm>
 
-#define AHB_PRESCALAR 0b0000
-#define APB1_PRESCALAR 0b101		// AHB divided by 4 APB Prescaler: 0b0xx: AHB clock not divided, 0b100 div by  2, 0b101: div by  4, 0b110 div by  8; 0b111 div by 16
+#define AHB_PRESCALAR 0b0000		// 0 = Not divided
+#define APB1_PRESCALAR 0b101		// AHB divided by 4: 0b0xx: AHB clock not divided, 0b100 div by  2, 0b101: div by  4, 0b110 div by  8; 0b111 div by 16
 #define APB2_PRESCALAR 0b101
 
 
@@ -21,7 +21,7 @@ void SystemClock_Config(void)
 			(0   << RCC_PLLCFGR_PLLP_Pos) |			// Divide by 2 (0 = /2, 1 = /4, 2 = /6, 3 = /8)
 			(7   << RCC_PLLCFGR_PLLQ_Pos);			// 48MHz for USB: 8MHz / 4(M) * 168(N) / 7(Q) = 48MHz
 
-	//	Set AHB, APB1 and APB2 prescalars
+	//	Set AHB (168MHz), APB1 (42MHz) and APB2 (42MHz) prescalars
 	RCC->CFGR |= (AHB_PRESCALAR << RCC_CFGR_HPRE_Pos) |
 			(APB1_PRESCALAR << RCC_CFGR_PPRE1_Pos) |
 			(APB2_PRESCALAR << RCC_CFGR_PPRE2_Pos) |
@@ -148,7 +148,7 @@ void InitTimer()
 {
 	//	Setup Timer 3 on an interrupt to trigger sample loading
 	RCC->APB1ENR |= RCC_APB1ENR_TIM3EN;				// Enable Timer 3
-	TIM3->PSC = (SystemCoreClock / SAMPLERATE) / 4;	// Set prescaler to fire at sample rate - this is divided by 4 to match the APB2 prescaler
+	TIM3->PSC = (SystemCoreClock / SAMPLERATE) / 4;	// Set prescaler to fire at sample rate - this is divided by 4 to match the APB1 prescaler (42MHz)
 	TIM3->ARR = 1; 									// Set maximum count value (auto reload register) - set to system clock / sampling rate
 
 	TIM3->DIER |= TIM_DIER_UIE;						//  DMA/interrupt enable register
@@ -214,7 +214,7 @@ void InitADC(void)
 	RCC->APB2ENR |= RCC_APB2ENR_ADC1EN;
 
 
-	GPIOB->MODER |= GPIO_MODER_MODER0;				// Set PB0 to Analog mode (0b11)
+	GPIOB->MODER |= GPIO_MODER_MODER0;				// Set PB0 to Analog mode (0b11) ADC12_IN8
 	GPIOB->MODER |= GPIO_MODER_MODER1;				// Set PB1 to Analog mode (0b11)
 	GPIOA->MODER |= GPIO_MODER_MODER1;				// Set PA1 to Analog mode (0b11)
 	GPIOA->MODER |= GPIO_MODER_MODER2;				// Set PA2 to Analog mode (0b11)
@@ -230,7 +230,7 @@ void InitADC(void)
 	ADC1->SQR1 = (ADC_BUFFER_LENGTH - 1) << ADC_SQR1_L_Pos;		// Number of conversions in sequence
 	InitAdcPins(ADC1, {8, 9, 1, 2, 3, 10, 12, 14, 7, 11});
 
-	ADC1->CR2 |= ADC_CR2_EOCS;						// Trigger interrupt on end of each individual conversion
+	ADC1->CR2 |= ADC_CR2_EOCS;						// EOC bit set at end of each regular conversion
 	ADC1->CR2 |= ADC_CR2_EXTEN_0;					// ADC hardware trigger 00: Trigger detection disabled; 01: Trigger detection on the rising edge; 10: Trigger detection on the falling edge; 11: Trigger detection on both the rising and falling edges
 	ADC1->CR2 |= ADC_CR2_EXTSEL_1 | ADC_CR2_EXTSEL_2;	// ADC External trigger: 0110 = TIM2_TRGO event
 
