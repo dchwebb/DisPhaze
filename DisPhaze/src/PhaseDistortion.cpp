@@ -3,6 +3,9 @@
 extern	bool dacRead;
 extern volatile uint32_t debugWorkTime, debugInterval;
 
+PhaseDistortion phaseDist;
+
+
 inline float PhaseDistortion::sinLutWrap(float pos)
 {
 	while (pos >= SINLUTSIZE) {
@@ -17,8 +20,8 @@ inline float PhaseDistortion::sinLutWrap(float pos)
 //	Interpolate between two positions (derived from a float and its rounded value) in a LUT
 float PhaseDistortion::Interpolate(float* LUT, float& LUTPosition)
 {
-	float s1 = LUT[static_cast<int32_t>(LUTPosition)];
-	float s2 = LUT[static_cast<int32_t>(LUTPosition + 1) % LUTSIZE];
+	const float s1 = LUT[static_cast<int32_t>(LUTPosition)];
+	const float s2 = LUT[static_cast<int32_t>(LUTPosition + 1) % LUTSIZE];
 	return s1 + ((s2 - s1) * (LUTPosition - std::round(LUTPosition)));
 }
 
@@ -26,10 +29,10 @@ float PhaseDistortion::Interpolate(float* LUT, float& LUTPosition)
 // Generate a phase distorted sine wave - pass LUT containing PD offsets, LUT position as a fraction of the wave cycle and a scaling factor
 float PhaseDistortion::GetPhaseDist(const float* PdLUT, const float LUTPosition, const float scale)
 {
-	float phaseDist = PdLUT[static_cast<int32_t>(LUTPosition * LUTSIZE)] * SINLUTSIZE * scale;
+	const float phaseDist = PdLUT[static_cast<int32_t>(LUTPosition * LUTSIZE)] * SINLUTSIZE * scale;
 
 	// Add main wave position to phase distortion position and ensure in bounds
-	float pos = sinLutWrap((LUTPosition * SINLUTSIZE) + phaseDist);
+	const float pos = sinLutWrap((LUTPosition * SINLUTSIZE) + phaseDist);
 
 	return SineLUT[static_cast<uint32_t>(pos)];
 }
@@ -38,14 +41,12 @@ float PhaseDistortion::GetPhaseDist(const float* PdLUT, const float LUTPosition,
 float PhaseDistortion::GetResonantWave(const float LUTPosition, float scale)
 {
 	// models waves 6-8 of the Casio CZ which are saw/triangle envelopes into which harmonics are added as the phase distortion increases
-	static float lastSample = 0.0f;
-
 	scale = ((scale / 5.0f) * 23.0f) + 1.0f;		// Sets number of sine waves per cycle: scale input 0-5 to 1-24 (original only went to 16)
 
 	// offset to 3/4 of the way through the sine wave so each cycle starts at the flat top of the wave
 	constexpr float sineOffset = static_cast<float>(3 * (SINLUTSIZE / 4));
 
-	float pos = sinLutWrap(((LUTPosition * SINLUTSIZE) * scale) + sineOffset);
+	const float pos = sinLutWrap(((LUTPosition * SINLUTSIZE) * scale) + sineOffset);
 
 	// Scale the amplitude of the cycle from 1 to 0 to create a saw tooth type envelope on each cycle
 	float ampMod = 1.0f;
@@ -74,27 +75,32 @@ float PhaseDistortion::GetBlendPhaseDist(const float pdBlend, const float LUTPos
 	const float* pdLUTBlendB = LUTArray[static_cast<uint8_t>(pdBlend + 1) % pd1LutCount];
 
 	// Get the values from each LUT for the sample position
-	float phaseDistA = pdLUTBlendA[(int)(LUTPosition * LUTSIZE)] * SINLUTSIZE * scale;
-	float phaseDistB = pdLUTBlendB[(int)(LUTPosition * LUTSIZE)] * SINLUTSIZE * scale;
+	const float phaseDistA = pdLUTBlendA[(int)(LUTPosition * LUTSIZE)] * SINLUTSIZE * scale;
+	const float phaseDistB = pdLUTBlendB[(int)(LUTPosition * LUTSIZE)] * SINLUTSIZE * scale;
 
 	// Get the weighted blend of the two PD amounts
-	float blend = pdBlend - (uint8_t)pdBlend;
-	float phaseDist = ((1 - blend) * phaseDistA) + (blend * phaseDistB);
+	const float blend = pdBlend - (uint8_t)pdBlend;
+	const float phaseDist = ((1 - blend) * phaseDistA) + (blend * phaseDistB);
 
 	// Add main wave position to phase distortion position and ensure in bounds
-	float pos = sinLutWrap((LUTPosition * SINLUTSIZE) + phaseDist);
+	const float pos = sinLutWrap((LUTPosition * SINLUTSIZE) + phaseDist);
 
 	return SineLUT[static_cast<uint32_t>(pos)];
 }
 
 
-
 void PhaseDistortion::CalcNextSamples()
 {
+	// Around the center point of the ADC the reading averages to the low side causing tuning problems - adjust here
+	uint16_t adjPitch = ADC_array[ADC_Pitch];
+	if (adjPitch == 2047) {
+		adjPitch += centerPitchAdj;
+	}
+
 	// Calculate frequencies
-	pitch = ((3 * pitch) + ADC_array[ADC_Pitch]) / 4;				// 1V/Oct input with smoothing
+	pitch = ((3 * pitch) + adjPitch) / 4;							// 1V/Oct input with smoothing
 	fineTune = ((15 * fineTune) + ADC_array[ADC_FTune]) / 16;		// Fine tune with smoothing
-	freq1 = PitchLUT[(pitch + ((2048 - fineTune) / 32)) / 4];		// divide by four as there are 1024 items in DAC CV Voltage to Pitch Freq LUT and 4096 possible DAC voltage values
+	freq1 = PitchLUT[pitch + ((2048 - fineTune) / 32)];
 
 	//	Coarse tuning - add some hysteresis to prevent jumping
 	if (coarseTune > ADC_array[ADC_CTune] + 128 || coarseTune < ADC_array[ADC_CTune] - 128) {
@@ -142,10 +148,10 @@ void PhaseDistortion::CalcNextSamples()
 
 
 	// Get PD amount from pot and CV ADCs; Currently seeing 0v as ~3000 and 5V as ~960 (converted to 0.0f - 5.0f)
-	float tmpPD1Scale = static_cast<float>(std::min((3800 - ADC_array[ADC_PD1CV]) + ADC_array[ADC_PD1Pot], 5000)) / 1000.0f;	// Convert PD amount for OSC1
+	const float tmpPD1Scale = static_cast<float>(std::min((3800 - ADC_array[ADC_PD1CV]) + ADC_array[ADC_PD1Pot], 5000)) / 1000.0f;	// Convert PD amount for OSC1
 	pd1Scale = std::max(((pd1Scale * 31) + tmpPD1Scale) / 32, 0.0f);
 
-	float tmpPD2Scale = static_cast<float>(std::min((4096 - ADC_array[ADC_PD2CV]) + ADC_array[ADC_PD2Pot], 5000)) / 1000.0f;	// Convert PD amount for OSC2
+	const float tmpPD2Scale = static_cast<float>(std::min((4096 - ADC_array[ADC_PD2CV]) + ADC_array[ADC_PD2Pot], 5000)) / 1000.0f;	// Convert PD amount for OSC2
 	if (pd2Resonant) {
 		pd2Scale = (pd2Scale * 0.995f) + (tmpPD2Scale * 0.005f);		// Heavily damp PD2 scale if using resonant waves to reduce jitter noise
 	} else {
@@ -163,7 +169,7 @@ void PhaseDistortion::CalcNextSamples()
 	}
 
 	// Calculate output as a float from -1 to +1 checking phase distortion and phase offset as required
-	float sampleOut1 = GetBlendPhaseDist(pdLut1, samplePos1 / SAMPLERATE, pd1Scale);
+	const float sampleOut1 = GetBlendPhaseDist(pdLut1, samplePos1 / SAMPLERATE, pd1Scale);
 
 	float sampleOut2;
 	if (pd2Resonant) {

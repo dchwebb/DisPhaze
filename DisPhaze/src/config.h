@@ -41,3 +41,5 @@ private:
 	void FlashWaitForLastOperation();
 	void FlashProgram(uint32_t* dest_addr, uint32_t* src_addr, size_t size);
 };
+
+extern Config config;

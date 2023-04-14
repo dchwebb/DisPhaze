@@ -18,14 +18,14 @@ const float* LUTArray[7] = { PDSquareLUT, PDWave4LUT, PDWave5LUT, PDSawLUT, PDWa
 
 
 float SineLUT[SINLUTSIZE];
-float PitchLUT[LUTSIZE];
+float PitchLUT[PITCHLUTSIZE];
 
 void CreateLUTs()
 {
 	// Generate pitch lookup table
-	for (int p = 0; p < LUTSIZE; ++p) {
-		float power = static_cast<float>(p * 4.0f) / (PITCH_SPREAD + config.tuningSpread);		// Reduce 583 to decrease spread
-		PitchLUT[p] = (PITCH_OFFSET + config.tuningOffset) * std::pow(2.0f, power);				// Increase 2299 to increase pitch
+	for (int p = 0; p < PITCHLUTSIZE; ++p) {
+		float power = static_cast<float>(p) / (PITCH_SPREAD + config.tuningSpread);			// Reduce 583 to decrease spread
+		PitchLUT[p] = (PITCH_OFFSET + config.tuningOffset) * std::pow(2.0f, power);			// Increase 2299 to increase pitch
 	}
 
 	// Generate Sine LUT

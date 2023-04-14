@@ -15,21 +15,6 @@
  * 6. When the calibration is complete press the calibration button again to save
  */
 
-/* V3 Changes:
- * Octave Up PC10 > PA0
- * Octave Dn PC11 > PC3
- * DAC2_Mix PB8 > PC13
- * Swap:
- * PD1_Type
- * VCA
- * PD2_CV
- * PD2_POT
- */
-
-Config config;
-PhaseDistortion phaseDist;
-
-USB usb;
 
 extern uint32_t SystemCoreClock;
 volatile uint16_t ADC_array[ADC_BUFFER_LENGTH];

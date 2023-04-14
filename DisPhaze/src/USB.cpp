@@ -1,5 +1,6 @@
 #include "USB.h"
 
+USB usb;
 
 void USB::USBInterruptHandler() {		// In Drivers\STM32F4xx_HAL_Driver\Src\stm32f4xx_hal_pcd.c
 
@@ -882,7 +883,7 @@ void USB::OutputDebug() {
 		evNo = (evNo + 1) % USB_DEBUG_COUNT;
 	}
 }
-
+*/
 
 
 /* startup sequence:

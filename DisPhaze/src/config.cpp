@@ -1,6 +1,7 @@
 #include <config.h>
 
 extern bool dacRead;
+Config config;
 
 void Config::Calibrate() 			// Checks if calibrate button has been pressed and runs calibration routine if so
 {

@@ -24,6 +24,7 @@ private:
 	float pdLut1 = 0.0f;			// Phase distortion LUT - float as channel 1 allows blending
 	uint8_t pdLut2 = 0;				// PD LUT is being used for channel 2
 	bool pd2Resonant;				// Using resonant wave for channel 2
+	float lastSample = 0.0f;		// For smoothing resonant wave
 
 	float VCALevel;
 
@@ -32,6 +33,7 @@ private:
 	float samplePos1 = 0.0f;
 	float samplePos2 = 0.0f;
 	uint16_t pitch;
+	uint16_t centerPitchAdj = 10;	// ADC is inaccurate around center reading of 2047 - add this offset to compensate
 	int16_t fineTune = 0;
 	int16_t coarseTune = 0;
 

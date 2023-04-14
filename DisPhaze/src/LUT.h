@@ -6,6 +6,7 @@
 
 // LUT sizes are probably all going to be constant
 #define LUTSIZE 1024
+#define PITCHLUTSIZE 4096
 #define SINLUTSIZE 16384
 
 extern const float PDSquareLUT[LUTSIZE];
@@ -19,6 +20,6 @@ extern const float* LUTArray[7];
 //extern const uint8_t noOfLUTs;
 
 extern float SineLUT[SINLUTSIZE];
-extern float PitchLUT[LUTSIZE];
+extern float PitchLUT[PITCHLUTSIZE];
 
 void CreateLUTs();

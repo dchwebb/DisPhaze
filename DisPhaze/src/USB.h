@@ -429,3 +429,5 @@ public:
 	void OutputDebug();
 #endif
 };
+
+extern USB usb;
