@@ -26,49 +26,6 @@ void TIM3_IRQHandler(void)
 }
 
 
-void EXTI0_IRQHandler(void)
-{
-	// PA0 - octave up; PC3 Octave Down
-	if (GPIOA->IDR & GPIO_IDR_IDR_0) {
-		phaseDist.relativePitch = PhaseDistortion::OCTAVEUP;
-	} else if (GPIOC->IDR & GPIO_IDR_IDR_3) {
-		phaseDist.relativePitch = PhaseDistortion::OCTAVEDOWN;
-	} else {
-		phaseDist.relativePitch = PhaseDistortion::NONE;
-	}
-	EXTI->PR |= EXTI_PR_PR0;			// Clear interrupt pending
-}
-
-
-void EXTI3_IRQHandler(void)
-{
-	// PA0 - octave up; PC3 Octave Down
-	if (GPIOA->IDR & GPIO_IDR_IDR_0) {
-		phaseDist.relativePitch = PhaseDistortion::OCTAVEUP;
-	} else if (GPIOC->IDR & GPIO_IDR_IDR_3) {
-		phaseDist.relativePitch = PhaseDistortion::OCTAVEDOWN;
-	} else {
-		phaseDist.relativePitch = PhaseDistortion::NONE;
-	}
-	EXTI->PR |= EXTI_PR_PR3;			// Clear interrupt pending
-}
-
-void EXTI15_10_IRQHandler(void)
-{
-	phaseDist.mixOn = (GPIOC->IDR & GPIO_IDR_IDR_13);			// Read PC13 - DAC2 Output to Mix mode
-
-	EXTI->PR |= EXTI_PR_PR13;		// Clear interrupt pending
-}
-
-
-void EXTI9_5_IRQHandler(void)
-{
-	phaseDist.ringModOn = (GPIOC->IDR & GPIO_IDR_IDR_6);		// Read PC6 - DAC1 Output to Ring Mod mode
-
-	EXTI->PR |= EXTI_PR_PR6;			// Clear interrupt pending
-}
-
-
 void OTG_FS_IRQHandler(void) {
 	usb.InterruptHandler();
 }
@@ -78,6 +35,11 @@ void UART4_IRQHandler(void) {
 	if (UART4->SR | USART_SR_RXNE) {
 		usb.midi.serialHandler(UART4->DR); 				// accessing DR automatically resets the receive flag
 	}
+}
+
+void SysTick_Handler(void)
+{
+	++SysTickVal;
 }
 
 void NMI_Handler(void) {}

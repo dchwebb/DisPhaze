@@ -1,5 +1,4 @@
 #pragma once
-
 #include "initialisation.h"
 #include "LUT.h"
 #include "MidiHandler.h"
@@ -9,10 +8,9 @@
 
 struct PhaseDistortion {
 public:
-	bool ringModOn = false;
-	bool mixOn = false;
+
 	bool polyphonic = true;
-	enum RelativePitch { NONE, OCTAVEDOWN, OCTAVEUP	} relativePitch;		// used to adjust pitch of oscillator 2 relative to oscillator 1
+
 	static constexpr uint8_t pd1LutCount = 5;
 	static constexpr uint8_t pd2LutCount = 8;
 
@@ -94,6 +92,12 @@ private:
 		uint32_t ReleaseTime;
 	} envDetect;
 
+	struct OutputSamples {
+		float out1 = 0.0f;
+		float out2 = 0.0f;
+	};
+
+
 	// Compressor/Limiter settings
 	enum class CompState {none, hold, release};
 	CompState compState[2] = {CompState::none, CompState::none};
@@ -112,6 +116,15 @@ private:
 	static float sinLutWrap(float pos);
 	float Compress(float x, uint8_t channel);
 	void DetectEnvelope();
+	void OctaveCalc(float& freq1, float& freq12);
+	OutputSamples PolyOutput(float pdLut1, uint8_t pdLut2, float pd2Resonant);
+	OutputSamples MonoOutput(float pdLut1, uint8_t pdLut2, float pd2Resonant);
+
+	Btn actionButton {{GPIOB, 5, GpioPin::Type::InputPullup}};
+	GpioPin ringModSwitch {GPIOC, 6, GpioPin::Type::Input};
+	GpioPin mixSwitch {GPIOC, 13, GpioPin::Type::Input};
+	GpioPin octaveUp {GPIOA, 0, GpioPin::Type::Input};
+	GpioPin octaveDown {GPIOC, 3, GpioPin::Type::Input};
 };
 
 extern PhaseDistortion phaseDist;

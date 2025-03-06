@@ -1,12 +1,16 @@
 #include "initialisation.h"
 #include <algorithm>
 
+GpioPin debugPin {GPIOB, 12, GpioPin::Type::Output};
+
+volatile ADCValues adc;
+
 #define AHB_PRESCALAR 0b0000
 #define APB1_PRESCALAR 0b101		// AHB divided by 4 APB Prescaler: 0b0xx: AHB clock not divided, 0b100 div by  2, 0b101: div by  4, 0b110 div by  8; 0b111 div by 16
 #define APB2_PRESCALAR 0b101
 
 
-void SystemClock_Config(void)
+void InitClocks()
 {
 	RCC->APB1ENR |= RCC_APB1ENR_PWREN;				// Enable Power Control clock
 	PWR->CR |= PWR_CR_VOS;							// Enable VOS voltage scaling - allows maximum clock speed
@@ -33,32 +37,33 @@ void SystemClock_Config(void)
 	while ((RCC->CR & RCC_CR_PLLRDY) == 0);			// Wait till PLL is ready
 	while ((RCC->CFGR & RCC_CFGR_SWS_PLL) == 0);	// System clock switch status SWS = 0b10 = PLL is really selected
 
-	// STM32F405x/407x/415x/417x Revision Z (0x1001) devices: prefetch is supported DW - assume revision Y (0x100F) is OK
-	volatile uint32_t idNumber = DBGMCU->IDCODE;
-	idNumber = idNumber >> 16;
-	if (idNumber == 0x1001 || idNumber == 0x100F)
-		FLASH->ACR |= FLASH_ACR_PRFTEN;				// Enable the Flash prefetch
+	FLASH->ACR |= FLASH_ACR_PRFTEN;					// Enable the Flash prefetch
 
 	// Enable data and instruction cache
 	FLASH->ACR |= FLASH_ACR_ICEN;
 	FLASH->ACR |= FLASH_ACR_DCEN;
+
+	SystemCoreClockUpdate();						// Update SystemCoreClock variable
 }
 
 
-void InitSysTick(uint32_t ticks, uint32_t calib)
+void InitHardware()
 {
-	// Register macros found in core_cm4.h
-	SysTick->CTRL = 0;								// Disable SysTick
-	SysTick->LOAD = (ticks - 1) - calib;			// Set reload register - ie number of ticks before interrupt fired
+	InitClocks();
+	InitSysTick();
+	InitDAC();						// DAC1 Output on PA4 (Pin 20); DAC2 Output on PA5 (Pin 21)
+	InitADC();						// Configure ADC for analog controls
+	InitDebugTimer();				// Timer to check available calculation time
+	InitPWMTimer();					// PWM timers for LED control
+	InitMidiUART();
 
-	// Set priority of Systick interrupt to least urgency (ie largest priority value)
-	NVIC_SetPriority (SysTick_IRQn, (1 << __NVIC_PRIO_BITS) - 1);
+}
 
-	SysTick->VAL = 0;								// Reset the SysTick counter value
 
-//	SysTick->CTRL |= SysTick_CTRL_CLKSOURCE_Msk;	// Select processor clock: 1 = processor clock; 0 = external clock
-	SysTick->CTRL |= SysTick_CTRL_TICKINT_Msk;		// Enable SysTick interrupt
-	SysTick->CTRL |= SysTick_CTRL_ENABLE_Msk;		// Enable SysTick
+void InitSysTick()
+{
+	SysTick_Config(SystemCoreClock / sysTickInterval);		// gives 1ms
+	NVIC_SetPriority(SysTick_IRQn, 0);
 }
 
 
@@ -83,75 +88,6 @@ void InitDAC()
 }
 
 
-void InitGPIO()
-{
-	// MODER: 00: Input (default), 01: Output, 10: Alternate function, 11: Analog
-
-	//	Enable GPIO and external interrupt clocks
-	RCC->AHB1ENR |= RCC_AHB1ENR_GPIOAEN;			// reset and clock control - advanced high performance bus - GPIO port A
-	RCC->AHB1ENR |= RCC_AHB1ENR_GPIOBEN;			// reset and clock control - advanced high performance bus - GPIO port B
-	RCC->AHB1ENR |= RCC_AHB1ENR_GPIOCEN;			// reset and clock control - advanced high performance bus - GPIO port C
-	RCC->APB2ENR |= RCC_APB2ENR_SYSCFGEN;			// Enable system configuration clock: used to manage external interrupt line connection to GPIOs
-
-	// PC6 Ring Mod Button in
-	GPIOC->MODER &= ~(GPIO_MODER_MODER6);			// input mode is default
-	//GPIOC->PUPDR |= GPIO_PUPDR_PUPDR6_0;			// Set pin to pull up:  01 Pull-up; 10 Pull-down; 11 Reserved
-
-	// PC13 DAC2 Mix mode switch
-	GPIOC->MODER &= ~(GPIO_MODER_MODER13);			// input mode is default
-	//GPIOC->PUPDR |= GPIO_PUPDR_PUPDR13_1;			// Set pin to pull down:  01 Pull-up; 10 Pull-down; 11 Reserved
-
-	// PB12 (fault with PB5) Action button
-//	GPIOB->MODER &= ~(GPIO_MODER_MODER5);			// input mode is default
-//	GPIOB->PUPDR |= GPIO_PUPDR_PUPDR5_0;			// Set pin to pull down:  01 Pull-up; 10 Pull-down; 11 Reserved
-	GPIOB->MODER &= ~(GPIO_MODER_MODER12);			// input mode is default
-	GPIOB->PUPDR |= GPIO_PUPDR_PUPDR12_0;			// Set pin to pull up:  01 Pull-up; 10 Pull-down; 11 Reserved
-
-
-	// Set up PA0 and PC3 for octave up and down switch
-	GPIOA->MODER &= ~(GPIO_MODER_MODER0);			// input mode is default
-	GPIOA->PUPDR |= GPIO_PUPDR_PUPDR0_1;			// Set pin to pull down:  01 Pull-up; 10 Pull-down; 11 Reserved
-
-	GPIOC->MODER &= ~(GPIO_MODER_MODER3);			// input mode is default
-	GPIOC->PUPDR |= GPIO_PUPDR_PUPDR3_1;			// Set pin to pull down:  01 Pull-up; 10 Pull-down; 11 Reserved
-
-	// configure PC13 switch to fire an interrupt (mix)
-	SYSCFG->EXTICR[3] |= SYSCFG_EXTICR4_EXTI13_PC;	// Select Pin PC13 which uses External interrupt 4
-	EXTI->RTSR |= EXTI_RTSR_TR13;					// Enable rising edge trigger
-	EXTI->FTSR |= EXTI_FTSR_TR13;					// Enable falling edge trigger
-	EXTI->IMR |= EXTI_IMR_MR13;						// Activate interrupt using mask
-
-	// configure PC6 switch to fire an interrupt (ring mod)
-	SYSCFG->EXTICR[1] |= SYSCFG_EXTICR2_EXTI6_PC;	// Select Pin PC6 which uses External interrupt 2
-	EXTI->RTSR |= EXTI_RTSR_TR6;					// Enable rising edge trigger
-	EXTI->FTSR |= EXTI_FTSR_TR6;					// Enable falling edge trigger
-	EXTI->IMR |= EXTI_IMR_MR6;						// Activate interrupt using mask
-
-	// configure PA0 & PC3 switch to fire an interrupt
-	SYSCFG->EXTICR[0] |= SYSCFG_EXTICR1_EXTI0_PA;	// Select Pin PA0 which uses External interrupt 1
-	EXTI->RTSR |= EXTI_RTSR_TR0;					// Enable rising edge trigger
-	EXTI->FTSR |= EXTI_FTSR_TR0;					// Enable falling edge trigger for line 10
-	EXTI->IMR |= EXTI_IMR_MR0;						// Activate interrupt using mask
-
-	SYSCFG->EXTICR[0] |= SYSCFG_EXTICR1_EXTI3_PC;	// Select Pin PC3 which uses External interrupt 1
-	EXTI->RTSR |= EXTI_RTSR_TR3;					// Enable rising edge trigger
-	EXTI->FTSR |= EXTI_FTSR_TR3;					// Enable falling edge trigger
-	EXTI->IMR |= EXTI_IMR_MR3;						// Activate interrupt using mask
-
-	NVIC_SetPriority(EXTI0_IRQn, 3);
-	NVIC_EnableIRQ(EXTI0_IRQn);
-
-	NVIC_SetPriority(EXTI3_IRQn, 3);
-	NVIC_EnableIRQ(EXTI3_IRQn);
-
-	NVIC_SetPriority(EXTI9_5_IRQn, 3);
-	NVIC_EnableIRQ(EXTI9_5_IRQn);
-
-	NVIC_SetPriority(EXTI15_10_IRQn, 3);
-	NVIC_EnableIRQ(EXTI15_10_IRQn);
-}
-
-
 void InitTimer()
 {
 	//	Setup Timer 3 on an interrupt to trigger sample loading
@@ -166,7 +102,6 @@ void InitTimer()
 	TIM3->CR1 |= TIM_CR1_CEN;
 	TIM3->EGR |= TIM_EGR_UG;
 }
-
 
 
 void InitDebugTimer()
@@ -254,7 +189,7 @@ void InitADC(void)
 
 	DMA2_Stream0->NDTR |= ADC_BUFFER_LENGTH;		// Number of data items to transfer (ie size of ADC buffer)
 	DMA2_Stream0->PAR = (uint32_t)(&(ADC1->DR));	// Configure the peripheral data register address
-	DMA2_Stream0->M0AR = (uint32_t)(ADC_array);		// Configure the memory address (note that M1AR is used for double-buffer mode)
+	DMA2_Stream0->M0AR = (uint32_t)(&adc);			// Configure the memory address (note that M1AR is used for double-buffer mode)
 	DMA2_Stream0->CR &= ~DMA_SxCR_CHSEL;			// channel select to 0 for ADC1
 
 	DMA2_Stream0->CR |= DMA_SxCR_EN;				// Enable DMA2
@@ -361,13 +296,11 @@ void InitPWMTimer()
 }
 
 
-void InitMidiUART() {
-	// PC11 UART4_RX
-
+void InitMidiUART()
+{
 	RCC->APB1ENR |= RCC_APB1ENR_UART4EN;			// UART4 clock enable
 
-	GPIOC->MODER |= GPIO_MODER_MODER11_1;			// Set alternate function on PC11
-	GPIOC->AFR[1] |= 0b1000 << 12;					// Alternate function on PC11 for UART4_RX is 1000: AF8
+	GpioPin::Init(GPIOC, 11, GpioPin::Type::AlternateFunction, 8);	// PC11 UART4_RX
 
 	int Baud = (SystemCoreClock / 4) / (16 * 31250);
 	UART4->BRR |= Baud << 4;						// Baud Rate (called USART_BRR_DIV_Mantissa) = (Sys Clock: 168MHz / APB1 Prescaler DIV4: 42MHz) / (16 * 31250) = 84
@@ -380,5 +313,4 @@ void InitMidiUART() {
 	NVIC_EnableIRQ(UART4_IRQn);
 
 	UART4->CR1 |= USART_CR1_UE;						// USART Enable
-
 }

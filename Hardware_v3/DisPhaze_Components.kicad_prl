@@ -67,6 +67,12 @@
     "visible_layers": "003f2ff_80000001",
     "zone_display_mode": 1
   },
+  "git": {
+    "repo_password": "",
+    "repo_type": "",
+    "repo_username": "",
+    "ssh_key": ""
+  },
   "meta": {
     "filename": "DisPhaze_Components.kicad_prl",
     "version": 3

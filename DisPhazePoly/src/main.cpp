@@ -46,6 +46,7 @@ PhaseDistortion phaseDist;
 USB usb;
 
 extern uint32_t SystemCoreClock;
+volatile uint32_t SysTickVal;
 volatile uint16_t ADC_array[ADC_BUFFER_LENGTH];
 
 bool dacRead = false;				// Tells the main loop when to queue up the next samples
@@ -62,25 +63,13 @@ extern "C" {						// Use extern C to allow linker to find ISR
 
 int main(void)
 {
-	SystemInit();					// Activates floating point coprocessor and resets clock
-	SystemClock_Config();			// Configure the clock and PLL
-	SystemCoreClockUpdate();		// Update SystemCoreClock (system clock frequency) derived from settings of oscillators, prescalers and PLL
+	InitHardware();
 
 	config.RestoreConfig();			// Restore calibration settings from flash memory and create MIDI to pitch LUT if needed
 	CreateLUTs();					// Create pitch and sine wave look up tables
-	InitGPIO();						// Configure switches for Ring mod, mix and octave selection
-	InitDAC();						// DAC1 Output on PA4 (Pin 20); DAC2 Output on PA5 (Pin 21)
 	InitTimer();					// Sample output timer 3 - fires interrupt to trigger sample output from DAC
-	InitADC();						// Configure ADC for analog controls
-	InitDebugTimer();				// Timer to check available calculation time
-	InitPWMTimer();					// PWM timers for LED control
-	InitMidiUART();
-
 	usb.Init();
 
-	EXTI0_IRQHandler();				// Call the Interrupt event handler to set up the octave up/down switch to current position
-	EXTI15_10_IRQHandler();			// Call the Interrupt event handler to set up the ring mod switch to current position
-	EXTI9_5_IRQHandler();			// Call the Interrupt event handler to set up the mix switch to current position
 
 	while (1) {
 		config.Calibrate();			// Checks if calibrate button has been pressed and runs calibration routine if so

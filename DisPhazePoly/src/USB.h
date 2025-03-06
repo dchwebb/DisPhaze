@@ -8,7 +8,7 @@
 #include <cstring>
 
 // Enables capturing of debug data for output over STLink UART on dev boards
-#define USB_DEBUG true
+#define USB_DEBUG false
 #if (USB_DEBUG)
 #include "uartHandler.h"
 #define USB_DEBUG_COUNT 400

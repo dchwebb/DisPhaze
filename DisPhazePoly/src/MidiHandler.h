@@ -39,6 +39,7 @@ public:
 	uint8_t noteCount = 0;									// Number of notes currently sounding
 	uint16_t pitchBend = 8192;								// Pitchbend amount in raw format (0 - 16384)
 	const float pitchBendSemiTones = 12.0f;					// Number of semitones for a full pitchbend
+	uint32_t midiReceived = 0;								// Set to systick of last received midi note
 
 private:
 	void midiEvent(const uint32_t data);

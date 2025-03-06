@@ -34,6 +34,7 @@ void MidiHandler::DataOut()
 void MidiHandler::midiEvent(const uint32_t data)
 {
 	auto midiData = MidiData(data);
+	midiReceived = SysTickVal;			// Allows auto switching between midi and CV mode
 
 	// Note off - set envelope to release
 	if (midiData.msg == NoteOff) {

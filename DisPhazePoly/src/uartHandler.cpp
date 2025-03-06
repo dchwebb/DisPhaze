@@ -118,8 +118,9 @@ uint8_t uartCommand()
 		);
 
 	} else if (strcmp((const char*)uartCmd, "usbdebug\n") == 0) {
+#if (USB_DEBUG)
 		usb.OutputDebug();
-
+#endif
 	} else {
 		uartSendString(": Unrecognised command Type 'help' for supported commands\r\n");
 	}

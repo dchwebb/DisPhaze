@@ -26,11 +26,11 @@ void Config::Calibrate() 			// Checks if calibrate button has been pressed and r
 		// Generate square wave
 		if (dacRead) {
 			static float pitch, fineTune, samplePos1;
-			tuningOffset = ((31.0f * tuningOffset) + ((ADC_array[ADC_PD1Pot] - 2048)) / 20.0f) / 32.0f;		// Use pd1 amount pot to set the tuning offset
-			tuningSpread = ((31.0f * tuningSpread) + ((ADC_array[ADC_PD2Pot] - 2048)) / 100.0f) / 32.0f;	// Use pd2 amount pot to set the tuning spread
+			tuningOffset = ((31.0f * tuningOffset) + ((adc.PD1Pot - 2048)) / 20.0f) / 32.0f;		// Use pd1 amount pot to set the tuning offset
+			tuningSpread = ((31.0f * tuningSpread) + ((adc.PD2Pot - 2048)) / 100.0f) / 32.0f;	// Use pd2 amount pot to set the tuning spread
 
-			pitch = ((31.0f * pitch) + ADC_array[ADC_Pitch]) / 32.0f;
-			fineTune = ((31.0f * fineTune) + ADC_array[ADC_FTune]) / 32.0f;
+			pitch = ((31.0f * pitch) + adc.Pitch) / 32.0f;
+			fineTune = ((31.0f * fineTune) + adc.FTune) / 32.0f;
 			float adjPitch = pitch + (2048.0f - fineTune) / 32.0f;
 
 			// Defaults: PITCH_SPREAD -583.0f, PITCH_OFFSET 2299.0f

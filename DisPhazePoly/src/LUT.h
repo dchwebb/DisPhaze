@@ -5,23 +5,20 @@
 #include <cmath>
 
 // LUT sizes are probably all going to be constant
-#define LUTSIZE 1024
-#define SINLUTSIZE 16384
-//#define midiLUTSize 16384		// Size of MIDI to pitch LUT
+static constexpr uint32_t pitchLutSize = 4096;
+static constexpr uint32_t sinLutSize = 16384;
 
-extern const float PDSquareLUT[LUTSIZE];
-extern const float PDSawLUT[LUTSIZE];
-extern const float PDWave3LUT[LUTSIZE];
-extern const float PDWave4LUT[LUTSIZE];
-extern const float PDWave5LUT[LUTSIZE];
+extern const float PDSquareLUT[pitchLutSize];
+extern const float PDSawLUT[pitchLutSize];
+extern const float PDWave3LUT[pitchLutSize];
+extern const float PDWave4LUT[pitchLutSize];
+extern const float PDWave5LUT[pitchLutSize];
 
 // Create an array of pointers to the PD LUTs
 extern const float* LUTArray[7];
-//extern const uint8_t noOfLUTs;
 
-extern float SineLUT[SINLUTSIZE];
-extern float PitchLUT[LUTSIZE];
-//extern const std::array<float, midiLUTSize> MidiLUT;
+extern float SineLUT[sinLutSize];
+extern float PitchLUT[pitchLutSize];
 extern const uint32_t midiLUTSize;
 extern float* MidiLUT;
 extern const float midiLUTFirstNote;

@@ -3,36 +3,41 @@
 #include "stm32f4xx.h"
 #include <cstring>
 #include <Array>
+#include "GpioPIn.h"
 
 #define SAMPLERATE 44000
 #define PITCH_SPREAD -583.0f
 #define PITCH_OFFSET 2259.0f
 
+static constexpr uint32_t sysTickInterval = 1000;
+extern volatile uint32_t SysTickVal;
+
 #define ADC_BUFFER_LENGTH 10
-extern volatile uint16_t ADC_array[ADC_BUFFER_LENGTH];
 
-// 8, 3, 14, 9, 11, 2, 12, 1, 7, 10
 
-enum ADC_Controls {
-	ADC_Pitch    = 0,	// PB0 ADC12_IN8   Pin 27
-	ADC_VCA      = 1,	// PA3 ADC123_IN3  Pin 17
-	ADC_FTune    = 2,	// PC4 ADC12_IN14  Pin 24
-	ADC_CTune    = 3,	// PB1 ADC12_IN9   Pin 26
-	ADC_Osc1Type = 4,	// PC1 ADC12_IN11  Pin 9
-	ADC_Osc2Type = 5,	// PA2 ADC123_IN2  Pin 16
-	ADC_PD1CV    = 6,	// PC2 ADC123_IN12 Pin 10
-	ADC_PD2CV    = 7,	// PA1 ADC123_IN1  Pin 15
-	ADC_PD1Pot   = 8,	// PA7 ADC12_IN7   Pin 23
-	ADC_PD2Pot   = 9,	// PC0 ADC123_IN10 Pin 8
+struct ADCValues {
+	uint16_t Pitch;   	// PB0 ADC12_IN8   Pin 27
+	uint16_t VCA;     	// PA3 ADC123_IN3  Pin 17
+	uint16_t FTune;   	// PC4 ADC12_IN14  Pin 24
+	uint16_t CTune;   	// PB1 ADC12_IN9   Pin 26
+	uint16_t Osc1Type;	// PC1 ADC12_IN11  Pin 9
+	uint16_t Osc2Type;	// PA2 ADC123_IN2  Pin 16
+	uint16_t PD1CV;   	// PC2 ADC123_IN12 Pin 10
+	uint16_t PD2CV;   	// PA1 ADC123_IN1  Pin 15
+	uint16_t PD1Pot;  	// PA7 ADC12_IN7   Pin 23
+	uint16_t PD2Pot;  	// PC0 ADC123_IN10 Pin 8
 };
 
+extern volatile ADCValues adc;
 
 #define GreenLED TIM4->CCR2
 #define RedLED   TIM2->CCR2
-#define ActionBtn (GPIOB->IDR & GPIO_IDR_IDR_5) == GPIO_IDR_IDR_5
+extern GpioPin debugPin;
 
-void SystemClock_Config();
-void InitSysTick(uint32_t ticks, uint32_t calib);
+
+void InitHardware();
+void InitClocks();
+void InitSysTick();
 void InitDAC();
 void InitGPIO();
 void InitTimer();
