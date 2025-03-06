@@ -9,12 +9,13 @@
 struct PhaseDistortion {
 public:
 
-	bool polyphonic = true;
+	bool polyphonic = false;
 
 	static constexpr uint8_t pd1LutCount = 5;
 	static constexpr uint8_t pd2LutCount = 8;
 
 	void CalcNextSamples();
+	void SetSampleRate();
 
 	struct Env {
 		// Constructor calculates increment values based on default envelope settings

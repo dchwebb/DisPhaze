@@ -1,6 +1,15 @@
 #include "PhaseDistortion.h"
 #include "USB.h"
 
+void PhaseDistortion::SetSampleRate()
+{
+	// Monophonic mode uses double sample rate (2x44kHz = 88kHz)
+	if (!polyphonic) {
+		TIM3->PSC = (SystemCoreClock / SampleRate) / 8;
+	} else {
+		TIM3->PSC = (SystemCoreClock / SampleRate) / 4;
+	}
+}
 
 
 void PhaseDistortion::CalcNextSamples()
@@ -18,6 +27,7 @@ void PhaseDistortion::CalcNextSamples()
 			RedLED = 4095;
 			GreenLED = 0;
 		}
+		SetSampleRate();
 
 	} else if (actionButton.Pressed()) {
 		// Activate envelope detection mode
@@ -80,6 +90,195 @@ void PhaseDistortion::CalcNextSamples()
 
 	debugPin.SetLow();
 }
+
+
+
+PhaseDistortion::OutputSamples PhaseDistortion::MonoOutput(float pdLut1, uint8_t pdLut2, float pd2Resonant)
+{
+	// Get VCA levels (filtering out very low level VCA signals)
+	if (adc.VCA > 4070) {
+		VCALevel = 0.0f;
+	} else if (adc.VCA < 30) {
+		VCALevel = 1.0f;
+	} else {
+		VCALevel = ((VCALevel * 31) + (4096.0f - adc.VCA) / 4096) / 32;		// Convert ADC for VCA to float between 0 and 1 with damping
+	}
+
+	// Calculate frequencies
+	pitch = ((3 * pitch) + adc.Pitch) / 4;				// 1V/Oct input with smoothing
+	float freq1 = PitchLUT[(pitch + ((2048 - fineTune) / 32))];
+	float freq2;
+
+	OctaveCalc(freq1, freq2);
+
+	// jump forward to the next sample position
+	samplePos1 += freq1;
+	while (samplePos1 >= SampleRate) {
+		samplePos1 -= SampleRate;
+	}
+
+	samplePos2 += freq2;
+	while (samplePos2 >= SampleRate) {
+		samplePos2 -= SampleRate;
+	}
+
+	// Calculate output as a float from -1 to +1 checking phase distortion and phase offset as required
+	float sample1 = GetBlendPhaseDist(pdLut1, samplePos1 / SampleRate, pd1Scale);
+	float sample2 = pd2Resonant ?
+			GetResonantWave(samplePos2 / SampleRate, pd2Scale, pdLut2) :
+			GetPhaseDist(LUTArray[pdLut2], samplePos2 / SampleRate, pd2Scale);
+
+	if (ringModSwitch.IsHigh())
+		sample1 *= sample2;
+	if (mixSwitch.IsHigh())
+		sample2 += sample1;
+
+	OutputSamples output;
+	output.out1 = sample1 * VCALevel;
+	output.out2 = sample2 * VCALevel;
+
+	// Set LED based envelope detection or poly level output
+	GreenLED = static_cast<uint32_t>(VCALevel * 4095.0f);								// Set LED PWM level to VCA
+
+	return output;
+}
+
+
+PhaseDistortion::OutputSamples PhaseDistortion::PolyOutput(float pdLut1, uint8_t pdLut2, float pd2Resonant)
+{
+	// If note processing is taking too long kill oldest note
+	extern uint32_t debugWorkTime;
+	if (debugWorkTime > 1850) {
+		usb.midi.midiNotes[0].envelope = MidiHandler::env::FR;
+	}
+
+	uint8_t polyNotes = usb.midi.noteCount;
+	float pb = usb.midi.pitchBendSemiTones * ((usb.midi.pitchBend - 8192) / 8192.0f);		// convert raw pitchbend to midi note number
+	float finetuneAdjust = pb - (2048.0f - fineTune) / 1024.0f;
+
+	int8_t removeNote = -1;		// To enable removal of notes that have completed release envelope
+	float polyLevel = 0;		// Get maximum level of polyphonic notes to display on LED
+
+	OutputSamples output;
+
+	for (uint8_t n = 0; n < polyNotes; ++n) {
+		auto& midiNote = usb.midi.midiNotes[n];
+
+		// Calculate frequencies
+		float lutIndex = (midiNote.noteValue + finetuneAdjust - midiLUTFirstNote) * midiLUTSize / midiLUTNotes;
+		float freq1 = MidiLUT[static_cast<uint32_t>(lutIndex)];
+		float freq2;
+
+		OctaveCalc(freq1, freq2);
+
+		// Jump forward to the next sample position
+		midiNote.samplePos1 += freq1;
+		while (midiNote.samplePos1 >= SampleRate) 			midiNote.samplePos1 -= SampleRate;
+		midiNote.samplePos2 += freq2;
+		while (midiNote.samplePos2 >= SampleRate) 			midiNote.samplePos2 -= SampleRate;
+
+
+		// Calculate Phase Distortion envelope scaling (Attack and Decay phase scaling the PD amount from CV and pot)
+		switch (midiNote.pdEnvelope) {
+		case MidiHandler::pdEnv::A:
+			midiNote.pdLevel += envelope.A_pd_Inc;
+			if (midiNote.pdLevel >= 1.0f) {
+				midiNote.pdEnvelope = MidiHandler::pdEnv::D;
+			}
+			break;
+		case MidiHandler::pdEnv::D:
+			midiNote.pdLevel -= envelope.D_pd_Inc;
+			if (midiNote.pdLevel <= 0.0f) {
+				midiNote.pdLevel = 0.0f;
+				midiNote.pdEnvelope = MidiHandler::pdEnv::Off;
+			}
+			break;
+		default:
+			break;
+		}
+
+		// Calculate output as a float from -1 to +1 checking phase distortion and phase offset as required
+		float sample1 = GetBlendPhaseDist(pdLut1, midiNote.samplePos1 / SampleRate, pd1Scale * midiNote.pdLevel);
+		float sample2 = pd2Resonant ?
+				GetResonantWave(midiNote.samplePos2 / SampleRate, pd2Scale * midiNote.pdLevel, pdLut2) :
+				GetPhaseDist(LUTArray[pdLut2], midiNote.samplePos2 / SampleRate, pd2Scale * midiNote.pdLevel);
+
+		if (ringModSwitch.IsHigh())
+			sample1 *= sample2;
+		if (mixSwitch.IsHigh())
+			sample2 += sample1;
+
+
+		// Calculate envelope levels of polyphonic voices
+		if (detectEnv) {
+			sample1 *= VCALevel;
+			sample2 *= VCALevel;
+
+		} else {
+
+			switch (midiNote.envelope) {
+			case MidiHandler::env::A:
+				midiNote.vcaLevel += envelope.AInc;
+
+				if (midiNote.vcaLevel >= 1.0f) {
+					midiNote.envelope = MidiHandler::env::D;
+				}
+				break;
+
+			case MidiHandler::env::D:
+				midiNote.vcaLevel -= envelope.DInc;
+
+				if (midiNote.vcaLevel <= envelope.S) {
+					midiNote.envelope = MidiHandler::env::S;
+				}
+				break;
+
+			case MidiHandler::env::S:
+				midiNote.vcaLevel = envelope.S;
+				break;
+
+			case MidiHandler::env::R:
+				midiNote.vcaLevel -= envelope.RInc;
+				if (midiNote.vcaLevel <= 0.0f) {
+					midiNote.vcaLevel = 0.0f;
+					removeNote = n;
+				}
+				break;
+
+			case MidiHandler::env::FR:
+				midiNote.vcaLevel -= envelope.FRInc;
+				if (midiNote.vcaLevel <= 0.0f) {
+					midiNote.vcaLevel = 0.0f;
+					removeNote = n;
+				}
+				break;
+			}
+
+			sample1 *= midiNote.vcaLevel;			// Scale sample output level based on envelope
+			sample2 *= midiNote.vcaLevel;
+
+			polyLevel += midiNote.vcaLevel;			// For LED display
+		}
+
+		output.out1 += sample1;
+		output.out2 += sample2;
+	}
+
+	if (removeNote >= 0) {
+		usb.midi.RemoveNote(removeNote);
+	}
+
+	output.out1 = Compress(output.out1, 0);
+	output.out2 = Compress(output.out2, 1);
+
+	// Set LED based envelope detection or poly level output
+	if (!detectEnv) {
+		RedLED = static_cast<uint32_t>((polyLevel * 4095.0f) / usb.midi.polyCount);
+	}
+
+	return output;
+}
+
 
 
 //	Interpolate between two positions (derived from a float and its rounded value) in a LUT
@@ -195,19 +394,6 @@ float PhaseDistortion::Compress(float level, uint8_t channel)
 }
 
 
-// little routine to generate a pulse on channel 2 at each envelope detection change
-#ifdef DEBUG_ENV_DETECT
-bool debugState = false;
-void DebugState() {
-//	DAC->DHR12R1 = debugState ? 4095 : 0;
-//	debugState = !debugState;
-}
-uint32_t lastSamples[256];		// debug
-uint8_t lastSampPos = 0;		// debug
-#else
-#define DebugState()
-#endif
-
 void PhaseDistortion::DetectEnvelope()
 {
 	uint32_t lvl = 4096 - adc.VCA;
@@ -220,8 +406,6 @@ void PhaseDistortion::DetectEnvelope()
 	case envDetectState::waitZero:			// Wait until level settles around 0
 		RedLED = 0;
 		GreenLED = 4095;
-
-		DebugState();
 
 		if (lvl < 10) {
 			++envDetect.stateCount;
@@ -257,8 +441,6 @@ void PhaseDistortion::DetectEnvelope()
 				envDetect.stateCount = 0;
 				envDetect.maxLevel = 0;
 				envDetect.counter = 0;
-
-				DebugState();
 			}
 		} else {
 			envDetect.stateCount = 0;
@@ -285,7 +467,6 @@ void PhaseDistortion::DetectEnvelope()
 				envDetect.stateCount = 0;
 				envDetect.minLevel = envDetect.smoothLevel;
 			}
-			DebugState();
 		} else {
 			envDetect.stateCount = 0;
 		}
@@ -308,7 +489,6 @@ void PhaseDistortion::DetectEnvelope()
 				envDetect.DecayTime = envDetect.levelTime;
 				envDetect.state = envDetectState::Sustain;
 				envDetect.SustainLevel = envDetect.smoothLevel;
-				DebugState();
 			}
 		} else {
 			envDetect.stateCount = 0;
@@ -337,7 +517,6 @@ void PhaseDistortion::DetectEnvelope()
 			envDetect.stateCount = 0;
 			envDetect.stateCount2 = 0;
 			envDetect.minLevel = envDetect.smoothLevel;
-			DebugState();
 		}
 
 		break;
@@ -357,7 +536,6 @@ void PhaseDistortion::DetectEnvelope()
 					envDetect.SustainLevel = envDetect.smoothLevel;
 					envDetect.DecayTime = envDetect.levelTime - envDetect.AttackTime;
 					envDetect.ReleaseTime = 0;
-					DebugState();
 				}
 			}
 		} else {
@@ -387,8 +565,6 @@ void PhaseDistortion::DetectEnvelope()
 		envelope.R = std::max(envDetect.ReleaseTime, 1UL);
 
 		envelope.UpdateIncrements();
-
-		DebugState();
 	}
 
 }
@@ -412,210 +588,6 @@ void PhaseDistortion::OctaveCalc(float& freq1, float& freq2)
 	} else if (octaveDown.IsHigh()) {
 		freq2 /= 2.0f;
 	}
-}
-
-
-uint32_t overload = 0;
-
-PhaseDistortion::OutputSamples PhaseDistortion::PolyOutput(float pdLut1, uint8_t pdLut2, float pd2Resonant)
-{
-	// If note processing is taking too long kill oldest note
-	extern uint32_t debugWorkTime;
-	if (debugWorkTime > 1850) {
-		usb.midi.midiNotes[0].envelope = MidiHandler::env::FR;
-		++overload;
-	}
-
-	uint8_t polyNotes = usb.midi.noteCount;
-	float pb = usb.midi.pitchBendSemiTones * ((usb.midi.pitchBend - 8192) / 8192.0f);		// convert raw pitchbend to midi note number
-	float finetuneAdjust = pb - (2048.0f - fineTune) / 1024.0f;
-
-	int8_t removeNote = -1;		// To enable removal of notes that have completed release envelope
-	float polyLevel = 0;		// Get maximum level of polyphonic notes to display on LED
-
-	OutputSamples output;
-
-	for (uint8_t n = 0; n < polyNotes; ++n) {
-		auto& midiNote = usb.midi.midiNotes[n];
-
-		// Calculate frequencies
-		float lutIndex = (midiNote.noteValue + finetuneAdjust - midiLUTFirstNote) * midiLUTSize / midiLUTNotes;
-		float freq1 = MidiLUT[static_cast<uint32_t>(lutIndex)];
-		float freq2;
-
-		OctaveCalc(freq1, freq2);
-
-		// Jump forward to the next sample position
-		midiNote.samplePos1 += freq1;
-		while (midiNote.samplePos1 >= SAMPLERATE) 			midiNote.samplePos1 -= SAMPLERATE;
-		midiNote.samplePos2 += freq2;
-		while (midiNote.samplePos2 >= SAMPLERATE) 			midiNote.samplePos2 -= SAMPLERATE;
-
-
-		// Calculate Phase Distortion envelope scaling (Attack and Decay phase scaling the PD amount from CV and pot)
-		switch (midiNote.pdEnvelope) {
-		case MidiHandler::pdEnv::A:
-			midiNote.pdLevel += envelope.A_pd_Inc;
-			if (midiNote.pdLevel >= 1.0f) {
-				midiNote.pdEnvelope = MidiHandler::pdEnv::D;
-			}
-			break;
-		case MidiHandler::pdEnv::D:
-			midiNote.pdLevel -= envelope.D_pd_Inc;
-			if (midiNote.pdLevel <= 0.0f) {
-				midiNote.pdLevel = 0.0f;
-				midiNote.pdEnvelope = MidiHandler::pdEnv::Off;
-			}
-			break;
-		default:
-			break;
-		}
-
-		// Calculate output as a float from -1 to +1 checking phase distortion and phase offset as required
-		float sample1 = GetBlendPhaseDist(pdLut1, midiNote.samplePos1 / SAMPLERATE, pd1Scale * midiNote.pdLevel);
-		float sample2 = pd2Resonant ?
-				GetResonantWave(midiNote.samplePos2 / SAMPLERATE, pd2Scale * midiNote.pdLevel, pdLut2) :
-				GetPhaseDist(LUTArray[pdLut2], midiNote.samplePos2 / SAMPLERATE, pd2Scale * midiNote.pdLevel);
-
-		if (ringModSwitch.IsHigh())
-			sample1 *= sample2;
-		if (mixSwitch.IsHigh())
-			sample2 += sample1;
-
-
-		// Calculate envelope levels of polyphonic voices
-		if (detectEnv) {
-			sample1 *= VCALevel;
-			sample2 *= VCALevel;
-
-		} else {
-
-			switch (midiNote.envelope) {
-			case MidiHandler::env::A:
-				midiNote.vcaLevel += envelope.AInc;
-
-				if (midiNote.vcaLevel >= 1.0f) {
-					midiNote.envelope = MidiHandler::env::D;
-				}
-				break;
-
-			case MidiHandler::env::D:
-				midiNote.vcaLevel -= envelope.DInc;
-
-				if (midiNote.vcaLevel <= envelope.S) {
-					midiNote.envelope = MidiHandler::env::S;
-				}
-				break;
-
-			case MidiHandler::env::S:
-				midiNote.vcaLevel = envelope.S;
-				break;
-
-			case MidiHandler::env::R:
-				midiNote.vcaLevel -= envelope.RInc;
-				if (midiNote.vcaLevel <= 0.0f) {
-					midiNote.vcaLevel = 0.0f;
-					removeNote = n;
-				}
-				break;
-
-			case MidiHandler::env::FR:
-				midiNote.vcaLevel -= envelope.FRInc;
-				if (midiNote.vcaLevel <= 0.0f) {
-					midiNote.vcaLevel = 0.0f;
-					removeNote = n;
-				}
-				break;
-			}
-
-			sample1 *= midiNote.vcaLevel;			// Scale sample output level based on envelope
-			sample2 *= midiNote.vcaLevel;
-
-			polyLevel += midiNote.vcaLevel;			// For LED display
-		}
-
-		output.out1 += sample1;
-		output.out2 += sample2;
-	}
-
-	if (removeNote >= 0) {
-		usb.midi.RemoveNote(removeNote);
-	}
-
-	output.out1 = Compress(output.out1, 0);
-	output.out2 = Compress(output.out2, 1);
-
-	// Set LED based envelope detection or poly level output
-	if (!detectEnv) {
-		RedLED = static_cast<uint32_t>((polyLevel * 4095.0f) / usb.midi.polyCount);
-	}
-
-	return output;
-}
-
-
-PhaseDistortion::OutputSamples PhaseDistortion::MonoOutput(float pdLut1, uint8_t pdLut2, float pd2Resonant)
-{
-	// Get VCA levels (filtering out very low level VCA signals)
-	if (adc.VCA > 4070) {
-		VCALevel = 0.0f;
-	} else if (adc.VCA < 30) {
-		VCALevel = 1.0f;
-	} else {
-		VCALevel = ((VCALevel * 31) + (4096.0f - adc.VCA) / 4096) / 32;		// Convert ADC for VCA to float between 0 and 1 with damping
-	}
-
-	// Calculate frequencies
-	pitch = ((3 * pitch) + adc.Pitch) / 4;				// 1V/Oct input with smoothing
-	float freq1 = PitchLUT[(pitch + ((2048 - fineTune) / 32))];		// divide by four as there are 1024 items in DAC CV Voltage to Pitch Freq LUT and 4096 possible DAC voltage values
-
-	if (coarseTune > 3412) {
-		freq1 *= 4;
-	} else if (coarseTune > 2728) {
-		freq1 *= 2;
-	} else if (coarseTune < 682) {
-		freq1 /= 4;
-	} else if (coarseTune < 1364) {
-		freq1 /= 2;
-	}
-
-	float freq2 = freq1;
-	if (octaveUp.IsHigh()) {
-		freq2 = freq1 * 2.0f;
-	} else if (octaveDown.IsHigh()) {
-		freq2 = freq1 / 2.0f;
-	}
-
-	// jump forward to the next sample position
-	samplePos1 += freq1;
-	while (samplePos1 >= SAMPLERATE) {
-		samplePos1 -= SAMPLERATE;
-	}
-
-	samplePos2 += freq2;
-	while (samplePos2 >= SAMPLERATE) {
-		samplePos2 -= SAMPLERATE;
-	}
-
-	// Calculate output as a float from -1 to +1 checking phase distortion and phase offset as required
-	float sample1 = GetBlendPhaseDist(pdLut1, samplePos1 / SAMPLERATE, pd1Scale);
-	float sample2 = pd2Resonant ?
-			GetResonantWave(samplePos2 / SAMPLERATE, pd2Scale, pdLut2) :
-			GetPhaseDist(LUTArray[pdLut2], samplePos2 / SAMPLERATE, pd2Scale);
-
-	if (ringModSwitch.IsHigh())
-		sample1 *= sample2;
-	if (mixSwitch.IsHigh())
-		sample2 += sample1;
-
-	OutputSamples output;
-	output.out1 = sample1 * VCALevel;
-	output.out2 = sample2 * VCALevel;
-
-	// Set LED based envelope detection or poly level output
-	GreenLED = static_cast<uint32_t>(VCALevel * 4095.0f);								// Set LED PWM level to VCA
-
-	return output;
 }
 
 

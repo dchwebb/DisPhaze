@@ -5,9 +5,9 @@
 #include <Array>
 #include "GpioPIn.h"
 
-#define SAMPLERATE 44000
+static constexpr uint32_t SampleRate = 44000;
 #define PITCH_SPREAD -583.0f
-#define PITCH_OFFSET 2259.0f
+static constexpr float PITCH_OFFSET = 1129.5f;
 
 static constexpr uint32_t sysTickInterval = 1000;
 extern volatile uint32_t SysTickVal;
@@ -40,7 +40,7 @@ void InitClocks();
 void InitSysTick();
 void InitDAC();
 void InitGPIO();
-void InitTimer();
+void InitSampleTimer();
 void InitADC();
 void InitDebugTimer();
 void InitPWMTimer();

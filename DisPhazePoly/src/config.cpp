@@ -35,11 +35,11 @@ void Config::Calibrate() 			// Checks if calibrate button has been pressed and r
 
 			// Defaults: PITCH_SPREAD -583.0f, PITCH_OFFSET 2299.0f
 			samplePos1 += ((PITCH_OFFSET + tuningOffset) * std::pow(2.0f, adjPitch / (PITCH_SPREAD + tuningSpread)));
-			while (samplePos1 >= SAMPLERATE) {
-				samplePos1-= SAMPLERATE;
+			while (samplePos1 >= SampleRate) {
+				samplePos1-= SampleRate;
 			}
 
-			DAC->DHR12R1 = (samplePos1 > SAMPLERATE / 2) ? 4095: 0;
+			DAC->DHR12R1 = (samplePos1 > SampleRate / 2) ? 4095: 0;
 			dacRead = 0;
 
 		}

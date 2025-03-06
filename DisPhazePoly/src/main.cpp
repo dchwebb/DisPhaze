@@ -67,7 +67,8 @@ int main(void)
 
 	config.RestoreConfig();			// Restore calibration settings from flash memory and create MIDI to pitch LUT if needed
 	CreateLUTs();					// Create pitch and sine wave look up tables
-	InitTimer();					// Sample output timer 3 - fires interrupt to trigger sample output from DAC
+	InitSampleTimer();				// Sample output timer 3 - fires interrupt to trigger sample output from DAC
+	phaseDist.SetSampleRate();		// Double sample rate for monophonic mode
 	usb.Init();
 
 
