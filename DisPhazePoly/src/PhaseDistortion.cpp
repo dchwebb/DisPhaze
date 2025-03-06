@@ -281,13 +281,13 @@ PhaseDistortion::OutputSamples PhaseDistortion::PolyOutput(float pdLut1, uint8_t
 
 
 
-//	Interpolate between two positions (derived from a float and its rounded value) in a LUT
-float PhaseDistortion::Interpolate(float* LUT, float& LUTPosition)
-{
-	float s1 = LUT[static_cast<int32_t>(LUTPosition)];
-	float s2 = LUT[static_cast<int32_t>(LUTPosition + 1) % pitchLutSize];
-	return s1 + ((s2 - s1) * (LUTPosition - std::round(LUTPosition)));
-}
+////	Interpolate between two positions (derived from a float and its rounded value) in a LUT
+//float PhaseDistortion::Interpolate(float* LUT, float& LUTPosition)
+//{
+//	float s1 = LUT[static_cast<int32_t>(LUTPosition)];
+//	float s2 = LUT[static_cast<int32_t>(LUTPosition + 1) % pitchLutSize];
+//	return s1 + ((s2 - s1) * (LUTPosition - std::round(LUTPosition)));
+//}
 
 
 float PhaseDistortion::GetResonantWave(const float LUTPosition, float scale, const uint8_t pdLut2)
@@ -323,7 +323,7 @@ float PhaseDistortion::GetResonantWave(const float LUTPosition, float scale, con
 // Generate a phase distorted sine wave - pass LUT containing PD offsets, LUT position as a fraction of the wave cycle and a scaling factor
 float PhaseDistortion::GetPhaseDist(const float* PdLUT, const float LUTPosition, const float scale)
 {
-	float phaseDist = PdLUT[static_cast<int32_t>(LUTPosition * pitchLutSize)] * sinLutSize * scale;
+	float phaseDist = PdLUT[static_cast<int32_t>(LUTPosition * pdLutSize)] * sinLutSize * scale;
 
 	// Add main wave position to phase distortion position and ensure in bounds
 	float pos = sinLutWrap((LUTPosition * sinLutSize) + phaseDist);
@@ -340,8 +340,8 @@ float PhaseDistortion::GetBlendPhaseDist(const float pdBlend, const float LUTPos
 	const float* pdLUTBlendB = LUTArray[static_cast<uint8_t>(pdBlend + 1) % pd1LutCount];
 
 	// Get the values from each LUT for the sample position
-	float phaseDistA = pdLUTBlendA[(int)(LUTPosition * pitchLutSize)] * sinLutSize * scale;
-	float phaseDistB = pdLUTBlendB[(int)(LUTPosition * pitchLutSize)] * sinLutSize * scale;
+	float phaseDistA = pdLUTBlendA[(int)(LUTPosition * pdLutSize)] * sinLutSize * scale;
+	float phaseDistB = pdLUTBlendB[(int)(LUTPosition * pdLutSize)] * sinLutSize * scale;
 
 	// Get the weighted blend of the two PD amounts
 	float blend = pdBlend - (uint8_t)pdBlend;
