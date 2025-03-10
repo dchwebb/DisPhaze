@@ -1,6 +1,44 @@
 #include "PhaseDistortion.h"
 #include "USB.h"
 
+void PhaseDistortion::SetLED()
+{
+	if (ledState != oldLedState) {
+		if (ledState == LEDState::SwitchToMono || ledState == LEDState::SwitchToPoly) {
+			ledCounter = 0;
+		}
+		if (ledState == LEDState::Mono) {
+			RedLED = 0;
+		}
+		if (ledState == LEDState::Poly) {
+			GreenLED = 0;
+		}
+
+		oldLedState = ledState;
+	}
+
+	if (ledState == LEDState::SwitchToMono || ledState == LEDState::SwitchToPoly) {
+		static constexpr uint32_t fadeTime = 70000;
+		if (++ledCounter >= fadeTime) {
+			ledState = (ledState == LEDState::SwitchToPoly) ? LEDState::Poly : LEDState::Mono;
+			ledCounter = 0;
+		}
+		if (ledState == LEDState::SwitchToMono) {
+			RedLED = 4095 * (fadeTime - ledCounter) / fadeTime;
+			GreenLED = 4095 * ledCounter / fadeTime;
+		} else {
+			GreenLED= 4095 * (fadeTime - ledCounter) / fadeTime;
+			RedLED = 4095 * ledCounter / fadeTime;
+		}
+	} else if (ledState == LEDState::Mono) {
+		GreenLED = (uint32_t)(VCALevel * 4095.0f);
+	} else if (ledState == LEDState::Poly && !detectEnv) {
+		RedLED = static_cast<uint32_t>((polyLevel * 4095.0f) / usb.midi.polyCount);
+	}
+
+}
+
+
 void PhaseDistortion::SetSampleRate()
 {
 	// Monophonic mode uses double sample rate (2x44kHz = 88kHz)
@@ -21,11 +59,9 @@ void PhaseDistortion::CalcNextSamples()
 		polyphonic = !polyphonic;
 		if (!polyphonic) {
 			detectEnv = false;
-			GreenLED = 4095;
-			RedLED = 0;
+			ledState = LEDState::SwitchToMono;
 		} else {
-			RedLED = 4095;
-			GreenLED = 0;
+			ledState = LEDState::SwitchToPoly;
 		}
 		SetSampleRate();
 
@@ -33,8 +69,6 @@ void PhaseDistortion::CalcNextSamples()
 		// Activate envelope detection mode
 		if (polyphonic) {
 			detectEnv = !detectEnv;
-			GreenLED = 0;
-			RedLED = 0;
 			if (detectEnv) {
 				envDetect.state = envDetectState::waitZero;
 			}
@@ -88,6 +122,8 @@ void PhaseDistortion::CalcNextSamples()
 	DAC->DHR12R2 = static_cast<int32_t>((1.0f + output.out1) * 2047.0f);
 	DAC->DHR12R1 = static_cast<int32_t>((1.0f + output.out2) * 2047.0f);
 
+	SetLED();
+
 	debugPin.SetLow();
 }
 
@@ -137,9 +173,6 @@ PhaseDistortion::OutputSamples PhaseDistortion::MonoOutput(float pdLut1, uint8_t
 	output.out1 = sample1 * VCALevel;
 	output.out2 = sample2 * VCALevel;
 
-	// Set LED based envelope detection or poly level output
-	GreenLED = static_cast<uint32_t>(VCALevel * 4095.0f);								// Set LED PWM level to VCA
-
 	return output;
 }
 
@@ -153,13 +186,13 @@ PhaseDistortion::OutputSamples PhaseDistortion::PolyOutput(float pdLut1, uint8_t
 	}
 
 	uint8_t polyNotes = usb.midi.noteCount;
+	polyLevel = 0.0f;
+	int8_t removeNote = -1;		// To enable removal of notes that have completed release envelope
+	OutputSamples output;
+
 	float pb = usb.midi.pitchBendSemiTones * ((usb.midi.pitchBend - 8192) / 8192.0f);		// convert raw pitchbend to midi note number
 	float finetuneAdjust = pb - (2048.0f - fineTune) / 1024.0f;
 
-	int8_t removeNote = -1;		// To enable removal of notes that have completed release envelope
-	float polyLevel = 0;		// Get maximum level of polyphonic notes to display on LED
-
-	OutputSamples output;
 
 	for (uint8_t n = 0; n < polyNotes; ++n) {
 		auto& midiNote = usb.midi.midiNotes[n];
@@ -270,11 +303,6 @@ PhaseDistortion::OutputSamples PhaseDistortion::PolyOutput(float pdLut1, uint8_t
 
 	output.out1 = Compress(output.out1, 0);
 	output.out2 = Compress(output.out2, 1);
-
-	// Set LED based envelope detection or poly level output
-	if (!detectEnv) {
-		RedLED = static_cast<uint32_t>((polyLevel * 4095.0f) / usb.midi.polyCount);
-	}
 
 	return output;
 }

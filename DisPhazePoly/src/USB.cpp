@@ -3,17 +3,19 @@
 
 volatile bool debugStart = true;
 
+volatile uint32_t susp = 0;
 
 // procedure to allow classes to pass configuration data back via endpoint 1 (eg CDC line setup, MSC MaxLUN etc)
 void USB::EP0In(const uint8_t* buff, uint32_t size)
 {
-	ep0.inBuffSize = size;
+	ep0.inBuffSize = std::min(size, static_cast<uint32_t>(req.Length));
 	ep0.inBuff = buff;
 	ep0State = EP0State::DataIn;
 
 	USBUpdateDbg({}, {}, {}, ep0.inBuffSize, {}, (uint32_t*)ep0.inBuff);
 
-	EPStartXfer(Direction::in, 0, size);		// sends blank request back
+	EPStartXfer(Direction::in, 0, ep0.inBuffSize);		// sends blank request back
+
 }
 
 

@@ -5,7 +5,6 @@
 #include <algorithm>
 
 
-
 struct PhaseDistortion {
 public:
 
@@ -60,6 +59,7 @@ public:
 	} filter;
 
 private:
+
 	uint16_t pd1Type = 0;			// Phase distortion type knob position with smoothing
 	uint16_t pd2Type = 0;
 	float pd1Scale = 0.0f;			// Amount of phase distortion with smoothing
@@ -68,6 +68,7 @@ private:
 	float samplePos2 = 0.0f;
 
 	float VCALevel;					// Output level with smoothing
+	float polyLevel;				// Polyphonic output level for LED brightness
 	uint16_t pitch;					// Pitch with smoothing
 	int16_t fineTune = 0;
 	int16_t coarseTune = 0;
@@ -108,9 +109,13 @@ private:
 	float compLevel[2] = {defaultLevel, defaultLevel};		// Compressor level adjusted for input
 	uint16_t compHoldTimer[2] = {0, 0};							// Compressor hold counter
 
+	// LED settings
+	enum class LEDState {Off, Mono, Poly, SwitchToMono, SwitchToPoly, WaitForEnv, Attack, Decay, Sustain, Release};
+	LEDState ledState = polyphonic ? LEDState::Poly : LEDState::Mono;
+	LEDState oldLedState = LEDState::Off;
+	uint32_t ledCounter = 0;
 
 
-	float Interpolate(float* LUT, float& LUTPosition);
 	float GetPhaseDist(const float* PdLUT, const float LUTPosition, const float scale);
 	float GetBlendPhaseDist(const float PDBlend, const float LUTPosition, const float scale);
 	float GetResonantWave(const float LUTPosition, const float scale, const uint8_t pdLut2);
@@ -120,6 +125,7 @@ private:
 	void OctaveCalc(float& freq1, float& freq12);
 	OutputSamples PolyOutput(float pdLut1, uint8_t pdLut2, float pd2Resonant);
 	OutputSamples MonoOutput(float pdLut1, uint8_t pdLut2, float pd2Resonant);
+	void SetLED();
 
 	Btn actionButton {{GPIOB, 5, GpioPin::Type::InputPullup}};
 	GpioPin ringModSwitch {GPIOC, 6, GpioPin::Type::Input};
