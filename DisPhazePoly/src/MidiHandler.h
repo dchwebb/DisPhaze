@@ -14,14 +14,22 @@ public:
 
 	void DataIn() override;
 	void DataOut() override;
+	void ActivateEP() override;
 	void ClassSetup(usbRequest& req) override;
 	void ClassSetupData(usbRequest& req, const uint8_t* data) override;
+	uint32_t GetInterfaceDescriptor(const uint8_t** buffer) override;
+
+	void SendData(uint8_t* buffer, uint32_t size);
+
 	void RemoveNote(uint8_t note);
 	void serialHandler(uint32_t data);
 
 	enum MIDIType {Unknown = 0, NoteOn = 0x9, NoteOff = 0x8, PolyPressure = 0xA, ControlChange = 0xB, ProgramChange = 0xC, ChannelPressure = 0xD, PitchBend = 0xE, System = 0xF };
 	enum env : uint8_t {A = 0, D = 1, S = 2, R = 3, FR = 4};			// FR = fast release
 	enum class pdEnv : uint8_t {A, D, Off};
+
+	static const uint8_t Descriptor[];
+	static constexpr uint8_t MidiClassDescSize = 50;		// size of just the MIDI class definition (excluding interface descriptors)
 
 	struct MidiNote {
 		float noteValue;		// MIDI note value adjusted with pitch bend
@@ -39,7 +47,7 @@ public:
 	uint8_t noteCount = 0;									// Number of notes currently sounding
 	uint16_t pitchBend = 8192;								// Pitchbend amount in raw format (0 - 16384)
 	const float pitchBendSemiTones = 12.0f;					// Number of semitones for a full pitchbend
-	uint32_t midiReceived = 0;								// Set to systick of last received midi note
+	uint32_t midiReceived = 0;
 
 private:
 	void midiEvent(const uint32_t data);

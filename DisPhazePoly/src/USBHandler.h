@@ -4,6 +4,7 @@
 class USB;
 
 enum class Direction {in, out};
+enum EndPointType {Control = 0, Isochronous = 1, Bulk = 2, Interrupt = 3};
 
 struct usbRequest {
 	uint8_t RequestType;
@@ -25,7 +26,7 @@ struct usbRequest {
 class USBHandler {
 public:
 	USB* usb;
-	USBHandler(USB* usb, uint8_t inEP, uint8_t outEP, int8_t interface) : usb(usb), inEP(inEP), outEP(outEP), interface(interface) {}
+	USBHandler(USB* usb, uint8_t inEP, uint8_t outEP, int8_t interface);
 
 	uint8_t inEP;
 	uint8_t outEP;
@@ -43,11 +44,14 @@ public:
 
 	virtual void DataIn() = 0;
 	virtual void DataOut() = 0;
+	virtual void ActivateEP() = 0;
 	virtual void ClassSetup(usbRequest& req) = 0;
 	virtual void ClassSetupData(usbRequest& req, const uint8_t* data) = 0;
+	virtual uint32_t GetInterfaceDescriptor(const uint8_t** buffer) = 0;
 protected:
    // Proxy functions to allow access to USB private methods
    void EndPointTransfer(Direction d, uint8_t ep, uint32_t len);
+   void EndPointActivate(const uint8_t ep, const Direction d, const EndPointType eptype);
    void SetupIn(uint32_t size, const uint8_t* buff);
 };
 
@@ -59,10 +63,11 @@ public:
 
 	void DataIn() override;
 	void DataOut() override;
+	void ActivateEP() override;
 	void ClassSetup(usbRequest& req) override;
 	void ClassSetupData(usbRequest& req, const uint8_t* data) override;
+	uint32_t GetInterfaceDescriptor(const uint8_t** buffer) override {return 0;};
 
-	//uint32_t* outBuff = ep0OutBuff;
 private:
 	uint32_t ep0OutBuff[64];		// EP0 OUT Data filled in RxLevel Interrupt
 };
