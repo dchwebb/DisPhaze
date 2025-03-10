@@ -314,3 +314,11 @@ void InitMidiUART()
 
 	UART4->CR1 |= USART_CR1_UE;						// USART Enable
 }
+
+
+void DelayMS(uint32_t ms)
+{
+	// Crude delay system
+	const uint32_t now = SysTickVal;
+	while (now + ms > SysTickVal) {};
+}

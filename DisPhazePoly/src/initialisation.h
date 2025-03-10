@@ -45,3 +45,4 @@ void InitADC();
 void InitDebugTimer();
 void InitPWMTimer();
 void InitMidiUART();
+void DelayMS(uint32_t ms);

@@ -43,7 +43,6 @@
 Config config;
 PhaseDistortion phaseDist;
 
-USB usb;
 
 extern uint32_t SystemCoreClock;
 volatile uint32_t SysTickVal;
@@ -69,7 +68,7 @@ int main(void)
 	CreateLUTs();					// Create pitch and sine wave look up tables
 	InitSampleTimer();				// Sample output timer 3 - fires interrupt to trigger sample output from DAC
 	phaseDist.SetSampleRate();		// Double sample rate for monophonic mode
-	usb.Init();
+	usb.Init(false);
 
 
 	while (1) {
