@@ -1,13 +1,16 @@
 #pragma once
 
-
+class Btn;
 extern volatile uint32_t SysTickVal;
 
 class GpioPin {
+	friend Btn;
+
 public:
 	enum class Type {Input, InputPullup, InputPulldown, Output, AlternateFunction};
 	enum class DriveStrength {Low, Medium, High, VeryHigh};
 	enum class OutputType {PushPull, OpenDrain};
+
 
 	GpioPin(GPIO_TypeDef* port, uint32_t pin, Type pinType, uint32_t alternateFunction = 0, DriveStrength driveStrength = DriveStrength::Low, OutputType outputType = OutputType::PushPull) :
 		port(port), pin(pin), pinType(pinType)
@@ -118,7 +121,7 @@ struct Btn {
 	// Debounce button press mechanism
 	bool Pressed() {
 		// Has been pressed and now released
-		if (pin.IsHigh() && down && SysTickVal > up + 200) {		// IsHigh = button not pressed
+		if (!ButtonDown() && down && SysTickVal > up + 200) {		// button not pressed
 			down = 0;
 			up = SysTickVal;
 			if (longPressed) {
@@ -128,7 +131,7 @@ struct Btn {
 			return true;
 		}
 
-		if (pin.IsLow() && down == 0 && SysTickVal > up + 200) {	// IsLow  = button pressed
+		if (ButtonDown() && down == 0 && SysTickVal > up + 200) {	// button pressed
 			down = SysTickVal;
 			up = 0;
 		}
@@ -136,11 +139,14 @@ struct Btn {
 	}
 
 	bool LongPress() {
-		if (pin.IsLow() && !longPressed && down && SysTickVal > down + 2000) {
+		if (ButtonDown() && !longPressed && down && SysTickVal > down + 2000) {
 			longPressed = true;
 			return true;
 		}
 		return false;
 	}
 
+	bool ButtonDown() {
+		return pin.pinType == GpioPin::Type::InputPullup ? pin.IsLow() : pin.IsHigh();
+	}
 };

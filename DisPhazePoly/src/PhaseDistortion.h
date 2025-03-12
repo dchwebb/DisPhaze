@@ -127,11 +127,11 @@ private:
 	OutputSamples MonoOutput(float pdLut1, uint8_t pdLut2, float pd2Resonant);
 	void SetLED();
 
-	Btn actionButton {{GPIOB, 5, GpioPin::Type::InputPullup}};
+	Btn actionButton {{GPIOB, 5, GpioPin::Type::InputPulldown}};
 	GpioPin ringModSwitch {GPIOC, 6, GpioPin::Type::Input};
 	GpioPin mixSwitch {GPIOC, 13, GpioPin::Type::Input};
-	GpioPin octaveUp {GPIOA, 0, GpioPin::Type::Input};
-	GpioPin octaveDown {GPIOC, 3, GpioPin::Type::Input};
+	GpioPin octaveUp {GPIOA, 0, GpioPin::Type::InputPulldown};
+	GpioPin octaveDown {GPIOC, 3, GpioPin::Type::InputPulldown};
 };
 
 extern PhaseDistortion phaseDist;
