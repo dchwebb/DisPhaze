@@ -105,9 +105,9 @@ private:
 	CompState compState[2] = {CompState::none, CompState::none};
 	static constexpr uint16_t compHold = 6000;				// Hold time in samples before limiter is released
 	static constexpr float compRelease = 0.000005f;			// Larger = faster release, smaller = slower
-	static constexpr float defaultLevel = 0.35f;				// Default compressor level
+	static constexpr float defaultLevel = 0.35f;			// Default compressor level
 	float compLevel[2] = {defaultLevel, defaultLevel};		// Compressor level adjusted for input
-	uint16_t compHoldTimer[2] = {0, 0};							// Compressor hold counter
+	uint16_t compHoldTimer[2] = {0, 0};						// Compressor hold counter
 
 	// LED settings
 	enum class LEDState {Off, Mono, Poly, SwitchToMono, SwitchToPoly, WaitForEnv, Attack, Decay, Sustain, Release};

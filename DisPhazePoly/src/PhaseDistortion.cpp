@@ -210,7 +210,7 @@ PhaseDistortion::OutputSamples PhaseDistortion::PolyOutput(float pdLut1, uint8_t
 		midiNote.samplePos2 += freq2;
 		while (midiNote.samplePos2 >= SampleRate) 			midiNote.samplePos2 -= SampleRate;
 
-
+/*
 		// Calculate Phase Distortion envelope scaling (Attack and Decay phase scaling the PD amount from CV and pot)
 		switch (midiNote.pdEnvelope) {
 		case MidiHandler::pdEnv::A:
@@ -235,6 +235,14 @@ PhaseDistortion::OutputSamples PhaseDistortion::PolyOutput(float pdLut1, uint8_t
 		float sample2 = pd2Resonant ?
 				GetResonantWave(midiNote.samplePos2 / SampleRate, pd2Scale * midiNote.pdLevel, pdLut2) :
 				GetPhaseDist(LUTArray[pdLut2], midiNote.samplePos2 / SampleRate, pd2Scale * midiNote.pdLevel);
+
+*/
+		// Calculate output as a float from -1 to +1 checking phase distortion and phase offset as required
+		float sample1 = GetBlendPhaseDist(pdLut1, midiNote.samplePos1 / SampleRate, pd1Scale);
+		float sample2 = pd2Resonant ?
+				GetResonantWave(midiNote.samplePos2 / SampleRate, pd2Scale * midiNote.pdLevel, pdLut2) :
+				GetPhaseDist(LUTArray[pdLut2], midiNote.samplePos2 / SampleRate, pd2Scale);
+
 
 		if (ringModSwitch.IsHigh())
 			sample1 *= sample2;
