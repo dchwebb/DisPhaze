@@ -92,7 +92,7 @@ void InitSampleTimer()
 {
 	//	Setup Timer 3 on an interrupt to trigger sample loading
 	RCC->APB1ENR |= RCC_APB1ENR_TIM3EN;				// Enable Timer 3
-	TIM3->PSC = (SystemCoreClock / SampleRate) / 4;	// Set prescaler to fire at sample rate - this is divided by 4 to match the APB1 prescaler (42MHz)
+	TIM3->PSC = (SystemCoreClock / sampleRate) / 4;	// Set prescaler to fire at sample rate - this is divided by 4 to match the APB1 prescaler (42MHz)
 	TIM3->ARR = 1; 									// Set maximum count value (auto reload register) - set to system clock / sampling rate
 
 	TIM3->DIER |= TIM_DIER_UIE;						//  DMA/interrupt enable register
@@ -156,14 +156,9 @@ void InitADC(void)
 	RCC->AHB1ENR |= RCC_AHB1ENR_GPIOAEN | RCC_AHB1ENR_GPIOBEN | RCC_AHB1ENR_GPIOCEN;
 	RCC->APB2ENR |= RCC_APB2ENR_ADC1EN;
 
-	// Configure PA1 (1), PA2 (2), PA3 (3) PA7 (7) to Analog mode (0b11)
-	GPIOA->MODER |= GPIO_MODER_MODER1 | GPIO_MODER_MODER2 | GPIO_MODER_MODER3 | GPIO_MODER_MODER7;
-
-	// Configure PB0 (8), PB1 (9) to Analog mode (0b11)
-	GPIOB->MODER |= GPIO_MODER_MODER0 | GPIO_MODER_MODER1;
-
-	// Configure PC0 (10), PC1 (11), PC2 (12), PC4 (14) to Analog mode (0b11)
-	GPIOC->MODER |= GPIO_MODER_MODER0 | GPIO_MODER_MODER1 | GPIO_MODER_MODER2 | GPIO_MODER_MODER4;
+	GPIOA->MODER |= GPIO_MODER_MODER1 | GPIO_MODER_MODER2 | GPIO_MODER_MODER3 | GPIO_MODER_MODER7;		// Configure PA1 (1), PA2 (2), PA3 (3) PA7 (7) to Analog mode (0b11)
+	GPIOB->MODER |= GPIO_MODER_MODER0 | GPIO_MODER_MODER1;		// Configure PB0 (8), PB1 (9) to Analog mode (0b11)
+	GPIOC->MODER |= GPIO_MODER_MODER0 | GPIO_MODER_MODER1 | GPIO_MODER_MODER2 | GPIO_MODER_MODER4;	// Configure PC0 (10), PC1 (11), PC2 (12), PC4 (14) to Analog mode (0b11)
 
 	ADC1->CR1 |= ADC_CR1_SCAN;						// Activate scan mode
 	ADC1->SQR1 = (ADC_BUFFER_LENGTH - 1) << ADC_SQR1_L_Pos;		// Number of conversions in sequence
@@ -321,4 +316,25 @@ void DelayMS(uint32_t ms)
 	// Crude delay system
 	const uint32_t now = SysTickVal;
 	while (now + ms > SysTickVal) {};
+}
+
+
+// FIXME - need to update startup*.s; check memory region for one that does not get cleared on reboot
+void JumpToBootloader()
+{
+	*reinterpret_cast<unsigned long *>(0x00000000) = 0xDEADBEEF; 	// Use ITCM RAM for DFU flag as this is not cleared at restart
+
+	__disable_irq();
+
+	FLASH->ACR &= ~FLASH_ACR_DCEN;					// Disable data cache
+
+	// Not sure why but seem to need to write this value twice or gets lost - caching issue?
+	*reinterpret_cast<unsigned long *>(0x00000000) = 0xDEADBEEF;
+
+	__DSB();
+	NVIC_SystemReset();
+
+	while (1) {
+		// Code should never reach this loop
+	}
 }

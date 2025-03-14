@@ -2,6 +2,7 @@
 #include "initialisation.h"
 #include "LUT.h"
 #include "MidiHandler.h"
+#include "configManager.h"
 #include <algorithm>
 
 
@@ -15,6 +16,7 @@ public:
 
 	void CalcNextSamples();
 	void SetSampleRate();
+	static void UpdateConfig();
 
 	struct Env {
 		// Constructor calculates increment values based on default envelope settings
@@ -44,7 +46,18 @@ public:
 			D_pd_Inc = 1.0f / D_pd;
 		}
 
-	} envelope;
+	};
+
+	struct {
+		 Env envelope;
+	} cfg;
+
+	ConfigSaver configSaver = {
+		.settingsAddress = &cfg,
+		.settingsSize = sizeof(cfg),
+		.validateSettings = UpdateConfig
+	};
+
 
 	// Polyphonic Output smoothing filter
 	struct {

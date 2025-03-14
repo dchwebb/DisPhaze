@@ -1,8 +1,9 @@
 #include "initialisation.h"
 #include "PhaseDistortion.h"
-#include "config.h"
+#include "configManager.h"
 #include "USB.h"
 #include "CDCHandler.h"
+#include "Calib.h"
 
 #if (USB_DEBUG)
 #include "uartHandler.h"
@@ -40,9 +41,9 @@
 
 
 
-Config config;
+//Config config;
 PhaseDistortion phaseDist;
-
+Calib calib;
 
 extern uint32_t SystemCoreClock;
 volatile uint32_t SysTickVal;
@@ -58,6 +59,7 @@ extern "C" {						// Use extern C to allow linker to find ISR
 #include "interrupts.h"
 }
 
+Config config{&phaseDist.configSaver, &calib.configSaver};		// Construct config handler with list of configSavers
 
 
 int main(void)
@@ -72,7 +74,8 @@ int main(void)
 
 
 	while (1) {
-		config.Calibrate();			// Checks if calibrate button has been pressed and runs calibration routine if so
+		calib.Calibrate();			// Calibration state machine
+		usb.cdc.ProcessCommand();	// Check for incoming CDC commands
 
 #if (USB_DEBUG)
 		if (uartCmdRdy) {
@@ -80,7 +83,6 @@ int main(void)
 		}
 #endif
 
-		usb.cdc.ProcessCommand();	// Check for incoming CDC commands
 
 	}
 }

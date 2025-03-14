@@ -3,9 +3,20 @@
 
 USB usb;
 
+extern "C" {
+// To enable USB for printf commands (To print floats enable 'Use float with printf from newlib-nano' MCU Build Settings)
+size_t _write(int handle, const unsigned char* buf, size_t bufSize)
+{
+	if (usb.devState == USB::DeviceState::Configured) {
+		return usb.SendString(buf, bufSize);
+	} else {
+		return 0;
+	}
+}
+}
+
 volatile bool debugStart = true;
 
-volatile uint32_t susp = 0;
 
 // procedure to allow classes to pass configuration data back via endpoint 1 (eg CDC line setup, MSC MaxLUN etc)
 void USB::EP0In(const uint8_t* buff, const uint32_t size)

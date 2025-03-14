@@ -17,11 +17,9 @@ void TIM3_IRQHandler(void)
 
 		//dacRead = true;
 
-		// Ready for next sample (Calibrating sends out a square wave for tuning so disables normal output)
-		if (!config.calibrating) {
-			phaseDist.CalcNextSamples();
-			debugWorkTime = TIM5->CNT;
-		}
+		// Ready for next sample
+		phaseDist.CalcNextSamples();
+		debugWorkTime = TIM5->CNT;
 	}
 }
 

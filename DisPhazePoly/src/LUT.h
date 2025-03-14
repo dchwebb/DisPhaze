@@ -1,7 +1,7 @@
 #pragma once
 
 #include "initialisation.h"
-#include "config.h"
+#include "configManager.h"
 #include <cmath>
 
 // LUT sizes are probably all going to be constant

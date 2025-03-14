@@ -1,4 +1,5 @@
 #include "PhaseDistortion.h"
+#include "Calib.h"
 #include "USB.h"
 
 void PhaseDistortion::SetLED()
@@ -43,9 +44,9 @@ void PhaseDistortion::SetSampleRate()
 {
 	// Monophonic mode uses double sample rate (2x44kHz = 88kHz)
 	if (!polyphonic) {
-		TIM3->PSC = (SystemCoreClock / SampleRate) / 8;
+		TIM3->PSC = (SystemCoreClock / sampleRate) / 8;
 	} else {
-		TIM3->PSC = (SystemCoreClock / SampleRate) / 4;
+		TIM3->PSC = (SystemCoreClock / sampleRate) / 4;
 	}
 }
 
@@ -66,7 +67,7 @@ void PhaseDistortion::CalcNextSamples()
 		SetSampleRate();
 
 	} else if (actionButton.Pressed()) {
-		// Activate envelope detection mode
+		// Activate cfg.envelope detection mode
 		if (polyphonic) {
 			detectEnv = !detectEnv;
 			if (detectEnv) {
@@ -75,7 +76,7 @@ void PhaseDistortion::CalcNextSamples()
 		}
 	}
 
-	// Envelope detection - NB VCA is inverted
+	// cfg.envelope detection - NB VCA is inverted
 	if (detectEnv) {
 		DetectEnvelope();
 	}
@@ -141,28 +142,29 @@ PhaseDistortion::OutputSamples PhaseDistortion::MonoOutput(float pdLut1, uint8_t
 	}
 
 	// Calculate frequencies
-	pitch = ((3 * pitch) + adc.Pitch) / 4;				// 1V/Oct input with smoothing
-	float freq1 = PitchLUT[(pitch + ((2048 - fineTune) / 32))];
+	pitch = ((3 * pitch) + adc.Pitch_CV) / 4;				// 1V/Oct input with smoothing
+	//float freq1 = calib.pitchLUT[(pitch + ((2048 - fineTune) / 32))];		// FIXME disabled fine tune for now
+	float freq1 = calib.pitchLUT[adc.Pitch_CV];
 	float freq2;
 
 	OctaveCalc(freq1, freq2);
 
 	// jump forward to the next sample position
 	samplePos1 += freq1;
-	while (samplePos1 >= SampleRate) {
-		samplePos1 -= SampleRate;
+	while (samplePos1 >= sampleRate) {
+		samplePos1 -= sampleRate;
 	}
 
 	samplePos2 += freq2;
-	while (samplePos2 >= SampleRate) {
-		samplePos2 -= SampleRate;
+	while (samplePos2 >= sampleRate) {
+		samplePos2 -= sampleRate;
 	}
 
 	// Calculate output as a float from -1 to +1 checking phase distortion and phase offset as required
-	float sample1 = GetBlendPhaseDist(pdLut1, samplePos1 / SampleRate, pd1Scale);
+	float sample1 = GetBlendPhaseDist(pdLut1, samplePos1 / sampleRate, pd1Scale);
 	float sample2 = pd2Resonant ?
-			GetResonantWave(samplePos2 / SampleRate, pd2Scale, pdLut2) :
-			GetPhaseDist(LUTArray[pdLut2], samplePos2 / SampleRate, pd2Scale);
+			GetResonantWave(samplePos2 / sampleRate, pd2Scale, pdLut2) :
+			GetPhaseDist(LUTArray[pdLut2], samplePos2 / sampleRate, pd2Scale);
 
 	if (ringModSwitch.IsHigh())
 		sample1 *= sample2;
@@ -187,7 +189,7 @@ PhaseDistortion::OutputSamples PhaseDistortion::PolyOutput(float pdLut1, uint8_t
 
 	uint8_t polyNotes = usb.midi.noteCount;
 	polyLevel = 0.0f;
-	int8_t removeNote = -1;		// To enable removal of notes that have completed release envelope
+	int8_t removeNote = -1;		// To enable removal of notes that have completed release cfg.envelope
 	OutputSamples output;
 
 	float pb = usb.midi.pitchBendSemiTones * ((usb.midi.pitchBend - 8192) / 8192.0f);		// convert raw pitchbend to midi note number
@@ -206,24 +208,24 @@ PhaseDistortion::OutputSamples PhaseDistortion::PolyOutput(float pdLut1, uint8_t
 
 		// Jump forward to the next sample position
 		midiNote.samplePos1 += freq1;
-		while (midiNote.samplePos1 >= SampleRate) 			midiNote.samplePos1 -= SampleRate;
+		while (midiNote.samplePos1 >= sampleRate) 			midiNote.samplePos1 -= sampleRate;
 		midiNote.samplePos2 += freq2;
-		while (midiNote.samplePos2 >= SampleRate) 			midiNote.samplePos2 -= SampleRate;
+		while (midiNote.samplePos2 >= sampleRate) 			midiNote.samplePos2 -= sampleRate;
 
 /*
-		// Calculate Phase Distortion envelope scaling (Attack and Decay phase scaling the PD amount from CV and pot)
-		switch (midiNote.pdEnvelope) {
+		// Calculate Phase Distortion cfg.envelope scaling (Attack and Decay phase scaling the PD amount from CV and pot)
+		switch (midiNote.pdcfg.envelope) {
 		case MidiHandler::pdEnv::A:
-			midiNote.pdLevel += envelope.A_pd_Inc;
+			midiNote.pdLevel += cfg.envelope.A_pd_Inc;
 			if (midiNote.pdLevel >= 1.0f) {
-				midiNote.pdEnvelope = MidiHandler::pdEnv::D;
+				midiNote.pdcfg.envelope = MidiHandler::pdEnv::D;
 			}
 			break;
 		case MidiHandler::pdEnv::D:
-			midiNote.pdLevel -= envelope.D_pd_Inc;
+			midiNote.pdLevel -= cfg.envelope.D_pd_Inc;
 			if (midiNote.pdLevel <= 0.0f) {
 				midiNote.pdLevel = 0.0f;
-				midiNote.pdEnvelope = MidiHandler::pdEnv::Off;
+				midiNote.pdcfg.envelope = MidiHandler::pdEnv::Off;
 			}
 			break;
 		default:
@@ -238,10 +240,10 @@ PhaseDistortion::OutputSamples PhaseDistortion::PolyOutput(float pdLut1, uint8_t
 
 */
 		// Calculate output as a float from -1 to +1 checking phase distortion and phase offset as required
-		float sample1 = GetBlendPhaseDist(pdLut1, midiNote.samplePos1 / SampleRate, pd1Scale);
+		float sample1 = GetBlendPhaseDist(pdLut1, midiNote.samplePos1 / sampleRate, pd1Scale);
 		float sample2 = pd2Resonant ?
-				GetResonantWave(midiNote.samplePos2 / SampleRate, pd2Scale * midiNote.pdLevel, pdLut2) :
-				GetPhaseDist(LUTArray[pdLut2], midiNote.samplePos2 / SampleRate, pd2Scale);
+				GetResonantWave(midiNote.samplePos2 / sampleRate, pd2Scale * midiNote.pdLevel, pdLut2) :
+				GetPhaseDist(LUTArray[pdLut2], midiNote.samplePos2 / sampleRate, pd2Scale);
 
 
 		if (ringModSwitch.IsHigh())
@@ -250,7 +252,7 @@ PhaseDistortion::OutputSamples PhaseDistortion::PolyOutput(float pdLut1, uint8_t
 			sample2 += sample1;
 
 
-		// Calculate envelope levels of polyphonic voices
+		// Calculate cfg.envelope levels of polyphonic voices
 		if (detectEnv) {
 			sample1 *= VCALevel;
 			sample2 *= VCALevel;
@@ -259,7 +261,7 @@ PhaseDistortion::OutputSamples PhaseDistortion::PolyOutput(float pdLut1, uint8_t
 
 			switch (midiNote.envelope) {
 			case MidiHandler::env::A:
-				midiNote.vcaLevel += envelope.AInc;
+				midiNote.vcaLevel += cfg.envelope.AInc;
 
 				if (midiNote.vcaLevel >= 1.0f) {
 					midiNote.envelope = MidiHandler::env::D;
@@ -267,19 +269,19 @@ PhaseDistortion::OutputSamples PhaseDistortion::PolyOutput(float pdLut1, uint8_t
 				break;
 
 			case MidiHandler::env::D:
-				midiNote.vcaLevel -= envelope.DInc;
+				midiNote.vcaLevel -= cfg.envelope.DInc;
 
-				if (midiNote.vcaLevel <= envelope.S) {
+				if (midiNote.vcaLevel <= cfg.envelope.S) {
 					midiNote.envelope = MidiHandler::env::S;
 				}
 				break;
 
 			case MidiHandler::env::S:
-				midiNote.vcaLevel = envelope.S;
+				midiNote.vcaLevel = cfg.envelope.S;
 				break;
 
 			case MidiHandler::env::R:
-				midiNote.vcaLevel -= envelope.RInc;
+				midiNote.vcaLevel -= cfg.envelope.RInc;
 				if (midiNote.vcaLevel <= 0.0f) {
 					midiNote.vcaLevel = 0.0f;
 					removeNote = n;
@@ -287,7 +289,7 @@ PhaseDistortion::OutputSamples PhaseDistortion::PolyOutput(float pdLut1, uint8_t
 				break;
 
 			case MidiHandler::env::FR:
-				midiNote.vcaLevel -= envelope.FRInc;
+				midiNote.vcaLevel -= cfg.envelope.FRInc;
 				if (midiNote.vcaLevel <= 0.0f) {
 					midiNote.vcaLevel = 0.0f;
 					removeNote = n;
@@ -295,7 +297,7 @@ PhaseDistortion::OutputSamples PhaseDistortion::PolyOutput(float pdLut1, uint8_t
 				break;
 			}
 
-			sample1 *= midiNote.vcaLevel;			// Scale sample output level based on envelope
+			sample1 *= midiNote.vcaLevel;			// Scale sample output level based on cfg.envelope
 			sample2 *= midiNote.vcaLevel;
 
 			polyLevel += midiNote.vcaLevel;			// For LED display
@@ -328,7 +330,7 @@ PhaseDistortion::OutputSamples PhaseDistortion::PolyOutput(float pdLut1, uint8_t
 
 float PhaseDistortion::GetResonantWave(const float LUTPosition, float scale, const uint8_t pdLut2)
 {
-	// models waves 6-8 of the Casio CZ which are saw/triangle envelopes into which harmonics are added as the phase distortion increases
+	// models waves 6-8 of the Casio CZ which are saw/triangle cfg.envelopes into which harmonics are added as the phase distortion increases
 	//static float lastSample = 0.0f;
 
 	scale = ((scale / 5.0f) * 23.0f) + 1.0f;		// Sets number of sine waves per cycle: scale input 0-5 to 1-24 (original only went to 16)
@@ -336,7 +338,7 @@ float PhaseDistortion::GetResonantWave(const float LUTPosition, float scale, con
 	// offset to 3/4 of the way through the sine wave so each cycle starts at the flat top of the wave
 	constexpr float sineOffset = static_cast<float>(3 * (sinLutSize / 4));
 
-	// Scale the amplitude of the cycle from 1 to 0 to create a saw tooth type envelope on each cycle
+	// Scale the amplitude of the cycle from 1 to 0 to create a saw tooth type cfg.envelope on each cycle
 	float ampMod = 1.0f;
 	if (pdLut2 == 5) {								// Saw tooth - amplitude linearly reduces over full cycle
 		ampMod = (1.0f - LUTPosition);
@@ -348,7 +350,7 @@ float PhaseDistortion::GetResonantWave(const float LUTPosition, float scale, con
 
 	float pos = sinLutWrap(((LUTPosition * sinLutSize) * scale) + sineOffset);
 	float sineSample = SineLUT[static_cast<uint32_t>(pos)];
-	sineSample = (sineSample + 1.0f) * ampMod;		// Offset so all positive and then apply amplitude envelope to create sawtooth
+	sineSample = (sineSample + 1.0f) * ampMod;		// Offset so all positive and then apply amplitude cfg.envelope to create sawtooth
 
 	// FIXME: removed as glitching in polyphonic mode. If required will need to store lastSample against each note
 	//lastSample = (lastSample * 0.85f) + (0.15f * (sineSample - 1.0f));			// Remove offset and damp
@@ -434,7 +436,7 @@ void PhaseDistortion::DetectEnvelope()
 {
 	uint32_t lvl = 4096 - adc.VCA;
 	envDetect.smoothLevel = ((15 * envDetect.smoothLevel) + lvl) / 16;
-	VCALevel = envDetect.smoothLevel / 4096.0f;				// While envelope detection is ongoing any output level will be set by incoming envelope
+	VCALevel = envDetect.smoothLevel / 4096.0f;				// While cfg.envelope detection is ongoing any output level will be set by incoming cfg.envelope
 	++envDetect.counter;
 
 
@@ -487,7 +489,7 @@ void PhaseDistortion::DetectEnvelope()
 
 		++envDetect.AttackTime;
 
-		// Wait for envelope to decrease - either switch to decay or release if stuck on high level for long time
+		// Wait for cfg.envelope to decrease - either switch to decay or release if stuck on high level for long time
 		if (envDetect.smoothLevel < envDetect.maxLevel - 30) {
 			envDetect.DecayTime = 0;
 
@@ -529,7 +531,7 @@ void PhaseDistortion::DetectEnvelope()
 		} else {
 			envDetect.stateCount = 0;
 			envDetect.minLevel = envDetect.smoothLevel;
-			envDetect.levelTime = envDetect.DecayTime;		// Capture the time envelope hits minimum detected level
+			envDetect.levelTime = envDetect.DecayTime;		// Capture the time cfg.envelope hits minimum detected level
 		}
 
 		// Decay to zero
@@ -563,7 +565,7 @@ void PhaseDistortion::DetectEnvelope()
 		RedLED = 4095;
 		GreenLED = 0;
 
-		// With very slow envelopes can hit the release phase early - attempt to detect
+		// With very slow cfg.envelopes can hit the release phase early - attempt to detect
 		if (envDetect.smoothLevel >= envDetect.minLevel) {
 			if (envDetect.smoothLevel > 100) {
 				++envDetect.stateCount2;
@@ -595,12 +597,12 @@ void PhaseDistortion::DetectEnvelope()
 	if (!detectEnv) {
 		GreenLED = 0;
 		RedLED = 0;
-		envelope.A = std::max(envDetect.AttackTime, 1UL);
-		envelope.D = std::max(envDetect.DecayTime, 1UL);
-		envelope.S = static_cast<float>(envDetect.SustainLevel) / static_cast<float>(envDetect.maxLevel);
-		envelope.R = std::max(envDetect.ReleaseTime, 1UL);
+		cfg.envelope.A = std::max(envDetect.AttackTime, 1UL);
+		cfg.envelope.D = std::max(envDetect.DecayTime, 1UL);
+		cfg.envelope.S = static_cast<float>(envDetect.SustainLevel) / static_cast<float>(envDetect.maxLevel);
+		cfg.envelope.R = std::max(envDetect.ReleaseTime, 1UL);
 
-		envelope.UpdateIncrements();
+		cfg.envelope.UpdateIncrements();
 	}
 
 }
@@ -637,4 +639,10 @@ inline float PhaseDistortion::sinLutWrap(float pos)
 		pos =  sinLutSize + pos;
 	}
 	return pos;
+}
+
+
+void PhaseDistortion::UpdateConfig()
+{
+
 }

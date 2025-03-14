@@ -5,18 +5,19 @@
 #include <Array>
 #include "GpioPIn.h"
 
-static constexpr uint32_t SampleRate = 44000;
+static constexpr uint32_t sampleRate = 44000;
 #define PITCH_SPREAD -583.0f
 static constexpr float PITCH_OFFSET = 1129.5f;
 
 static constexpr uint32_t sysTickInterval = 1000;
 extern volatile uint32_t SysTickVal;
 
+static constexpr uint32_t adcMax = 4095;
 #define ADC_BUFFER_LENGTH 10
 
 
 struct ADCValues {
-	uint16_t Pitch;   	// PB0 ADC12_IN8   Pin 27
+	uint16_t Pitch_CV;  	// PB0 ADC12_IN8   Pin 27
 	uint16_t VCA;     	// PA3 ADC123_IN3  Pin 17
 	uint16_t FTune;   	// PC4 ADC12_IN14  Pin 24
 	uint16_t CTune;   	// PB1 ADC12_IN9   Pin 26
@@ -46,3 +47,4 @@ void InitDebugTimer();
 void InitPWMTimer();
 void InitMidiUART();
 void DelayMS(uint32_t ms);
+void JumpToBootloader();

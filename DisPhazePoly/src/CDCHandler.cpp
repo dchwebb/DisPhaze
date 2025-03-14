@@ -1,5 +1,6 @@
 #include "USB.h"
 #include "CDCHandler.h"
+#include "Calib.h"
 #include "PhaseDistortion.h"
 
 void CDCHandler::ProcessCommand()
@@ -10,7 +11,23 @@ void CDCHandler::ProcessCommand()
 
 	std::string_view cmd {comCmd};
 
-	if (cmd.compare("help") == 0) {
+	// Provide option to switch to USB DFU mode - this allows the MCU to be programmed with STM32CubeProgrammer in DFU mode
+	if (state == serialState::dfuConfirm) {
+		if (cmd.compare("y") == 0 || cmd.compare("Y") == 0) {
+			usb->SendString("Switching to DFU Mode ...\r\n");
+			uint32_t old = SysTickVal;
+			while (SysTickVal < old + 100) {};		// Give enough time to send the message
+			JumpToBootloader();
+		} else {
+			state = serialState::pending;
+			usb->SendString("Upgrade cancelled\r\n");
+		}
+
+
+	} else if (calib.calibrating) {						// Send command to calibration process
+		calib.Calibrate(cmd[0]);
+
+	} else if (cmd.compare("help") == 0) {
 		usb->SendString("Mountjoy DisPhaze Poly - supported commands:\n\n"
 				"help           -  Shows this information\n"
 				"info           -  Display current settings\n"
@@ -28,14 +45,21 @@ void CDCHandler::ProcessCommand()
 
 		usb->SendString("Polyphonic mode: " + std::string(phaseDist.polyphonic ? "on\r\n": "off\r\n") +
 				"Filter level: 0." + std::to_string(static_cast<uint8_t>(100.0f * phaseDist.filter.b1)) +
-				"\r\nVCA Envelope: A:" + std::to_string(phaseDist.envelope.A) +
-				", D: " + std::to_string(phaseDist.envelope.D) +
-				", S: 0." + std::to_string(static_cast<uint8_t>(100.0f * phaseDist.envelope.S)) +
-				", R: " + std::to_string(phaseDist.envelope.R) +
-				"\r\nPD Envelope: A:" + std::to_string(phaseDist.envelope.A_pd) +
-				", D: " + std::to_string(phaseDist.envelope.D_pd) +
+				"\r\nVCA Envelope: A:" + std::to_string(phaseDist.cfg.envelope.A) +
+				", D: " + std::to_string(phaseDist.cfg.envelope.D) +
+				", S: 0." + std::to_string(static_cast<uint8_t>(100.0f * phaseDist.cfg.envelope.S)) +
+				", R: " + std::to_string(phaseDist.cfg.envelope.R) +
+				"\r\nPD Envelope: A:" + std::to_string(phaseDist.cfg.envelope.A_pd) +
+				", D: " + std::to_string(phaseDist.cfg.envelope.D_pd) +
 
 				"\n\r");
+
+	} else if (cmd.compare("dfu") == 0) {					// USB DFU firmware upgrade
+		printf("Start DFU upgrade mode? Press 'y' to confirm.\r\n");
+		state = serialState::dfuConfirm;
+
+	} else if (cmd.compare("calib") == 0) {					// Start calibration process
+		calib.Calibrate('s');
 
 	} else if (cmd.compare("poly") == 0) {
 		phaseDist.polyphonic = !phaseDist.polyphonic;
@@ -44,54 +68,54 @@ void CDCHandler::ProcessCommand()
 	} else if (cmd.compare(0, 7, "attack:") == 0) {			// Envelope attack time in samples
 		uint32_t val = ParseInt(cmd, ':', 1, UINT32_MAX);
 		if (val > 0) {
-			phaseDist.envelope.A = val;
-			phaseDist.envelope.UpdateIncrements();
+			phaseDist.cfg.envelope.A = val;
+			phaseDist.cfg.envelope.UpdateIncrements();
 			//config.SaveConfig();
 		}
-		usb->SendString("Attack set to: " + std::to_string(phaseDist.envelope.A) + " samples\r\n");
+		usb->SendString("Attack set to: " + std::to_string(phaseDist.cfg.envelope.A) + " samples\r\n");
 
 	} else if (cmd.compare(0, 6, "decay:") == 0) {			// Envelope decay time in samples
 		uint32_t val = ParseInt(cmd, ':', 1, UINT32_MAX);
 		if (val > 0) {
-			phaseDist.envelope.D = val;
-			phaseDist.envelope.UpdateIncrements();
+			phaseDist.cfg.envelope.D = val;
+			phaseDist.cfg.envelope.UpdateIncrements();
 			//config.SaveConfig();
 		}
-		usb->SendString("Decay set to: " + std::to_string(phaseDist.envelope.D) + " samples\r\n");
+		usb->SendString("Decay set to: " + std::to_string(phaseDist.cfg.envelope.D) + " samples\r\n");
 
 	} else if (cmd.compare(0, 8, "sustain:") == 0) {		// Envelope sustain amount
 		float val = ParseFloat(cmd, ':', 0.0f, 1.0f);
-		phaseDist.envelope.S = val;
+		phaseDist.cfg.envelope.S = val;
 			//config.SaveConfig();
-		std::string s = std::to_string(static_cast<uint8_t>(100.0f * phaseDist.envelope.S));		// FIXME - using to_string on float crashes for some reason
+		std::string s = std::to_string(static_cast<uint8_t>(100.0f * phaseDist.cfg.envelope.S));		// FIXME - using to_string on float crashes for some reason
 		usb->SendString("Sustain set to: 0." + s + "\r\n");
 
 	} else if (cmd.compare(0, 8, "release:") == 0) {		// Envelope release time in samples
 		uint32_t val = ParseInt(cmd, ':', 1, UINT32_MAX);
 		if (val > 0) {
-			phaseDist.envelope.R = val;
-			phaseDist.envelope.UpdateIncrements();
+			phaseDist.cfg.envelope.R = val;
+			phaseDist.cfg.envelope.UpdateIncrements();
 			//config.SaveConfig();
 		}
-		usb->SendString("Release set to: " + std::to_string(phaseDist.envelope.R) + " samples\r\n");
+		usb->SendString("Release set to: " + std::to_string(phaseDist.cfg.envelope.R) + " samples\r\n");
 
 	} else if (cmd.compare(0, 4, "pda:") == 0) {			// Envelope attack time in samples
 		uint32_t val = ParseInt(cmd, ':', 1, UINT32_MAX);
 		if (val > 0) {
-			phaseDist.envelope.A_pd = val;
-			phaseDist.envelope.UpdateIncrements();
+			phaseDist.cfg.envelope.A_pd = val;
+			phaseDist.cfg.envelope.UpdateIncrements();
 			//config.SaveConfig();
 		}
-		usb->SendString("PD Attack set to: " + std::to_string(phaseDist.envelope.A_pd) + " samples\r\n");
+		usb->SendString("PD Attack set to: " + std::to_string(phaseDist.cfg.envelope.A_pd) + " samples\r\n");
 
 	} else if (cmd.compare(0, 4, "pdd:") == 0) {			// Envelope decay time in samples
 		uint32_t val = ParseInt(cmd, ':', 1, UINT32_MAX);
 		if (val > 0) {
-			phaseDist.envelope.D_pd = val;
-			phaseDist.envelope.UpdateIncrements();
+			phaseDist.cfg.envelope.D_pd = val;
+			phaseDist.cfg.envelope.UpdateIncrements();
 			//config.SaveConfig();
 		}
-		usb->SendString("PD Decay set to: " + std::to_string(phaseDist.envelope.D_pd) + " samples\r\n");
+		usb->SendString("PD Decay set to: " + std::to_string(phaseDist.cfg.envelope.D_pd) + " samples\r\n");
 
 	} else if (cmd.compare(0, 7, "filter:") == 0) {			// Filter decay time
 		float val = ParseFloat(cmd, ':', 0.0f, 1.0f);

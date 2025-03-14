@@ -1,4 +1,5 @@
 #include "LUT.h"
+#include "Calib.h"
 
 extern Config config;
 
@@ -16,17 +17,23 @@ const float PDWave6_50LUT[pdLutSize] = {-5.1e-05,-0.001103,-0.002173,-0.003262,-
 // Create an array of pointers to the PD LUTs
 const float* LUTArray[7] = { PDSquareLUT, PDWave4LUT, PDWave5LUT, PDSawLUT, PDWave3LUT, PDWave6_100LUT, PDWave6_50LUT };
 
+// FIXME - temporary
+#define ADDR_FLASH_SECTOR_6    reinterpret_cast<float*>(0x08040000)		// Base address of Sector 6, 128 Kbytes
+constexpr float midiLUTFirstNote = 21.0f;			// 21 = 27.5Hz (A0)
+constexpr float midiLUTNotes = 100.0f;				// 121 = 8869.84Hz (C#9)
+constexpr uint32_t midiLUTSize = 16384;				// Size of MIDI to pitch LUT
+float* MidiLUT = ADDR_FLASH_SECTOR_6;
 
 float SineLUT[sinLutSize];
-float PitchLUT[pitchLutSize];
+//float PitchLUT[pitchLutSize];
 
 void CreateLUTs()
 {
 	// Generate pitch lookup table
-	for (uint32_t p = 0; p < pitchLutSize; ++p) {
-		float power = static_cast<float>(p) / (PITCH_SPREAD + config.tuningSpread);		// Reduce tuningSpread to decrease spread
-		PitchLUT[p] = (PITCH_OFFSET + config.tuningOffset) * std::pow(2.0f, power);				// Increase tuningOffset to increase pitch
-	}
+//	for (uint32_t p = 0; p < pitchLutSize; ++p) {
+//		float power = static_cast<float>(p) / (PITCH_SPREAD + calib.tuningSpread);		// Reduce tuningSpread to decrease spread
+//		PitchLUT[p] = (PITCH_OFFSET + calib.tuningOffset) * std::pow(2.0f, power);		// Increase tuningOffset to increase pitch
+//	}
 
 	// Generate Sine LUT
 	for (uint32_t s = 0; s < sinLutSize; ++s) {
@@ -34,25 +41,4 @@ void CreateLUTs()
 	}
 }
 
-/*
-#include <array>
 
-constexpr float midiLUTFirstNote = 21.0f;			// 21 = 27.5Hz (A0)
-constexpr float midiLUTNotes = 100.0f;				// 121 = 8869.84Hz (C#9)
-
-constexpr auto CreateMidiLUT()
-{
-	// Generate MIDI note to pitch lookup - this uses fractional MIDI note numbers to allow for pitchbends, fine tuning etc
-
-	std::array<float, midiLUTSize> array {};
-	for (int i = 0; i < midiLUTSize; ++i) {
-		float n = midiLUTFirstNote + ((float)i / (float)midiLUTSize) * midiLUTNotes;
-		array[i] = 440.0f * std::pow(2.0f, (n - 69.0f) / 12.0f);
-	}
-	return array;
-}
-
-
-
-constexpr std::array<float, midiLUTSize> MidiLUT = CreateMidiLUT();
-*/

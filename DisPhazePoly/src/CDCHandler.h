@@ -41,7 +41,7 @@ private:
 
 
 	// State machine for multi-stage commands
-	enum class serialState { pending, dfuConfirm };
+	enum class serialState {pending, dfuConfirm, calibConfirm};
 	serialState state = serialState::pending;
 
 	static const uint8_t Descriptor[];
