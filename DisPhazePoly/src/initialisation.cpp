@@ -149,7 +149,7 @@ void InitADC(void)
 	TIM8->ARR = 100 - 1;							// Auto-reload register (ie reset counter) divided by 100
 	TIM8->CCR1 = 50 - 1;							// Capture and compare - ie when counter hits this number PWM high
 	TIM8->CCER |= TIM_CCER_CC1E;					// Capture/Compare 1 output enable
-	TIM8->CCMR1 |= TIM_CCMR1_OC1M_1 |TIM_CCMR1_OC1M_2;		// 110 PWM Mode 1
+	TIM8->CCMR1 |= TIM_CCMR1_OC1M_1 | TIM_CCMR1_OC1M_2;		// 110 PWM Mode 1
 	TIM8->CR1 |= TIM_CR1_CEN;
 
 	// Enable GPIO and ADC1 clock source

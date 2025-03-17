@@ -8,15 +8,16 @@
 
 struct PhaseDistortion {
 public:
-
-	bool polyphonic = false;
-
 	static constexpr uint8_t pd1LutCount = 5;
 	static constexpr uint8_t pd2LutCount = 8;
 
 	void CalcNextSamples();
 	void SetSampleRate();
 	static void UpdateConfig();
+	void ChangePoly();
+
+	uint32_t sampleCalcWindow = 0;			// Set in interrupt to calculate available sample calculation time
+	uint32_t sampleCalcTime = 0;			// Set in interrupt to calculate if poluphonic sample calculation is too slow
 
 	struct Env {
 		// Constructor calculates increment values based on default envelope settings
@@ -49,7 +50,8 @@ public:
 	};
 
 	struct {
-		 Env envelope;
+		bool polyphonic = false;
+		Env envelope;
 	} cfg;
 
 	ConfigSaver configSaver = {
@@ -124,7 +126,7 @@ private:
 
 	// LED settings
 	enum class LEDState {Off, Mono, Poly, SwitchToMono, SwitchToPoly, WaitForEnv, Attack, Decay, Sustain, Release};
-	LEDState ledState = polyphonic ? LEDState::Poly : LEDState::Mono;
+	LEDState ledState = cfg.polyphonic ? LEDState::Poly : LEDState::Mono;
 	LEDState oldLedState = LEDState::Off;
 	uint32_t ledCounter = 0;
 
@@ -139,8 +141,10 @@ private:
 	OutputSamples PolyOutput(float pdLut1, uint8_t pdLut2, float pd2Resonant);
 	OutputSamples MonoOutput(float pdLut1, uint8_t pdLut2, float pd2Resonant);
 	void SetLED();
+	float FastTanh(const float x);
 
-	Btn actionButton {{GPIOB, 5, GpioPin::Type::InputPulldown}};
+	//Btn actionButton {{GPIOB, 5, GpioPin::Type::InputPulldown}};			// FIXME
+	Btn actionButton {{GPIOB, 5, GpioPin::Type::InputPullup}};			// FIXME - setting for DW module
 	GpioPin ringModSwitch {GPIOC, 6, GpioPin::Type::Input};
 	GpioPin mixSwitch {GPIOC, 13, GpioPin::Type::Input};
 	GpioPin octaveUp {GPIOA, 0, GpioPin::Type::InputPulldown};

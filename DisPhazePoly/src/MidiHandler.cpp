@@ -1,6 +1,7 @@
 #include <MidiHandler.h>
 #include "USB.h"
 #include "LUT.h"
+#include "PhaseDistortion.h"
 
 
 void MidiHandler::SendData(uint8_t* buffer, uint32_t size)
@@ -54,6 +55,10 @@ void MidiHandler::midiEvent(const uint32_t data)
 	}
 
 	if (midiData.msg == NoteOn) {
+		if (!phaseDist.cfg.polyphonic) {
+			phaseDist.ChangePoly();
+		}
+
 		// Check if note is already sounding and reinitialise timing if so
 		for (uint8_t i = 0; i < noteCount; ++i) {
 

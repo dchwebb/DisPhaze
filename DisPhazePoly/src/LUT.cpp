@@ -22,23 +22,30 @@ const float* LUTArray[7] = { PDSquareLUT, PDWave4LUT, PDWave5LUT, PDSawLUT, PDWa
 constexpr float midiLUTFirstNote = 21.0f;			// 21 = 27.5Hz (A0)
 constexpr float midiLUTNotes = 100.0f;				// 121 = 8869.84Hz (C#9)
 constexpr uint32_t midiLUTSize = 16384;				// Size of MIDI to pitch LUT
-float* MidiLUT = ADDR_FLASH_SECTOR_6;
+//float* MidiLUT = ADDR_FLASH_SECTOR_6;
 
+float* MidiLUT = reinterpret_cast<float*>(0x10000000);	// Put LUT in CCRAM
 float SineLUT[sinLutSize];
-//float PitchLUT[pitchLutSize];
+//float* SineLUT = reinterpret_cast<float*>(0x10000000);	// Put sine LUT in CCRAM
+
 
 void CreateLUTs()
 {
-	// Generate pitch lookup table
-//	for (uint32_t p = 0; p < pitchLutSize; ++p) {
-//		float power = static_cast<float>(p) / (PITCH_SPREAD + calib.tuningSpread);		// Reduce tuningSpread to decrease spread
-//		PitchLUT[p] = (PITCH_OFFSET + calib.tuningOffset) * std::pow(2.0f, power);		// Increase tuningOffset to increase pitch
-//	}
-
 	// Generate Sine LUT
 	for (uint32_t s = 0; s < sinLutSize; ++s) {
 		SineLUT[s] = sin(s * 2.0f * M_PI / sinLutSize);
 	}
+
+	// Check if MIDI to pitch LUT has been created - this is done here to avoid having to Flash each time program is built
+//	if (MidiLUT[0] != 440.0f * std::pow(2.0f, (midiLUTFirstNote - 69.0f) / 12.0f)) {
+		for (uint32_t i = 0; i < midiLUTSize; ++i) {
+			float n = midiLUTFirstNote + ((float)i / (float)midiLUTSize) * midiLUTNotes;
+			MidiLUT[i] = (440.0f * std::pow(2.0f, (n - 69.0f) / 12.0f)) / sampleRate;			// 69 is midi note of A 440
+
+//			FlashWaitForLastOperation();
+		}
+//	}
+
 }
 
 

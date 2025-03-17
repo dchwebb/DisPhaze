@@ -1,3 +1,5 @@
+float samplePosDebug = 0;
+
 void TIM3_IRQHandler(void)
 {
 	// Send next samples to DAC
@@ -7,19 +9,7 @@ void TIM3_IRQHandler(void)
 		DAC->SWTRIGR |= DAC_SWTRIGR_SWTRIG1;		// Tell the DAC to output the next value
 		DAC->SWTRIGR |= DAC_SWTRIGR_SWTRIG2;		// Tell the DAC to output the next value
 
-//		if (dacRead) {								// If the buffer has not been refilled increment overrun warning
-//			overrun++;
-//		}
-
-		// Debug timing
-		debugInterval = TIM5->CNT;
-		TIM5->EGR |= TIM_EGR_UG;
-
-		//dacRead = true;
-
-		// Ready for next sample
 		phaseDist.CalcNextSamples();
-		debugWorkTime = TIM5->CNT;
 	}
 }
 

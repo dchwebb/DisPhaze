@@ -6,7 +6,6 @@
 
 // LUT sizes are probably all going to be constant
 static constexpr uint32_t pdLutSize = 1024;
-static constexpr uint32_t pitchLutSize = 4096;
 static constexpr uint32_t sinLutSize = 16384;
 
 extern const float PDSquareLUT[pdLutSize];
@@ -19,7 +18,7 @@ extern const float PDWave5LUT[pdLutSize];
 extern const float* LUTArray[7];
 
 extern float SineLUT[sinLutSize];
-extern float PitchLUT[pitchLutSize];
+//extern float* SineLUT;
 extern const uint32_t midiLUTSize;
 extern float* MidiLUT;
 extern const float midiLUTFirstNote;

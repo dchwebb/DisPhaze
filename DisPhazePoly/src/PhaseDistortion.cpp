@@ -43,32 +43,41 @@ void PhaseDistortion::SetLED()
 void PhaseDistortion::SetSampleRate()
 {
 	// Monophonic mode uses double sample rate (2x44kHz = 88kHz)
-	if (!polyphonic) {
+	if (!cfg.polyphonic) {
 		TIM3->PSC = (SystemCoreClock / sampleRate) / 8;
 	} else {
 		TIM3->PSC = (SystemCoreClock / sampleRate) / 4;
 	}
 }
 
+void PhaseDistortion::ChangePoly()
+{
+	cfg.polyphonic = !cfg.polyphonic;
+	config.ScheduleSave();
+	if (!cfg.polyphonic) {
+		detectEnv = false;
+		ledState = LEDState::SwitchToMono;
+	} else {
+		ledState = LEDState::SwitchToPoly;
+	}
+	SetSampleRate();
+}
+
 
 void PhaseDistortion::CalcNextSamples()
 {
 	debugPin.SetHigh();
+	// Sample calculation timing
+	sampleCalcWindow = TIM5->CNT;
+	TIM5->EGR |= TIM_EGR_UG;
 
 	// Check status of action button
 	if (actionButton.LongPress()) {
-		polyphonic = !polyphonic;
-		if (!polyphonic) {
-			detectEnv = false;
-			ledState = LEDState::SwitchToMono;
-		} else {
-			ledState = LEDState::SwitchToPoly;
-		}
-		SetSampleRate();
+		ChangePoly();
 
 	} else if (actionButton.Pressed()) {
 		// Activate cfg.envelope detection mode
-		if (polyphonic) {
+		if (cfg.polyphonic) {
 			detectEnv = !detectEnv;
 			if (detectEnv) {
 				envDetect.state = envDetectState::waitZero;
@@ -101,10 +110,10 @@ void PhaseDistortion::CalcNextSamples()
 
 
 	// Get PD amount from pot and CV ADCs; Currently seeing 0v as ~3000 and 5V as ~960 (converted to 0-5 for monophonic, 0-1.66 for polyphonic)
-	float tmpPD1Scale = static_cast<float>(std::min((3800 - adc.PD1CV) + adc.PD1Pot, 5000)) / (polyphonic ? 3000.0f : 1000.0f);
+	float tmpPD1Scale = static_cast<float>(std::min((3800 - adc.PD1CV) + adc.PD1Pot, 5000)) / (cfg.polyphonic ? 3000.0f : 1000.0f);
 	pd1Scale = std::max(((pd1Scale * 31) + tmpPD1Scale) / 32, 0.0f);
 
-	float tmpPD2Scale = static_cast<float>(std::min((4090 - adc.PD2CV) + adc.PD2Pot, 5000)) / (polyphonic ? 3000.0f : 1000.0f);
+	float tmpPD2Scale = static_cast<float>(std::min((4090 - adc.PD2CV) + adc.PD2Pot, 5000)) / (cfg.polyphonic ? 3000.0f : 1000.0f);
 	if (pd2Resonant) {
 		pd2Scale = (pd2Scale * 0.995f) + (tmpPD2Scale * 0.005f);		// Heavily damp PD2 scale if using resonant waves to reduce jitter noise
 	} else {
@@ -113,7 +122,7 @@ void PhaseDistortion::CalcNextSamples()
 
 	OutputSamples output;
 
-	if (polyphonic) {
+	if (cfg.polyphonic) {
 		output = PolyOutput(pdLut1, pdLut2, pd2Resonant);
 	} else {
 		output = MonoOutput(pdLut1, pdLut2, pd2Resonant);
@@ -124,6 +133,8 @@ void PhaseDistortion::CalcNextSamples()
 	DAC->DHR12R1 = static_cast<int32_t>((1.0f + output.out2) * 2047.0f);
 
 	SetLED();
+
+	phaseDist.sampleCalcTime = TIM5->CNT;
 
 	debugPin.SetLow();
 }
@@ -151,20 +162,20 @@ PhaseDistortion::OutputSamples PhaseDistortion::MonoOutput(float pdLut1, uint8_t
 
 	// jump forward to the next sample position
 	samplePos1 += freq1;
-	while (samplePos1 >= sampleRate) {
-		samplePos1 -= sampleRate;
+	while (samplePos1 >= 1.0f) {
+		samplePos1 -= 1.0f;
 	}
 
 	samplePos2 += freq2;
-	while (samplePos2 >= sampleRate) {
-		samplePos2 -= sampleRate;
+	while (samplePos2 >= 1.0f) {
+		samplePos2 -= 1.0f;
 	}
 
 	// Calculate output as a float from -1 to +1 checking phase distortion and phase offset as required
-	float sample1 = GetBlendPhaseDist(pdLut1, samplePos1 / sampleRate, pd1Scale);
+	float sample1 = GetBlendPhaseDist(pdLut1, samplePos1, pd1Scale);
 	float sample2 = pd2Resonant ?
-			GetResonantWave(samplePos2 / sampleRate, pd2Scale, pdLut2) :
-			GetPhaseDist(LUTArray[pdLut2], samplePos2 / sampleRate, pd2Scale);
+			GetResonantWave(samplePos2, pd2Scale, pdLut2) :
+			GetPhaseDist(LUTArray[pdLut2], samplePos2, pd2Scale);
 
 	if (ringModSwitch.IsHigh())
 		sample1 *= sample2;
@@ -182,8 +193,7 @@ PhaseDistortion::OutputSamples PhaseDistortion::MonoOutput(float pdLut1, uint8_t
 PhaseDistortion::OutputSamples PhaseDistortion::PolyOutput(float pdLut1, uint8_t pdLut2, float pd2Resonant)
 {
 	// If note processing is taking too long kill oldest note
-	extern uint32_t debugWorkTime;
-	if (debugWorkTime > 1850) {
+	if (sampleCalcTime > 1850) {
 		usb.midi.midiNotes[0].envelope = MidiHandler::env::FR;
 	}
 
@@ -193,8 +203,9 @@ PhaseDistortion::OutputSamples PhaseDistortion::PolyOutput(float pdLut1, uint8_t
 	OutputSamples output;
 
 	float pb = usb.midi.pitchBendSemiTones * ((usb.midi.pitchBend - 8192) / 8192.0f);		// convert raw pitchbend to midi note number
-	float finetuneAdjust = pb - (2048.0f - fineTune) / 1024.0f;
-
+	//float finetuneAdjust = pb - (2048.0f - fineTune) / 1024.0f;
+	float finetuneAdjust = 0.0f;			// FIXME -disabled for testing
+	uint32_t pdlut1Int = (uint32_t)std::round(pdLut1);
 
 	for (uint8_t n = 0; n < polyNotes; ++n) {
 		auto& midiNote = usb.midi.midiNotes[n];
@@ -208,42 +219,16 @@ PhaseDistortion::OutputSamples PhaseDistortion::PolyOutput(float pdLut1, uint8_t
 
 		// Jump forward to the next sample position
 		midiNote.samplePos1 += freq1;
-		while (midiNote.samplePos1 >= sampleRate) 			midiNote.samplePos1 -= sampleRate;
+		while (midiNote.samplePos1 >= 1.0f) 			midiNote.samplePos1 -= 1.0f;
 		midiNote.samplePos2 += freq2;
-		while (midiNote.samplePos2 >= sampleRate) 			midiNote.samplePos2 -= sampleRate;
+		while (midiNote.samplePos2 >= 1.0f) 			midiNote.samplePos2 -= 1.0f;
 
-/*
-		// Calculate Phase Distortion cfg.envelope scaling (Attack and Decay phase scaling the PD amount from CV and pot)
-		switch (midiNote.pdcfg.envelope) {
-		case MidiHandler::pdEnv::A:
-			midiNote.pdLevel += cfg.envelope.A_pd_Inc;
-			if (midiNote.pdLevel >= 1.0f) {
-				midiNote.pdcfg.envelope = MidiHandler::pdEnv::D;
-			}
-			break;
-		case MidiHandler::pdEnv::D:
-			midiNote.pdLevel -= cfg.envelope.D_pd_Inc;
-			if (midiNote.pdLevel <= 0.0f) {
-				midiNote.pdLevel = 0.0f;
-				midiNote.pdcfg.envelope = MidiHandler::pdEnv::Off;
-			}
-			break;
-		default:
-			break;
-		}
 
 		// Calculate output as a float from -1 to +1 checking phase distortion and phase offset as required
-		float sample1 = GetBlendPhaseDist(pdLut1, midiNote.samplePos1 / SampleRate, pd1Scale * midiNote.pdLevel);
+		float sample1 = GetPhaseDist(LUTArray[pdlut1Int], midiNote.samplePos1, pd1Scale);
 		float sample2 = pd2Resonant ?
-				GetResonantWave(midiNote.samplePos2 / SampleRate, pd2Scale * midiNote.pdLevel, pdLut2) :
-				GetPhaseDist(LUTArray[pdLut2], midiNote.samplePos2 / SampleRate, pd2Scale * midiNote.pdLevel);
-
-*/
-		// Calculate output as a float from -1 to +1 checking phase distortion and phase offset as required
-		float sample1 = GetBlendPhaseDist(pdLut1, midiNote.samplePos1 / sampleRate, pd1Scale);
-		float sample2 = pd2Resonant ?
-				GetResonantWave(midiNote.samplePos2 / sampleRate, pd2Scale * midiNote.pdLevel, pdLut2) :
-				GetPhaseDist(LUTArray[pdLut2], midiNote.samplePos2 / sampleRate, pd2Scale);
+				GetResonantWave(midiNote.samplePos2, pd2Scale * midiNote.pdLevel, pdLut2) :
+				GetPhaseDist(LUTArray[pdLut2], midiNote.samplePos2, pd2Scale);
 
 
 		if (ringModSwitch.IsHigh())
@@ -310,7 +295,6 @@ PhaseDistortion::OutputSamples PhaseDistortion::PolyOutput(float pdLut1, uint8_t
 	if (removeNote >= 0) {
 		usb.midi.RemoveNote(removeNote);
 	}
-
 	output.out1 = Compress(output.out1, 0);
 	output.out2 = Compress(output.out2, 1);
 
@@ -396,8 +380,8 @@ float PhaseDistortion::GetBlendPhaseDist(const float pdBlend, const float LUTPos
 
 float PhaseDistortion::Compress(float level, uint8_t channel)
 {
-	level = filter.a0 * level + filter.oldLevel[channel] * filter.b1;
-	filter.oldLevel[channel] = level;
+//	level = filter.a0 * level + filter.oldLevel[channel] * filter.b1;
+//	filter.oldLevel[channel] = level;
 
 	float absLevel = std::fabs(level);
 
@@ -641,6 +625,16 @@ inline float PhaseDistortion::sinLutWrap(float pos)
 	return pos;
 }
 
+
+
+float PhaseDistortion::FastTanh(const float x)
+{
+	// Apply FastTan approximation to limit sample from -1 to +1
+	float x2 = x * x;
+	float a = x * (135135.0f + x2 * (17325.0f + x2 * (378.0f + x2)));
+	float b = 135135.0f + x2 * (62370.0f + x2 * (3150.0f + x2 * 28.0f));
+	return a / b;
+}
 
 void PhaseDistortion::UpdateConfig()
 {

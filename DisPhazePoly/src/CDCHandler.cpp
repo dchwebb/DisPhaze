@@ -36,23 +36,30 @@ void CDCHandler::ProcessCommand()
 				"decay:xxxx     -  Set decay time in samples\n"
 				"sustain:x.xx   -  Set sustain 0.0 - 1.0\n"
 				"release:xxxx   -  Set release time in samples\n"
-				"pda:xxxx       -  Set PD attack time in samples\n"
-				"pdd:xxxx       -  Set PD decay time in samples\n"
 				"filter:x.xx    -  Set filter level 0.0 - 1.0\n"
 		);
 
 	} else if (cmd.compare("info") == 0) {
 
-		usb->SendString("Polyphonic mode: " + std::string(phaseDist.polyphonic ? "on\r\n": "off\r\n") +
-				"Filter level: 0." + std::to_string(static_cast<uint8_t>(100.0f * phaseDist.filter.b1)) +
-				"\r\nVCA Envelope: A:" + std::to_string(phaseDist.cfg.envelope.A) +
-				", D: " + std::to_string(phaseDist.cfg.envelope.D) +
-				", S: 0." + std::to_string(static_cast<uint8_t>(100.0f * phaseDist.cfg.envelope.S)) +
-				", R: " + std::to_string(phaseDist.cfg.envelope.R) +
-				"\r\nPD Envelope: A:" + std::to_string(phaseDist.cfg.envelope.A_pd) +
-				", D: " + std::to_string(phaseDist.cfg.envelope.D_pd) +
+		printf("Build Date: %s %s\r\n"
+				"Polyphonic mode: %s\r\n"
+				"Filter level: %.2f\r\n"
+				"VCA Envelope: A: %lu, D: %lu, S: %.2f, R: %lu\r\n"
+				"Calibration base: %.2f, mult: %.2f\r\n"
+				"Config sector: %lu; address: %p\r\n"
+				"\r\n"
+				, __DATE__, __TIME__,
+				(phaseDist.cfg.polyphonic ? "on" : "off"),
+				phaseDist.filter.b1,
+				phaseDist.cfg.envelope.A,
+				phaseDist.cfg.envelope.D,
+				phaseDist.cfg.envelope.S,
+				phaseDist.cfg.envelope.R,
+				calib.cfg.pitchBase,
+				-1.0f / calib.cfg.pitchMult,
+				config.currentSector,
+				config.flashConfigAddr + config.currentSettingsOffset / 4);		// pitch multiplier is stored as a negative reciprocal for calculation
 
-				"\n\r");
 
 	} else if (cmd.compare("dfu") == 0) {					// USB DFU firmware upgrade
 		printf("Start DFU upgrade mode? Press 'y' to confirm.\r\n");
@@ -62,60 +69,55 @@ void CDCHandler::ProcessCommand()
 		calib.Calibrate('s');
 
 	} else if (cmd.compare("poly") == 0) {
-		phaseDist.polyphonic = !phaseDist.polyphonic;
-		usb->SendString("Polyphonic mode: " + std::string(phaseDist.polyphonic ? "on\r\n": "off\r\n"));
+		phaseDist.cfg.polyphonic = !phaseDist.cfg.polyphonic;
+		usb->SendString("Polyphonic mode: " + std::string(phaseDist.cfg.polyphonic ? "on\r\n": "off\r\n"));
 
 	} else if (cmd.compare(0, 7, "attack:") == 0) {			// Envelope attack time in samples
 		uint32_t val = ParseInt(cmd, ':', 1, UINT32_MAX);
 		if (val > 0) {
 			phaseDist.cfg.envelope.A = val;
 			phaseDist.cfg.envelope.UpdateIncrements();
-			//config.SaveConfig();
+			config.ScheduleSave();
 		}
-		usb->SendString("Attack set to: " + std::to_string(phaseDist.cfg.envelope.A) + " samples\r\n");
+		printf("Attack set to: %lu samples\r\n", phaseDist.cfg.envelope.A);
 
 	} else if (cmd.compare(0, 6, "decay:") == 0) {			// Envelope decay time in samples
 		uint32_t val = ParseInt(cmd, ':', 1, UINT32_MAX);
 		if (val > 0) {
 			phaseDist.cfg.envelope.D = val;
 			phaseDist.cfg.envelope.UpdateIncrements();
-			//config.SaveConfig();
+			config.ScheduleSave();
 		}
-		usb->SendString("Decay set to: " + std::to_string(phaseDist.cfg.envelope.D) + " samples\r\n");
+		printf("Decay set to: %lu samples\r\n", phaseDist.cfg.envelope.D);
 
 	} else if (cmd.compare(0, 8, "sustain:") == 0) {		// Envelope sustain amount
 		float val = ParseFloat(cmd, ':', 0.0f, 1.0f);
 		phaseDist.cfg.envelope.S = val;
-			//config.SaveConfig();
-		std::string s = std::to_string(static_cast<uint8_t>(100.0f * phaseDist.cfg.envelope.S));		// FIXME - using to_string on float crashes for some reason
-		usb->SendString("Sustain set to: 0." + s + "\r\n");
+		config.ScheduleSave();
+		printf("Sustain set to: %.2f\r\n", phaseDist.cfg.envelope.S);
 
 	} else if (cmd.compare(0, 8, "release:") == 0) {		// Envelope release time in samples
 		uint32_t val = ParseInt(cmd, ':', 1, UINT32_MAX);
 		if (val > 0) {
 			phaseDist.cfg.envelope.R = val;
 			phaseDist.cfg.envelope.UpdateIncrements();
-			//config.SaveConfig();
+			config.ScheduleSave();
 		}
-		usb->SendString("Release set to: " + std::to_string(phaseDist.cfg.envelope.R) + " samples\r\n");
+		printf("Release set to: %lu samples\r\n", phaseDist.cfg.envelope.R);
 
-	} else if (cmd.compare(0, 4, "pda:") == 0) {			// Envelope attack time in samples
-		uint32_t val = ParseInt(cmd, ':', 1, UINT32_MAX);
-		if (val > 0) {
-			phaseDist.cfg.envelope.A_pd = val;
-			phaseDist.cfg.envelope.UpdateIncrements();
-			//config.SaveConfig();
-		}
-		usb->SendString("PD Attack set to: " + std::to_string(phaseDist.cfg.envelope.A_pd) + " samples\r\n");
+	} else if (cmd.compare(0, 8, "pitchbase:") == 0) {		// Pitch base calib settings
+		float val = ParseFloat(cmd, ':', 0.0f, 1.0f);
+		calib.cfg.pitchBase = val;
+		calib.UpdatePitchLUT();
+		config.ScheduleSave();
+		printf("Pitch Base set to: %.2f\r\n", calib.cfg.pitchBase);
 
-	} else if (cmd.compare(0, 4, "pdd:") == 0) {			// Envelope decay time in samples
-		uint32_t val = ParseInt(cmd, ':', 1, UINT32_MAX);
-		if (val > 0) {
-			phaseDist.cfg.envelope.D_pd = val;
-			phaseDist.cfg.envelope.UpdateIncrements();
-			//config.SaveConfig();
-		}
-		usb->SendString("PD Decay set to: " + std::to_string(phaseDist.cfg.envelope.D_pd) + " samples\r\n");
+	} else if (cmd.compare(0, 8, "pitchmult:") == 0) {		// Pitch multiplier calib settings
+		float val = ParseFloat(cmd, ':', 0.0f, 1.0f);
+		calib.cfg.pitchMult = val;
+		calib.UpdatePitchLUT();
+		config.ScheduleSave();
+		printf("Pitch Multiplier set to: %.2f\r\n", calib.cfg.pitchMult);
 
 	} else if (cmd.compare(0, 7, "filter:") == 0) {			// Filter decay time
 		float val = ParseFloat(cmd, ':', 0.0f, 1.0f);

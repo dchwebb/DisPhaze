@@ -13,9 +13,10 @@ struct ConfigSaver {
 
 
 class Config {
-	friend class CommandHandler;					// Allow the serial handler access to private data for printing
+	friend class CDCHandler;					// Allow the serial handler access to private data for printing
+
 public:
-	static constexpr uint8_t configVersion = 3;
+	static constexpr uint8_t configVersion = 4;
 	
 	// STM32F405 has up to 7 sectors of flash organized as: 16K (sector 0-3), 64k (sector 4), 128k (sector 5-11)
 	static constexpr uint32_t flashConfigSector = 8;		// Sector 6 is used for the MIDI LUT

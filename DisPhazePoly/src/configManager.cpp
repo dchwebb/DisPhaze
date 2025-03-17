@@ -141,6 +141,12 @@ void Config::RestoreConfig()
 			}
 			configPos += saver->settingsSize;
 		}
+	} else {		// If no config stored run update settings to initialise config across components
+		for (auto saver : configSavers) {
+			if (saver->validateSettings != nullptr) {
+				saver->validateSettings();
+			}
+		}
 	}
 }
 

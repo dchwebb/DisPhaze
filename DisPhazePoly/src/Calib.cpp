@@ -5,7 +5,7 @@
 void Calib::UpdatePitchLUT()
 {
 	for (uint32_t i = 0; i < adcMax + 1; ++i) {
-		calib.pitchLUT[i] = calib.cfg.pitchBase * std::pow(2.0f, calib.cfg.pitchMult * i);
+		calib.pitchLUT[i] = calib.cfg.pitchBase * std::pow(2.0f, calib.cfg.pitchMult * i) / sampleRate;
 	}
 }
 
@@ -63,6 +63,7 @@ void Calib::Calibrate(char key)
 			const float voltSpread = (adcOctave0 - adcOctave1) / 2000.0f;
 
 			// 65.41f is frequency at 1V
+			// FIXME - experimental adjustments of both Base and Pitch to improve accuracy on test module
 			cfg.pitchBase = hertzAt1V / std::pow(2.0f, (-adcOctave1 / 2000.0f) / voltSpread) - 20;
 			cfg.pitchMult = -1.0f / (voltSpread + 2);
 
