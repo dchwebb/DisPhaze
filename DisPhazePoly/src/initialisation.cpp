@@ -92,7 +92,7 @@ void InitSampleTimer()
 {
 	//	Setup Timer 3 on an interrupt to trigger sample loading
 	RCC->APB1ENR |= RCC_APB1ENR_TIM3EN;				// Enable Timer 3
-	TIM3->PSC = (SystemCoreClock / sampleRate) / 4;	// Set prescaler to fire at sample rate - this is divided by 4 to match the APB1 prescaler (42MHz)
+	TIM3->PSC = (SystemCoreClock / sampleRateMono) / 4;	// Set prescaler to fire at sample rate - this is divided by 4 to match the APB1 prescaler (42MHz)
 	TIM3->ARR = 1; 									// Set maximum count value (auto reload register) - set to system clock / sampling rate
 
 	TIM3->DIER |= TIM_DIER_UIE;						//  DMA/interrupt enable register

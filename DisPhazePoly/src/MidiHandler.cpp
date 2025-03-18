@@ -75,7 +75,6 @@ void MidiHandler::midiEvent(const uint32_t data)
 		midiNotes[noteCount].envelope = A;						// Initialise VCA envelope to attack
 		midiNotes[noteCount].pdEnvelope = pdEnv::A;				// Initialise PD envelope to attack
 		midiNotes[noteCount].vcaLevel = 0.0f;
-		midiNotes[noteCount].pdLevel = 0.0f;
 		midiNotes[noteCount].samplePos1 = 0;
 		midiNotes[noteCount].samplePos2 = 0;
 

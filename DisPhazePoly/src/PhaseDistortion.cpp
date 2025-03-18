@@ -43,11 +43,7 @@ void PhaseDistortion::SetLED()
 void PhaseDistortion::SetSampleRate()
 {
 	// Monophonic mode uses double sample rate (2x44kHz = 88kHz)
-	if (!cfg.polyphonic) {
-		TIM3->PSC = (SystemCoreClock / sampleRate) / 8;
-	} else {
-		TIM3->PSC = (SystemCoreClock / sampleRate) / 4;
-	}
+	TIM3->PSC = (SystemCoreClock / (cfg.polyphonic ? sampleRatePoly : sampleRateMono)) / 4;
 }
 
 void PhaseDistortion::ChangePoly()
@@ -161,20 +157,13 @@ PhaseDistortion::OutputSamples PhaseDistortion::MonoOutput(float pdLut1, uint8_t
 	OctaveCalc(freq1, freq2);
 
 	// jump forward to the next sample position
-	samplePos1 += freq1;
-	while (samplePos1 >= 1.0f) {
-		samplePos1 -= 1.0f;
-	}
-
-	samplePos2 += freq2;
-	while (samplePos2 >= 1.0f) {
-		samplePos2 -= 1.0f;
-	}
+	samplePos1 += (uint32_t)freq1;
+	samplePos2 += (uint32_t)freq2;
 
 	// Calculate output as a float from -1 to +1 checking phase distortion and phase offset as required
 	float sample1 = GetBlendPhaseDist(pdLut1, samplePos1, pd1Scale);
 	float sample2 = pd2Resonant ?
-			GetResonantWave(samplePos2, pd2Scale, pdLut2) :
+			GetResonantWave(pdLut2, samplePos2, pd2Scale) :
 			GetPhaseDist(LUTArray[pdLut2], samplePos2, pd2Scale);
 
 	if (ringModSwitch.IsHigh())
@@ -218,16 +207,14 @@ PhaseDistortion::OutputSamples PhaseDistortion::PolyOutput(float pdLut1, uint8_t
 		OctaveCalc(freq1, freq2);
 
 		// Jump forward to the next sample position
-		midiNote.samplePos1 += freq1;
-		while (midiNote.samplePos1 >= 1.0f) 			midiNote.samplePos1 -= 1.0f;
-		midiNote.samplePos2 += freq2;
-		while (midiNote.samplePos2 >= 1.0f) 			midiNote.samplePos2 -= 1.0f;
+		midiNote.samplePos1 += (uint32_t)freq1;
+		midiNote.samplePos2 += (uint32_t)freq2;
 
 
 		// Calculate output as a float from -1 to +1 checking phase distortion and phase offset as required
 		float sample1 = GetPhaseDist(LUTArray[pdlut1Int], midiNote.samplePos1, pd1Scale);
 		float sample2 = pd2Resonant ?
-				GetResonantWave(midiNote.samplePos2, pd2Scale * midiNote.pdLevel, pdLut2) :
+				GetResonantWave(pdLut2, midiNote.samplePos2, pd2Scale) :
 				GetPhaseDist(LUTArray[pdLut2], midiNote.samplePos2, pd2Scale);
 
 
@@ -312,6 +299,36 @@ PhaseDistortion::OutputSamples PhaseDistortion::PolyOutput(float pdLut1, uint8_t
 //}
 
 
+float PhaseDistortion::GetResonantWave(const uint8_t pdLut2, const uint32_t LUTPosition, float scale)
+{
+	// models waves 6-8 of the Casio CZ which are saw/triangle envelopes into which harmonics are added as the phase distortion increases
+
+	scale = ((scale / 5.0f) * 23.0f) + 1.0f;		// Sets number of sine waves per cycle: scale input 0-5 to 1-24 (original only went to 16)
+
+	// offset to 3/4 of the way through the sine wave so each cycle starts at the flat top of the wave
+	constexpr float sineOffset = static_cast<float>(3 * (sinLutSize / 4));
+
+	// Scale the amplitude of the cycle from 1 to 0 to create a saw tooth type envelope on each cycle
+	constexpr float lutScale = 1.0f / std::pow(2.0f, 32.0f);
+	const float lutPosition = lutScale * LUTPosition;
+
+	float ampMod = 1.0f;
+	if (pdLut2 == 5) {								// Saw tooth - amplitude linearly reduces over full cycle
+		ampMod = (1.0f - lutPosition);
+	} else if (lutPosition > 0.5f) {				// Both triangle (wave 7) and loud saw (wave 8) fade out over second half of cycle
+		ampMod = (2.0f * (1.0f - lutPosition));
+	} else if (pdLut2 == 6) {						// Triangle (wave 7) fades in over first half of cycle
+		ampMod = (lutPosition * 2.0f);
+	}
+
+	float pos = sinLutWrap(((LUTPosition >> 18) * scale) + sineOffset);
+	float sineSample = SineLUT[static_cast<uint32_t>(pos)];
+	sineSample = (sineSample + 1.0f) * ampMod;		// Offset so all positive and then apply amplitude cfg.envelope to create sawtooth
+
+	return sineSample - 1.0f;
+}
+
+/*
 float PhaseDistortion::GetResonantWave(const float LUTPosition, float scale, const uint8_t pdLut2)
 {
 	// models waves 6-8 of the Casio CZ which are saw/triangle cfg.envelopes into which harmonics are added as the phase distortion increases
@@ -340,39 +357,35 @@ float PhaseDistortion::GetResonantWave(const float LUTPosition, float scale, con
 	//lastSample = (lastSample * 0.85f) + (0.15f * (sineSample - 1.0f));			// Remove offset and damp
 	return sineSample - 1.0f;
 }
-
+*/
 
 // Generate a phase distorted sine wave - pass LUT containing PD offsets, LUT position as a fraction of the wave cycle and a scaling factor
-float PhaseDistortion::GetPhaseDist(const float* PdLUT, const float LUTPosition, const float scale)
+float PhaseDistortion::GetPhaseDist(const float* PdLUT, const uint32_t LUTPosition, const float scale)
 {
-	float phaseDist = PdLUT[static_cast<int32_t>(LUTPosition * pdLutSize)] * sinLutSize * scale;
+	constexpr float mult = std::pow(2.0f, 32.0f);
+	float phaseDist = mult * PdLUT[LUTPosition >> 22] * scale;			// Phase distortion LUTs are 2^10, LUT position is 2^32
 
-	// Add main wave position to phase distortion position and ensure in bounds
-	float pos = sinLutWrap((LUTPosition * sinLutSize) + phaseDist);
-
-	return SineLUT[static_cast<uint32_t>(pos)];
+	return SineLUT[(uint32_t)(LUTPosition  + phaseDist) >> 18];
 }
 
 
 // Generate a phase distorted sine wave - pass LUT containing PD offsets, LUT position as a fraction of the wave cycle and a scaling factor
-float PhaseDistortion::GetBlendPhaseDist(const float pdBlend, const float LUTPosition, const float scale)
+float PhaseDistortion::GetBlendPhaseDist(const float pdBlend, const uint32_t LUTPosition, const float scale)
 {
 	// Get the two PD LUTs that will be blended
 	const float* pdLUTBlendA = LUTArray[static_cast<uint8_t>(pdBlend)];
 	const float* pdLUTBlendB = LUTArray[static_cast<uint8_t>(pdBlend + 1) % pd1LutCount];
 
 	// Get the values from each LUT for the sample position
-	float phaseDistA = pdLUTBlendA[(int)(LUTPosition * pdLutSize)] * sinLutSize * scale;
-	float phaseDistB = pdLUTBlendB[(int)(LUTPosition * pdLutSize)] * sinLutSize * scale;
+	float phaseDistA = pdLUTBlendA[LUTPosition >> 22] * scale;
+	float phaseDistB = pdLUTBlendB[LUTPosition >> 22] * scale;
 
 	// Get the weighted blend of the two PD amounts
 	float blend = pdBlend - (uint8_t)pdBlend;
 	float phaseDist = ((1 - blend) * phaseDistA) + (blend * phaseDistB);
 
 	// Add main wave position to phase distortion position and ensure in bounds
-	float pos = sinLutWrap((LUTPosition * sinLutSize) + phaseDist);
-
-	return SineLUT[static_cast<uint32_t>(pos)];
+	return SineLUT[(uint32_t)(LUTPosition  + phaseDist) >> 18];
 }
 
 
@@ -386,7 +399,7 @@ float PhaseDistortion::Compress(float level, uint8_t channel)
 	float absLevel = std::fabs(level);
 
 	// If current level will result in an output > 1.0f initiate compression to force this to maximum level
-	if (absLevel * compLevel[channel] > 1.0f) {
+	if (absLevel * defaultLevel > 1.0f) {
 		compState[channel] = CompState::hold;
 		compLevel[channel] = 1.0f / absLevel;
 		compHoldTimer[channel] = 0.0f;

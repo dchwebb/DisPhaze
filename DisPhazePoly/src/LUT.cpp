@@ -36,16 +36,11 @@ void CreateLUTs()
 		SineLUT[s] = sin(s * 2.0f * M_PI / sinLutSize);
 	}
 
-	// Check if MIDI to pitch LUT has been created - this is done here to avoid having to Flash each time program is built
-//	if (MidiLUT[0] != 440.0f * std::pow(2.0f, (midiLUTFirstNote - 69.0f) / 12.0f)) {
-		for (uint32_t i = 0; i < midiLUTSize; ++i) {
-			float n = midiLUTFirstNote + ((float)i / (float)midiLUTSize) * midiLUTNotes;
-			MidiLUT[i] = (440.0f * std::pow(2.0f, (n - 69.0f) / 12.0f)) / sampleRate;			// 69 is midi note of A 440
-
-//			FlashWaitForLastOperation();
-		}
-//	}
-
+	constexpr float mult = std::pow(2.0f, 32.0f) / sampleRatePoly;
+	for (uint32_t i = 0; i < midiLUTSize; ++i) {
+		float n = midiLUTFirstNote + ((float)i / (float)midiLUTSize) * midiLUTNotes;
+		MidiLUT[i] = (440.0f * std::pow(2.0f, (n - 69.0f) / 12.0f)) * mult;			// 69 is midi note of A 440
+	}
 }
 
 

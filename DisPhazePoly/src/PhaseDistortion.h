@@ -79,8 +79,10 @@ private:
 	uint16_t pd2Type = 0;
 	float pd1Scale = 0.0f;			// Amount of phase distortion with smoothing
 	float pd2Scale = 0.0f;
-	float samplePos1 = 0.0f;		// Current position within cycle
-	float samplePos2 = 0.0f;
+//	float samplePos1 = 0.0f;		// Current position within cycle
+//	float samplePos2 = 0.0f;
+	uint32_t samplePos1 = 0;		// Current position within cycle
+	uint32_t samplePos2 = 0;
 
 	float VCALevel;					// Output level with smoothing
 	float polyLevel;				// Polyphonic output level for LED brightness
@@ -118,8 +120,8 @@ private:
 	// Compressor/Limiter settings
 	enum class CompState {none, hold, release};
 	CompState compState[2] = {CompState::none, CompState::none};
-	static constexpr uint16_t compHold = 6000;				// Hold time in samples before limiter is released
-	static constexpr float compRelease = 0.000005f;			// Larger = faster release, smaller = slower
+	static constexpr uint16_t compHold = 12000;				// Hold time in samples before limiter is released
+	static constexpr float compRelease = 0.000001f;			// Larger = faster release, smaller = slower
 	static constexpr float defaultLevel = 0.35f;			// Default compressor level
 	float compLevel[2] = {defaultLevel, defaultLevel};		// Compressor level adjusted for input
 	uint16_t compHoldTimer[2] = {0, 0};						// Compressor hold counter
@@ -131,9 +133,9 @@ private:
 	uint32_t ledCounter = 0;
 
 
-	float GetPhaseDist(const float* PdLUT, const float LUTPosition, const float scale);
-	float GetBlendPhaseDist(const float PDBlend, const float LUTPosition, const float scale);
-	float GetResonantWave(const float LUTPosition, const float scale, const uint8_t pdLut2);
+	float GetPhaseDist(const float* PdLUT, const uint32_t LUTPosition, const float scale);
+	float GetBlendPhaseDist(const float PDBlend, const uint32_t LUTPosition, const float scale);
+	float GetResonantWave(const uint8_t pdLut2, const uint32_t LUTPosition, const float scale);
 	static float sinLutWrap(float pos);
 	float Compress(float x, uint8_t channel);
 	void DetectEnvelope();
@@ -143,8 +145,8 @@ private:
 	void SetLED();
 	float FastTanh(const float x);
 
-	//Btn actionButton {{GPIOB, 5, GpioPin::Type::InputPulldown}};			// FIXME
-	Btn actionButton {{GPIOB, 5, GpioPin::Type::InputPullup}};			// FIXME - setting for DW module
+	Btn actionButton {{GPIOB, 5, GpioPin::Type::InputPulldown}};			// FIXME
+	//Btn actionButton {{GPIOB, 5, GpioPin::Type::InputPullup}};			// FIXME - setting for DW module
 	GpioPin ringModSwitch {GPIOC, 6, GpioPin::Type::Input};
 	GpioPin mixSwitch {GPIOC, 13, GpioPin::Type::Input};
 	GpioPin octaveUp {GPIOA, 0, GpioPin::Type::InputPulldown};

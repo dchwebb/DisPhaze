@@ -4,8 +4,10 @@
 
 void Calib::UpdatePitchLUT()
 {
+	constexpr float mult = std::pow(2.0f, 32.0f) / sampleRateMono;
 	for (uint32_t i = 0; i < adcMax + 1; ++i) {
-		calib.pitchLUT[i] = calib.cfg.pitchBase * std::pow(2.0f, calib.cfg.pitchMult * i) / sampleRate;
+
+		calib.pitchLUT[i] = calib.cfg.pitchBase * std::pow(2.0f, calib.cfg.pitchMult * i) * mult;
 	}
 }
 
