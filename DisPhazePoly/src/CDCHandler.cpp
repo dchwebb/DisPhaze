@@ -35,22 +35,23 @@ void CDCHandler::ProcessCommand()
 				"attack:xxxx    -  Set polyphonic attack time in samples\n"
 				"decay:xxxx     -  Set decay time in samples\n"
 				"sustain:x.xx   -  Set sustain 0.0 - 1.0\n"
-				"release:xxxx   -  Set release time in samples\n"
-				"filter:x.xx    -  Set filter level 0.0 - 1.0\n"
+				"release:xxxx   -  Set envelope release time in samples\n"
+				"comphold:x.xx  -  Set compressor hold time in ms\n"
+				"comprel:x.xx   -  Set compressor release rate\n"
+				"compthresh:x.xx-  Set compressor threshold\n"
 		);
 
 	} else if (cmd.compare("info") == 0) {
 
 		printf("Build Date: %s %s\r\n"
 				"Polyphonic mode: %s\r\n"
-				"Filter level: %.2f\r\n"
 				"VCA Envelope: A: %lu, D: %lu, S: %.2f, R: %lu\r\n"
 				"Calibration base: %.2f, mult: %.2f\r\n"
 				"Config sector: %lu; address: %p\r\n"
+				"Compressor: Hold time %.2f ms; Release: %.8f; Threshold: %.2f\r\n"
 				"\r\n"
 				, __DATE__, __TIME__,
 				(phaseDist.cfg.polyphonic ? "on" : "off"),
-				phaseDist.filter.b1,
 				phaseDist.cfg.envelope.A,
 				phaseDist.cfg.envelope.D,
 				phaseDist.cfg.envelope.S,
@@ -58,7 +59,12 @@ void CDCHandler::ProcessCommand()
 				calib.cfg.pitchBase,
 				-1.0f / calib.cfg.pitchMult,
 				config.currentSector,
-				config.flashConfigAddr + config.currentSettingsOffset / 4);		// pitch multiplier is stored as a negative reciprocal for calculation
+				config.flashConfigAddr + config.currentSettingsOffset / 4,		// pitch multiplier is stored as a negative reciprocal for calculation
+				phaseDist.cfg.compressor.holdTime,
+				phaseDist.cfg.compressor.release,
+				phaseDist.cfg.compressor.threshold
+
+		 );
 
 
 	} else if (cmd.compare("dfu") == 0) {					// USB DFU firmware upgrade
@@ -112,20 +118,34 @@ void CDCHandler::ProcessCommand()
 		config.ScheduleSave();
 		printf("Pitch Base set to: %.2f\r\n", calib.cfg.pitchBase);
 
-	} else if (cmd.compare(0, 8, "pitchmult:") == 0) {		// Pitch multiplier calib settings
+	} else if (cmd.compare(0, 10, "pitchmult:") == 0) {		// Pitch multiplier calib settings
 		float val = ParseFloat(cmd, ':', 0.0f, 1.0f);
 		calib.cfg.pitchMult = val;
 		calib.UpdatePitchLUT();
 		config.ScheduleSave();
 		printf("Pitch Multiplier set to: %.2f\r\n", calib.cfg.pitchMult);
 
-	} else if (cmd.compare(0, 7, "filter:") == 0) {			// Filter decay time
+	} else if (cmd.compare(0, 9, "comphold:") == 0) {		// compressor hold time in ms
+		float val = ParseFloat(cmd, ':', 0.0f, 2000.0f);
+		phaseDist.cfg.compressor.holdTime = val;
+		phaseDist.UpdateConfig();
+		config.ScheduleSave();
+		printf("Compressor Hold time set to: %.2f ms\r\n", phaseDist.cfg.compressor.holdTime);
+
+	} else if (cmd.compare(0, 8, "comprel:") == 0) {		// compressor release rate
 		float val = ParseFloat(cmd, ':', 0.0f, 1.0f);
-		if (val > 0.0f) {
-			phaseDist.filter.SetDecay(val);
-		}
-		std::string s = std::to_string(static_cast<uint8_t>(100.0f * phaseDist.filter.b1));		// FIXME - using to_string on float crashes for some reason
-		usb->SendString("Filter decay set to: 0." + s + "\r\n");
+		phaseDist.cfg.compressor.release = val;
+		phaseDist.UpdateConfig();
+		config.ScheduleSave();
+		printf("Compressor release rate set to: %.2f\r\n", phaseDist.cfg.compressor.release);
+
+	} else if (cmd.compare(0, 11, "compthresh:") == 0) {	// Set compressor threshold
+		float val = ParseFloat(cmd, ':', 0.1f, 1.0f);
+		phaseDist.cfg.compressor.threshold = val;
+		phaseDist.UpdateConfig();
+		config.ScheduleSave();
+		printf("Compressor threshold set to: %.2f\r\n", phaseDist.cfg.compressor.threshold);
+
 
 	} else {
 		usb->SendString("Unrecognised command. Type 'help' for supported commands\n");

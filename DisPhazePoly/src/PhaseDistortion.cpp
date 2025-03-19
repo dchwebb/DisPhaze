@@ -393,13 +393,10 @@ float PhaseDistortion::GetBlendPhaseDist(const float pdBlend, const uint32_t LUT
 
 float PhaseDistortion::Compress(float level, uint8_t channel)
 {
-//	level = filter.a0 * level + filter.oldLevel[channel] * filter.b1;
-//	filter.oldLevel[channel] = level;
-
 	float absLevel = std::fabs(level);
 
 	// If current level will result in an output > 1.0f initiate compression to force this to maximum level
-	if (absLevel * defaultLevel > 1.0f) {
+	if (absLevel * cfg.compressor.threshold > 1.0f) {
 		compState[channel] = CompState::hold;
 		compLevel[channel] = 1.0f / absLevel;
 		compHoldTimer[channel] = 0.0f;
@@ -407,16 +404,16 @@ float PhaseDistortion::Compress(float level, uint8_t channel)
 		switch (compState[channel]) {
 		case CompState::hold:
 			++compHoldTimer[channel];
-			if (compHoldTimer[channel] >= compHold) {					// Start release phase once hold time has finished
+			if (compHoldTimer[channel] >= compHoldSamples) {					// Start release phase once hold time has finished
 				compState[channel] = CompState::release;
 			}
 			break;
 
 		// Ramp down compression level
 		case CompState::release:
-			compLevel[channel] = compLevel[channel] + compRelease;
-			if (compLevel[channel] >= defaultLevel) {
-				compLevel[channel] = defaultLevel;
+			compLevel[channel] = compLevel[channel] + cfg.compressor.release;
+			if (compLevel[channel] >= cfg.compressor.threshold) {
+				compLevel[channel] = cfg.compressor.threshold;
 				compState[channel] = CompState::none;
 			}
 			break;
@@ -651,5 +648,5 @@ float PhaseDistortion::FastTanh(const float x)
 
 void PhaseDistortion::UpdateConfig()
 {
-
+	phaseDist.compHoldSamples = (phaseDist.cfg.compressor.holdTime * sampleRatePoly) / 1000;		// Convert ms to sample count
 }

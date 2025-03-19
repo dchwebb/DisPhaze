@@ -52,6 +52,11 @@ public:
 	struct {
 		bool polyphonic = false;
 		Env envelope;
+		struct Compressor {
+			float holdTime = 350.0f;				// Hold time in ms before limiter is released
+			float release = 0.0000001f;				// Larger = faster release, smaller = slower
+			float threshold = 0.35f;				// Default compressor level
+		} compressor;
 	} cfg;
 
 	ConfigSaver configSaver = {
@@ -61,26 +66,12 @@ public:
 	};
 
 
-	// Polyphonic Output smoothing filter
-	struct {
-		float b1 = 0.15;		// filter coefficients: filter cutoff = (−ln(b1) / 2π) * (sample_rate / 2) = ~6.6kHz
-		float a0 = 1.0f - b1;
-		float oldLevel[2] = {0.0f, 0.0f};
-
-		void SetDecay(float d) {
-			b1 = d;
-			a0 = 1.0f - d;
-		}
-	} filter;
-
 private:
 
 	uint16_t pd1Type = 0;			// Phase distortion type knob position with smoothing
 	uint16_t pd2Type = 0;
 	float pd1Scale = 0.0f;			// Amount of phase distortion with smoothing
 	float pd2Scale = 0.0f;
-//	float samplePos1 = 0.0f;		// Current position within cycle
-//	float samplePos2 = 0.0f;
 	uint32_t samplePos1 = 0;		// Current position within cycle
 	uint32_t samplePos2 = 0;
 
@@ -90,7 +81,6 @@ private:
 	int16_t fineTune = 0;
 	int16_t coarseTune = 0;
 
-	uint32_t actionBtnTime = 0;		// Duration of action button press
 	bool detectEnv = false;			// Activated with action button to detect envelope on VCA input
 
 	enum class envDetectState {waitZero, waitAttack, Attack, Decay, Sustain, Release};
@@ -120,11 +110,9 @@ private:
 	// Compressor/Limiter settings
 	enum class CompState {none, hold, release};
 	CompState compState[2] = {CompState::none, CompState::none};
-	static constexpr uint16_t compHold = 12000;				// Hold time in samples before limiter is released
-	static constexpr float compRelease = 0.000001f;			// Larger = faster release, smaller = slower
-	static constexpr float defaultLevel = 0.35f;			// Default compressor level
-	float compLevel[2] = {defaultLevel, defaultLevel};		// Compressor level adjusted for input
-	uint16_t compHoldTimer[2] = {0, 0};						// Compressor hold counter
+	uint32_t compHoldSamples = 0;					// Compressor hold time converted from ms to samples
+	float compLevel[2] = {cfg.compressor.threshold, cfg.compressor.threshold};		// Compressor level adjusted for input
+	uint32_t compHoldTimer[2] = {0, 0};						// Compressor hold counter
 
 	// LED settings
 	enum class LEDState {Off, Mono, Poly, SwitchToMono, SwitchToPoly, WaitForEnv, Attack, Decay, Sustain, Release};
