@@ -6,7 +6,7 @@
 #include "GpioPIn.h"
 
 static constexpr uint32_t sampleRateMono = 88000;
-static constexpr uint32_t sampleRatePoly = 44000;
+static constexpr uint32_t sampleRatePoly = 60000;
 
 #define PITCH_SPREAD -583.0f
 static constexpr float PITCH_OFFSET = 1129.5f;
@@ -19,7 +19,7 @@ static constexpr uint32_t adcMax = 4095;
 
 
 struct ADCValues {
-	uint16_t Pitch_CV;  	// PB0 ADC12_IN8   Pin 27
+	uint16_t Pitch_CV; 	// PB0 ADC12_IN8   Pin 27
 	uint16_t VCA;     	// PA3 ADC123_IN3  Pin 17
 	uint16_t FTune;   	// PC4 ADC12_IN14  Pin 24
 	uint16_t CTune;   	// PB1 ADC12_IN9   Pin 26
@@ -33,8 +33,6 @@ struct ADCValues {
 
 extern volatile ADCValues adc;
 
-#define GreenLED TIM4->CCR2
-#define RedLED   TIM2->CCR2
 extern GpioPin debugPin;
 
 

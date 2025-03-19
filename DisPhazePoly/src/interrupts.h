@@ -1,11 +1,9 @@
-float samplePosDebug = 0;
-
 void TIM3_IRQHandler(void)
 {
 	// Send next samples to DAC
-	if (TIM3->SR & TIM_SR_UIF) { 					// if UIF flag is set
-
+	if (TIM3->SR & TIM_SR_UIF) {
 		TIM3->SR &= ~TIM_SR_UIF;					// clear UIF flag
+
 		DAC->SWTRIGR |= DAC_SWTRIGR_SWTRIG1;		// Tell the DAC to output the next value
 		DAC->SWTRIGR |= DAC_SWTRIGR_SWTRIG2;		// Tell the DAC to output the next value
 

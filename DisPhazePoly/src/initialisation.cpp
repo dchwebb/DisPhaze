@@ -92,7 +92,7 @@ void InitSampleTimer()
 {
 	//	Setup Timer 3 on an interrupt to trigger sample loading
 	RCC->APB1ENR |= RCC_APB1ENR_TIM3EN;				// Enable Timer 3
-	TIM3->PSC = (SystemCoreClock / sampleRateMono) / 4;	// Set prescaler to fire at sample rate - this is divided by 4 to match the APB1 prescaler (42MHz)
+	TIM3->PSC = (SystemCoreClock / 4) / sampleRateMono;	// Set prescaler to fire at sample rate - this is divided by 4 to match the APB1 prescaler (42MHz)
 	TIM3->ARR = 1; 									// Set maximum count value (auto reload register) - set to system clock / sampling rate
 
 	TIM3->DIER |= TIM_DIER_UIE;						//  DMA/interrupt enable register
@@ -319,17 +319,16 @@ void DelayMS(uint32_t ms)
 }
 
 
-// FIXME - need to update startup*.s; check memory region for one that does not get cleared on reboot
 void JumpToBootloader()
 {
-	*reinterpret_cast<unsigned long *>(0x00000000) = 0xDEADBEEF; 	// Use ITCM RAM for DFU flag as this is not cleared at restart
+	*reinterpret_cast<unsigned long *>(0x10000000) = 0xDEADBEEF; 	// Use ITCM RAM for DFU flag as this is not cleared at restart
 
 	__disable_irq();
 
 	FLASH->ACR &= ~FLASH_ACR_DCEN;					// Disable data cache
 
 	// Not sure why but seem to need to write this value twice or gets lost - caching issue?
-	*reinterpret_cast<unsigned long *>(0x00000000) = 0xDEADBEEF;
+	*reinterpret_cast<unsigned long *>(0x10000000) = 0xDEADBEEF;
 
 	__DSB();
 	NVIC_SystemReset();
@@ -337,4 +336,5 @@ void JumpToBootloader()
 	while (1) {
 		// Code should never reach this loop
 	}
+
 }

@@ -34,8 +34,7 @@ public:
 	struct MidiNote {
 		float noteValue;		// MIDI note value adjusted with pitch bend
 		uint8_t origNote;		// MIDI note value
-		uint8_t envelope;		// Stage in vca envelope
-		pdEnv pdEnvelope;		// Stage in phase distortion envelope
+		env envelope;			// Stage in vca envelope
 		uint32_t samplePos1;	// Current position within cycle
 		uint32_t samplePos2;
 		float vcaLevel;			// Store amplitude envelope level

@@ -2,62 +2,6 @@
 #include "Calib.h"
 #include "USB.h"
 
-void PhaseDistortion::SetLED()
-{
-	if (ledState != oldLedState) {
-		if (ledState == LEDState::SwitchToMono || ledState == LEDState::SwitchToPoly) {
-			ledCounter = 0;
-		}
-		if (ledState == LEDState::Mono) {
-			RedLED = 0;
-		}
-		if (ledState == LEDState::Poly) {
-			GreenLED = 0;
-		}
-
-		oldLedState = ledState;
-	}
-
-	if (ledState == LEDState::SwitchToMono || ledState == LEDState::SwitchToPoly) {
-		static constexpr uint32_t fadeTime = 70000;
-		if (++ledCounter >= fadeTime) {
-			ledState = (ledState == LEDState::SwitchToPoly) ? LEDState::Poly : LEDState::Mono;
-			ledCounter = 0;
-		}
-		if (ledState == LEDState::SwitchToMono) {
-			RedLED = 4095 * (fadeTime - ledCounter) / fadeTime;
-			GreenLED = 4095 * ledCounter / fadeTime;
-		} else {
-			GreenLED= 4095 * (fadeTime - ledCounter) / fadeTime;
-			RedLED = 4095 * ledCounter / fadeTime;
-		}
-	} else if (ledState == LEDState::Mono) {
-		GreenLED = (uint32_t)(VCALevel * 4095.0f);
-	} else if (ledState == LEDState::Poly && !detectEnv) {
-		RedLED = static_cast<uint32_t>((polyLevel * 4095.0f) / usb.midi.polyCount);
-	}
-
-}
-
-
-void PhaseDistortion::SetSampleRate()
-{
-	// Monophonic mode uses double sample rate (2x44kHz = 88kHz)
-	TIM3->PSC = (SystemCoreClock / (cfg.polyphonic ? sampleRatePoly : sampleRateMono)) / 4;
-}
-
-void PhaseDistortion::ChangePoly()
-{
-	cfg.polyphonic = !cfg.polyphonic;
-	config.ScheduleSave();
-	if (!cfg.polyphonic) {
-		detectEnv = false;
-		ledState = LEDState::SwitchToMono;
-	} else {
-		ledState = LEDState::SwitchToPoly;
-	}
-	SetSampleRate();
-}
 
 
 void PhaseDistortion::CalcNextSamples()
@@ -72,7 +16,7 @@ void PhaseDistortion::CalcNextSamples()
 		ChangePoly();
 
 	} else if (actionButton.Pressed()) {
-		// Activate cfg.envelope detection mode
+		// Activate envelope detection mode
 		if (cfg.polyphonic) {
 			detectEnv = !detectEnv;
 			if (detectEnv) {
@@ -81,7 +25,7 @@ void PhaseDistortion::CalcNextSamples()
 		}
 	}
 
-	// cfg.envelope detection - NB VCA is inverted
+	// envelope detection - NB VCA is inverted
 	if (detectEnv) {
 		DetectEnvelope();
 	}
@@ -150,8 +94,8 @@ PhaseDistortion::OutputSamples PhaseDistortion::MonoOutput(float pdLut1, uint8_t
 
 	// Calculate frequencies
 	pitch = ((3 * pitch) + adc.Pitch_CV) / 4;				// 1V/Oct input with smoothing
-	//float freq1 = calib.pitchLUT[(pitch + ((2048 - fineTune) / 32))];		// FIXME disabled fine tune for now
-	float freq1 = calib.pitchLUT[adc.Pitch_CV];
+	float freq1 = calib.pitchLUT[(pitch + ((2048 - fineTune) / 32))];
+	//float freq1 = calib.pitchLUT[adc.Pitch_CV];				// For testing
 	float freq2;
 
 	OctaveCalc(freq1, freq2);
@@ -182,18 +126,18 @@ PhaseDistortion::OutputSamples PhaseDistortion::MonoOutput(float pdLut1, uint8_t
 PhaseDistortion::OutputSamples PhaseDistortion::PolyOutput(float pdLut1, uint8_t pdLut2, float pd2Resonant)
 {
 	// If note processing is taking too long kill oldest note
-	if (sampleCalcTime > 1850) {
+	if (sampleCalcTime > maxSampleTime) {
 		usb.midi.midiNotes[0].envelope = MidiHandler::env::FR;
 	}
 
 	uint8_t polyNotes = usb.midi.noteCount;
 	polyLevel = 0.0f;
-	int8_t removeNote = -1;		// To enable removal of notes that have completed release cfg.envelope
+	int8_t removeNote = -1;		// To enable removal of notes that have completed release envelope
 	OutputSamples output;
 
 	float pb = usb.midi.pitchBendSemiTones * ((usb.midi.pitchBend - 8192) / 8192.0f);		// convert raw pitchbend to midi note number
-	//float finetuneAdjust = pb - (2048.0f - fineTune) / 1024.0f;
-	float finetuneAdjust = 0.0f;			// FIXME -disabled for testing
+	float finetuneAdjust = pb - (2048.0f - fineTune) / 1024.0f;
+//	float finetuneAdjust = 0.0f;			// for testing
 	uint32_t pdlut1Int = (uint32_t)std::round(pdLut1);
 
 	for (uint8_t n = 0; n < polyNotes; ++n) {
@@ -224,7 +168,7 @@ PhaseDistortion::OutputSamples PhaseDistortion::PolyOutput(float pdLut1, uint8_t
 			sample2 += sample1;
 
 
-		// Calculate cfg.envelope levels of polyphonic voices
+		// Calculate envelope levels of polyphonic voices
 		if (detectEnv) {
 			sample1 *= VCALevel;
 			sample2 *= VCALevel;
@@ -269,7 +213,7 @@ PhaseDistortion::OutputSamples PhaseDistortion::PolyOutput(float pdLut1, uint8_t
 				break;
 			}
 
-			sample1 *= midiNote.vcaLevel;			// Scale sample output level based on cfg.envelope
+			sample1 *= midiNote.vcaLevel;			// Scale sample output level based on envelope
 			sample2 *= midiNote.vcaLevel;
 
 			polyLevel += midiNote.vcaLevel;			// For LED display
@@ -289,20 +233,9 @@ PhaseDistortion::OutputSamples PhaseDistortion::PolyOutput(float pdLut1, uint8_t
 }
 
 
-
-////	Interpolate between two positions (derived from a float and its rounded value) in a LUT
-//float PhaseDistortion::Interpolate(float* LUT, float& LUTPosition)
-//{
-//	float s1 = LUT[static_cast<int32_t>(LUTPosition)];
-//	float s2 = LUT[static_cast<int32_t>(LUTPosition + 1) % pitchLutSize];
-//	return s1 + ((s2 - s1) * (LUTPosition - std::round(LUTPosition)));
-//}
-
-
+// models waves 6-8 of the Casio CZ which are saw/triangle envelopes into which harmonics are added as the phase distortion increases
 float PhaseDistortion::GetResonantWave(const uint8_t pdLut2, const uint32_t LUTPosition, float scale)
 {
-	// models waves 6-8 of the Casio CZ which are saw/triangle envelopes into which harmonics are added as the phase distortion increases
-
 	scale = ((scale / 5.0f) * 23.0f) + 1.0f;		// Sets number of sine waves per cycle: scale input 0-5 to 1-24 (original only went to 16)
 
 	// offset to 3/4 of the way through the sine wave so each cycle starts at the flat top of the wave
@@ -323,41 +256,11 @@ float PhaseDistortion::GetResonantWave(const uint8_t pdLut2, const uint32_t LUTP
 
 	float pos = sinLutWrap(((LUTPosition >> 18) * scale) + sineOffset);
 	float sineSample = SineLUT[static_cast<uint32_t>(pos)];
-	sineSample = (sineSample + 1.0f) * ampMod;		// Offset so all positive and then apply amplitude cfg.envelope to create sawtooth
+	sineSample = (sineSample + 1.0f) * ampMod;		// Offset so all positive and then apply amplitude envelope to create sawtooth
 
 	return sineSample - 1.0f;
 }
 
-/*
-float PhaseDistortion::GetResonantWave(const float LUTPosition, float scale, const uint8_t pdLut2)
-{
-	// models waves 6-8 of the Casio CZ which are saw/triangle cfg.envelopes into which harmonics are added as the phase distortion increases
-	//static float lastSample = 0.0f;
-
-	scale = ((scale / 5.0f) * 23.0f) + 1.0f;		// Sets number of sine waves per cycle: scale input 0-5 to 1-24 (original only went to 16)
-
-	// offset to 3/4 of the way through the sine wave so each cycle starts at the flat top of the wave
-	constexpr float sineOffset = static_cast<float>(3 * (sinLutSize / 4));
-
-	// Scale the amplitude of the cycle from 1 to 0 to create a saw tooth type cfg.envelope on each cycle
-	float ampMod = 1.0f;
-	if (pdLut2 == 5) {								// Saw tooth - amplitude linearly reduces over full cycle
-		ampMod = (1.0f - LUTPosition);
-	} else if (LUTPosition > 0.5f) {				// Both triangle (wave 7) and loud saw (wave 8) fade out over second half of cycle
-		ampMod = (2.0f * (1.0f - LUTPosition));
-	} else if (pdLut2 == 6) {						// Triangle (wave 7) fades in over first half of cycle
-		ampMod = (LUTPosition * 2.0f);
-	}
-
-	float pos = sinLutWrap(((LUTPosition * sinLutSize) * scale) + sineOffset);
-	float sineSample = SineLUT[static_cast<uint32_t>(pos)];
-	sineSample = (sineSample + 1.0f) * ampMod;		// Offset so all positive and then apply amplitude cfg.envelope to create sawtooth
-
-	// FIXME: removed as glitching in polyphonic mode. If required will need to store lastSample against each note
-	//lastSample = (lastSample * 0.85f) + (0.15f * (sineSample - 1.0f));			// Remove offset and damp
-	return sineSample - 1.0f;
-}
-*/
 
 // Generate a phase distorted sine wave - pass LUT containing PD offsets, LUT position as a fraction of the wave cycle and a scaling factor
 float PhaseDistortion::GetPhaseDist(const float* PdLUT, const uint32_t LUTPosition, const float scale)
@@ -387,7 +290,6 @@ float PhaseDistortion::GetBlendPhaseDist(const float pdBlend, const uint32_t LUT
 	// Add main wave position to phase distortion position and ensure in bounds
 	return SineLUT[(uint32_t)(LUTPosition  + phaseDist) >> 18];
 }
-
 
 
 
@@ -430,7 +332,7 @@ void PhaseDistortion::DetectEnvelope()
 {
 	uint32_t lvl = 4096 - adc.VCA;
 	envDetect.smoothLevel = ((15 * envDetect.smoothLevel) + lvl) / 16;
-	VCALevel = envDetect.smoothLevel / 4096.0f;				// While cfg.envelope detection is ongoing any output level will be set by incoming cfg.envelope
+	VCALevel = envDetect.smoothLevel / 4096.0f;				// While envelope detection is ongoing any output level will be set by incoming envelope
 	++envDetect.counter;
 
 
@@ -483,7 +385,7 @@ void PhaseDistortion::DetectEnvelope()
 
 		++envDetect.AttackTime;
 
-		// Wait for cfg.envelope to decrease - either switch to decay or release if stuck on high level for long time
+		// Wait for envelope to decrease - either switch to decay or release if stuck on high level for long time
 		if (envDetect.smoothLevel < envDetect.maxLevel - 30) {
 			envDetect.DecayTime = 0;
 
@@ -525,7 +427,7 @@ void PhaseDistortion::DetectEnvelope()
 		} else {
 			envDetect.stateCount = 0;
 			envDetect.minLevel = envDetect.smoothLevel;
-			envDetect.levelTime = envDetect.DecayTime;		// Capture the time cfg.envelope hits minimum detected level
+			envDetect.levelTime = envDetect.DecayTime;		// Capture the time envelope hits minimum detected level
 		}
 
 		// Decay to zero
@@ -559,7 +461,7 @@ void PhaseDistortion::DetectEnvelope()
 		RedLED = 4095;
 		GreenLED = 0;
 
-		// With very slow cfg.envelopes can hit the release phase early - attempt to detect
+		// With very slow envelopes can hit the release phase early - attempt to detect
 		if (envDetect.smoothLevel >= envDetect.minLevel) {
 			if (envDetect.smoothLevel > 100) {
 				++envDetect.stateCount2;
@@ -623,6 +525,64 @@ void PhaseDistortion::OctaveCalc(float& freq1, float& freq2)
 }
 
 
+void PhaseDistortion::SetLED()
+{
+	if (ledState != oldLedState) {
+		if (ledState == LEDState::SwitchToMono || ledState == LEDState::SwitchToPoly) {
+			ledCounter = 0;
+		}
+		if (ledState == LEDState::Mono) {
+			RedLED = 0;
+		}
+		if (ledState == LEDState::Poly) {
+			GreenLED = 0;
+		}
+
+		oldLedState = ledState;
+	}
+
+	if (ledState == LEDState::SwitchToMono || ledState == LEDState::SwitchToPoly) {
+		static constexpr uint32_t fadeTime = 70000;
+		if (++ledCounter >= fadeTime) {
+			ledState = (ledState == LEDState::SwitchToPoly) ? LEDState::Poly : LEDState::Mono;
+			ledCounter = 0;
+		}
+		if (ledState == LEDState::SwitchToMono) {
+			RedLED = 4095 * (fadeTime - ledCounter) / fadeTime;
+			GreenLED = 4095 * ledCounter / fadeTime;
+		} else {
+			GreenLED= 4095 * (fadeTime - ledCounter) / fadeTime;
+			RedLED = 4095 * ledCounter / fadeTime;
+		}
+	} else if (ledState == LEDState::Mono) {
+		GreenLED = (uint32_t)(VCALevel * 4095.0f);
+	} else if (ledState == LEDState::Poly && !detectEnv) {
+		RedLED = static_cast<uint32_t>((polyLevel * 4095.0f) / usb.midi.polyCount);
+	}
+}
+
+
+void PhaseDistortion::SetSampleRate()
+{
+	uint32_t sampleTime = (SystemCoreClock / 4) / (cfg.polyphonic ? sampleRatePoly : sampleRateMono);
+	TIM3->PSC = sampleTime;
+	maxSampleTime = (sampleTime * 2) - 100;
+}
+
+
+void PhaseDistortion::ChangePoly()
+{
+	cfg.polyphonic = !cfg.polyphonic;
+	config.ScheduleSave();
+	if (!cfg.polyphonic) {
+		detectEnv = false;
+		ledState = LEDState::SwitchToMono;
+	} else {
+		ledState = LEDState::SwitchToPoly;
+	}
+	SetSampleRate();
+}
+
 
 inline float PhaseDistortion::sinLutWrap(float pos)
 {
@@ -634,7 +594,6 @@ inline float PhaseDistortion::sinLutWrap(float pos)
 	}
 	return pos;
 }
-
 
 
 float PhaseDistortion::FastTanh(const float x)
@@ -649,4 +608,6 @@ float PhaseDistortion::FastTanh(const float x)
 void PhaseDistortion::UpdateConfig()
 {
 	phaseDist.compHoldSamples = (phaseDist.cfg.compressor.holdTime * sampleRatePoly) / 1000;		// Convert ms to sample count
+	phaseDist.ledState = phaseDist.cfg.polyphonic ? LEDState::Poly : LEDState::Mono;
+	phaseDist.SetSampleRate();
 }

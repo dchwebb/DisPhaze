@@ -81,6 +81,7 @@ private:
 	int16_t fineTune = 0;
 	int16_t coarseTune = 0;
 
+	uint32_t maxSampleTime = 0;		// Maximum sample time allowed before polyphonic notes are truncated
 	bool detectEnv = false;			// Activated with action button to detect envelope on VCA input
 
 	enum class envDetectState {waitZero, waitAttack, Attack, Decay, Sustain, Release};
@@ -133,12 +134,14 @@ private:
 	void SetLED();
 	float FastTanh(const float x);
 
-	Btn actionButton {{GPIOB, 5, GpioPin::Type::InputPulldown}};			// FIXME
-	//Btn actionButton {{GPIOB, 5, GpioPin::Type::InputPullup}};			// FIXME - setting for DW module
+	Btn actionButton {{GPIOB, 5, GpioPin::Type::InputPulldown}};
 	GpioPin ringModSwitch {GPIOC, 6, GpioPin::Type::Input};
 	GpioPin mixSwitch {GPIOC, 13, GpioPin::Type::Input};
 	GpioPin octaveUp {GPIOA, 0, GpioPin::Type::InputPulldown};
 	GpioPin octaveDown {GPIOC, 3, GpioPin::Type::InputPulldown};
+
+	volatile uint32_t& GreenLED = TIM4->CCR2;
+	volatile uint32_t& RedLED = TIM2->CCR2;
 };
 
 extern PhaseDistortion phaseDist;

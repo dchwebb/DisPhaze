@@ -11,8 +11,8 @@
 
 
 /* FIXME
- * Better note killing algorithm - zero crossings, look for release notes etc
  * Colours on Envelope detection (green for sustain phase); possibly envelope detect PD??
+ * Button press immediately triggers env detection
   */
 
 

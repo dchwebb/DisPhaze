@@ -31,6 +31,7 @@ void CDCHandler::ProcessCommand()
 		usb->SendString("Mountjoy DisPhaze Poly - supported commands:\n\n"
 				"help           -  Shows this information\n"
 				"info           -  Display current settings\n"
+				"dfu            -  USB firmware upgrade\n"
 				"poly           -  Switches between polyphonic and monophonic mode\n"
 				"attack:xxxx    -  Set polyphonic attack time in samples\n"
 				"decay:xxxx     -  Set decay time in samples\n"
@@ -75,8 +76,8 @@ void CDCHandler::ProcessCommand()
 		calib.Calibrate('s');
 
 	} else if (cmd.compare("poly") == 0) {
-		phaseDist.cfg.polyphonic = !phaseDist.cfg.polyphonic;
-		usb->SendString("Polyphonic mode: " + std::string(phaseDist.cfg.polyphonic ? "on\r\n": "off\r\n"));
+		phaseDist.ChangePoly();
+		printf("Polyphonic mode: %s\r\n", phaseDist.cfg.polyphonic ? "on": "off");
 
 	} else if (cmd.compare(0, 7, "attack:") == 0) {			// Envelope attack time in samples
 		uint32_t val = ParseInt(cmd, ':', 1, UINT32_MAX);
@@ -144,7 +145,7 @@ void CDCHandler::ProcessCommand()
 		phaseDist.cfg.compressor.threshold = val;
 		phaseDist.UpdateConfig();
 		config.ScheduleSave();
-		printf("Compressor threshold set to: %.2f\r\n", phaseDist.cfg.compressor.threshold);
+		printf("Compressor threshold set to: %.8f\r\n", phaseDist.cfg.compressor.threshold);
 
 
 	} else {
