@@ -2,8 +2,7 @@
 
 #include "stm32f4xx.h"
 #include <cstring>
-#include <Array>
-#include "GpioPIn.h"
+#include "GpioPin.h"
 
 static constexpr uint32_t sampleRateMono = 88000;
 static constexpr uint32_t sampleRatePoly = 66000;
@@ -12,6 +11,7 @@ static constexpr uint32_t sampleRatePoly = 66000;
 static constexpr float PITCH_OFFSET = 1129.5f;
 
 static constexpr uint32_t sysTickInterval = 1000;
+extern uint32_t SystemCoreClock;
 extern volatile uint32_t SysTickVal;
 
 static constexpr uint32_t adcMax = 4095;

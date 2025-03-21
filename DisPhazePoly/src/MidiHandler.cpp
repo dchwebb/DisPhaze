@@ -105,7 +105,7 @@ void MidiHandler::serialHandler(uint32_t data)
 {
 	Queue[QueueWrite] = data;
 	QueueSize++;
-	QueueWrite = (QueueWrite + 1) % MIDIQUEUESIZE;
+	QueueWrite = (QueueWrite + 1) % queueSize;
 
 	MIDIType type = static_cast<MIDIType>(Queue[QueueRead] >> 4);
 	uint8_t channel = Queue[QueueRead] & 0x0F;
@@ -149,7 +149,7 @@ void MidiHandler::serialHandler(uint32_t data)
 
 inline void MidiHandler::QueueInc() {
 	QueueSize--;
-	QueueRead = (QueueRead + 1) % MIDIQUEUESIZE;
+	QueueRead = (QueueRead + 1) % queueSize;
 }
 
 // Called when the release phase of a note has ended to remove from polyphony array

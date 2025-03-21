@@ -16,46 +16,21 @@ public:
 	static void UpdateConfig();
 	void ChangePoly();
 
-	uint32_t sampleCalcWindow = 0;			// Set in interrupt to calculate available sample calculation time
-	uint32_t sampleCalcTime = 0;			// Set in interrupt to calculate if poluphonic sample calculation is too slow
-
 	struct Env {
-		// Constructor calculates increment values based on default envelope settings
-		Env() {
-			UpdateIncrements();
-		}
-
-		uint32_t A = 1000;
-		uint32_t D = 4000;
+		float A = 0.001f;				// Time in seconds
+		float D = 0.05f;
 		float S = 0.5f;
-		uint32_t R = 5000;
-		uint32_t FR = 20;
-
-		uint32_t A_pd = 500;
-		uint32_t D_pd = 75000;
-
-		// Incremental variables for adding to current level based on envelope position
-		float AInc, DInc, RInc, FRInc, A_pd_Inc, D_pd_Inc;
-
-		// For computational efficiency envelope times in samples are converted to addition increments
-		void UpdateIncrements() {
-			AInc = 1.0f / A;
-			DInc = 1.0f / D;
-			RInc = 1.0f / R;
-			FRInc = 1.0f / FR;
-			A_pd_Inc = 1.0f / A_pd;
-			D_pd_Inc = 1.0f / D_pd;
-		}
-
+		float R = 0.05f;
+		float FR = 0.00045f;			// Fast release
 	};
 
 	struct {
 		bool polyphonic = false;
 		Env envelope;
 		struct Compressor {
-			float holdTime = 350.0f;				// Hold time in ms before limiter is released
-			float release = 0.0000001f;				// Larger = faster release, smaller = slower
-			float threshold = 0.35f;				// Default compressor level
+			float holdTime = 350.0f;	// Hold time in ms before limiter is released
+			float release = 0.0000001f;	// Larger = faster release, smaller = slower
+			float threshold = 0.35f;	// Default compressor level
 		} compressor;
 	} cfg;
 
@@ -67,22 +42,28 @@ public:
 
 
 private:
+	uint32_t sampleCalcWindow = 0;		// Set in interrupt to calculate available sample calculation time
+	uint32_t sampleCalcTime = 0;		// Set in interrupt to calculate if poluphonic sample calculation is too slow
 
-	uint16_t pd1Type = 0;			// Phase distortion type knob position with smoothing
+	uint16_t pd1Type = 0;				// Phase distortion type knob position with smoothing
 	uint16_t pd2Type = 0;
-	float pd1Scale = 0.0f;			// Amount of phase distortion with smoothing
+	float pd1Scale = 0.0f;				// Amount of phase distortion with smoothing
 	float pd2Scale = 0.0f;
-	uint32_t samplePos1 = 0;		// Current position within cycle
+	uint32_t samplePos1 = 0;			// Current position within cycle
 	uint32_t samplePos2 = 0;
 
-	float VCALevel;					// Output level with smoothing
-	float polyLevel;				// Polyphonic output level for LED brightness
-	uint16_t pitch;					// Pitch with smoothing
+	float VCALevel;						// Output level with smoothing
+	float polyLevel;					// Polyphonic output level for LED brightness
+	uint16_t pitch;						// Pitch with smoothing
 	int16_t fineTune = 0;
 	int16_t coarseTune = 0;
 
-	uint32_t maxSampleTime = 0;		// Maximum sample time allowed before polyphonic notes are truncated
-	bool detectEnv = false;			// Activated with action button to detect envelope on VCA input
+	uint32_t maxSampleTime = 0;			// Maximum sample time allowed before polyphonic notes are truncated
+	bool detectEnv = false;				// Activated with action button to detect envelope on VCA input
+
+	// Incremental variables for adding to current level based on envelope position
+	float attackInc, decayInc, releaseInc, fastRelInc;
+
 
 	enum class envDetectState {waitZero, waitAttack, Attack, Decay, Sustain, Release};
 	struct {
@@ -96,10 +77,10 @@ private:
 		int32_t minLevel;
 		int32_t levelTime;
 
-		uint32_t AttackTime;
-		uint32_t DecayTime;
-		int32_t SustainLevel;
-		uint32_t ReleaseTime;
+		uint32_t attackTime;		// Detected times in samples
+		uint32_t decayTime;
+		int32_t sustainLevel;
+		uint32_t releaseTime;
 	} envDetect;
 
 	struct OutputSamples {
@@ -113,7 +94,7 @@ private:
 	CompState compState[2] = {CompState::none, CompState::none};
 	uint32_t compHoldSamples = 0;					// Compressor hold time converted from ms to samples
 	float compLevel[2] = {cfg.compressor.threshold, cfg.compressor.threshold};		// Compressor level adjusted for input
-	uint32_t compHoldTimer[2] = {0, 0};						// Compressor hold counter
+	uint32_t compHoldTimer[2] = {0, 0};												// Compressor hold counter
 
 	// LED settings
 	enum class LEDState {Off, Mono, Poly, SwitchToMono, SwitchToPoly, DetectEnvelope, WaitForEnv, Attack, Decay, Sustain, Release};

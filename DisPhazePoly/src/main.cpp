@@ -15,8 +15,6 @@
 
 
 /* FIXME
- * Colours on Envelope detection (green for sustain phase); possibly envelope detect PD??
- * Button press immediately triggers env detection
  * Envelope times to ms
  */
 
@@ -24,7 +22,6 @@
 PhaseDistortion phaseDist;
 Calib calib;
 
-extern uint32_t SystemCoreClock;
 volatile uint32_t SysTickVal;
 volatile uint16_t ADC_array[ADC_BUFFER_LENGTH];
 
@@ -57,6 +54,7 @@ int main(void)
 			TIM3->CR1 |= TIM_CR1_CEN;
 		}
 #endif
+
 		calib.Calibrate();			// Calibration state machine
 		usb.cdc.ProcessCommand();	// Check for incoming CDC commands
 		config.SaveConfig();		// Save any scheduled changes

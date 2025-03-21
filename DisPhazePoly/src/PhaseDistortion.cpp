@@ -196,7 +196,7 @@ PhaseDistortion::OutputSamples PhaseDistortion::PolyOutput(float pdLut1, uint8_t
 
 			switch (midiNote.envelope) {
 			case MidiHandler::env::A:
-				midiNote.vcaLevel += cfg.envelope.AInc;
+				midiNote.vcaLevel += attackInc;
 
 				if (midiNote.vcaLevel >= 1.0f) {
 					midiNote.envelope = MidiHandler::env::D;
@@ -204,7 +204,7 @@ PhaseDistortion::OutputSamples PhaseDistortion::PolyOutput(float pdLut1, uint8_t
 				break;
 
 			case MidiHandler::env::D:
-				midiNote.vcaLevel -= cfg.envelope.DInc;
+				midiNote.vcaLevel -= decayInc;
 
 				if (midiNote.vcaLevel <= cfg.envelope.S) {
 					midiNote.envelope = MidiHandler::env::S;
@@ -216,7 +216,7 @@ PhaseDistortion::OutputSamples PhaseDistortion::PolyOutput(float pdLut1, uint8_t
 				break;
 
 			case MidiHandler::env::R:
-				midiNote.vcaLevel -= cfg.envelope.RInc;
+				midiNote.vcaLevel -= releaseInc;
 				if (midiNote.vcaLevel <= 0.0f) {
 					midiNote.vcaLevel = 0.0f;
 					removeNote = n;
@@ -224,7 +224,7 @@ PhaseDistortion::OutputSamples PhaseDistortion::PolyOutput(float pdLut1, uint8_t
 				break;
 
 			case MidiHandler::env::FR:
-				midiNote.vcaLevel -= cfg.envelope.FRInc;
+				midiNote.vcaLevel -= fastRelInc;
 				if (midiNote.vcaLevel <= 0.0f) {
 					midiNote.vcaLevel = 0.0f;
 					removeNote = n;
@@ -386,8 +386,8 @@ void PhaseDistortion::DetectEnvelope()
 				GreenLED = 4095;
 
 				envDetect.state = envDetectState::Attack;
-				envDetect.AttackTime = 0;
-				envDetect.ReleaseTime = 0;
+				envDetect.attackTime = 0;
+				envDetect.releaseTime = 0;
 				envDetect.stateCount = 0;
 				envDetect.maxLevel = 0;
 				envDetect.counter = 0;
@@ -399,15 +399,15 @@ void PhaseDistortion::DetectEnvelope()
 
 	case envDetectState::Attack:
 
-		++envDetect.AttackTime;
+		++envDetect.attackTime;
 
 		// Wait for envelope to decrease - either switch to decay or release if stuck on high level for long time
 		if (envDetect.smoothLevel < envDetect.maxLevel - 30) {
-			envDetect.DecayTime = 0;
+			envDetect.decayTime = 0;
 
 			if (envDetect.counter - envDetect.levelTime > 4000) {
-				envDetect.SustainLevel = envDetect.maxLevel;
-				envDetect.AttackTime = envDetect.levelTime;			// Attack time is moment maximum level was reached
+				envDetect.sustainLevel = envDetect.maxLevel;
+				envDetect.attackTime = envDetect.levelTime;			// Attack time is moment maximum level was reached
 				envDetect.minLevel = envDetect.smoothLevel;
 				envDetect.state = envDetectState::Release;
 			} else {
@@ -429,26 +429,26 @@ void PhaseDistortion::DetectEnvelope()
 
 	case envDetectState::Decay:
 	{
-		++envDetect.DecayTime;
+		++envDetect.decayTime;
 
 		// If the smoothed level does not fall below minimum recorded level for x samples assume in sustain phase
 		if (envDetect.smoothLevel >= envDetect.minLevel) {
 			++envDetect.stateCount;
 
 			if (envDetect.stateCount > 2000) {
-				envDetect.DecayTime = envDetect.levelTime;
+				envDetect.decayTime = envDetect.levelTime;
 				envDetect.state = envDetectState::Sustain;
-				envDetect.SustainLevel = envDetect.smoothLevel;
+				envDetect.sustainLevel = envDetect.smoothLevel;
 			}
 		} else {
 			envDetect.stateCount = 0;
 			envDetect.minLevel = envDetect.smoothLevel;
-			envDetect.levelTime = envDetect.DecayTime;		// Capture the time envelope hits minimum detected level
+			envDetect.levelTime = envDetect.decayTime;		// Capture the time envelope hits minimum detected level
 		}
 
 		// Decay to zero
 		if (envDetect.smoothLevel < 10)	{
-			envDetect.SustainLevel = 0;
+			envDetect.sustainLevel = 0;
 			detectEnv = false;
 		}
 
@@ -461,7 +461,7 @@ void PhaseDistortion::DetectEnvelope()
 		GreenLED = 4095;
 
 		// Once the current level has fallen 40 below the stable sustain level assume release phase
-		if (envDetect.SustainLevel < 45 || envDetect.SustainLevel - envDetect.smoothLevel > 40) {
+		if (envDetect.sustainLevel < 45 || envDetect.sustainLevel - envDetect.smoothLevel > 40) {
 			envDetect.state = envDetectState::Release;
 
 			envDetect.stateCount = 0;
@@ -473,7 +473,7 @@ void PhaseDistortion::DetectEnvelope()
 
 	case envDetectState::Release:
 
-		++envDetect.ReleaseTime;
+		++envDetect.releaseTime;
 		RedLED = 4095;
 		GreenLED = 0;
 
@@ -483,9 +483,9 @@ void PhaseDistortion::DetectEnvelope()
 				++envDetect.stateCount2;
 				if (envDetect.stateCount2 > 1000) {
 					envDetect.state = envDetectState::Sustain;
-					envDetect.SustainLevel = envDetect.smoothLevel;
-					envDetect.DecayTime = envDetect.levelTime - envDetect.AttackTime;
-					envDetect.ReleaseTime = 0;
+					envDetect.sustainLevel = envDetect.smoothLevel;
+					envDetect.decayTime = envDetect.levelTime - envDetect.attackTime;
+					envDetect.releaseTime = 0;
 				}
 			}
 		} else {
@@ -507,14 +507,18 @@ void PhaseDistortion::DetectEnvelope()
 	}
 
 	if (!detectEnv) {
+		config.ScheduleSave();
+
 		GreenLED = 0;
 		RedLED = 0;
-		cfg.envelope.A = std::max(envDetect.AttackTime, 1UL);
-		cfg.envelope.D = std::max(envDetect.DecayTime, 1UL);
-		cfg.envelope.S = static_cast<float>(envDetect.SustainLevel) / static_cast<float>(envDetect.maxLevel);
-		cfg.envelope.R = std::max(envDetect.ReleaseTime, 1UL);
 
-		cfg.envelope.UpdateIncrements();
+		// Convert sample times to seconds
+		cfg.envelope.A = (float)std::max(envDetect.attackTime, 1UL) / (float)sampleRatePoly;
+		cfg.envelope.D = (float)std::max(envDetect.decayTime, 1UL) / (float)sampleRatePoly;
+		cfg.envelope.S = static_cast<float>(envDetect.sustainLevel) / static_cast<float>(envDetect.maxLevel);
+		cfg.envelope.R = (float)std::max(envDetect.releaseTime, 1UL) / (float)sampleRatePoly;
+
+		UpdateConfig();
 	}
 
 }
@@ -633,4 +637,12 @@ void PhaseDistortion::UpdateConfig()
 	phaseDist.compHoldSamples = (phaseDist.cfg.compressor.holdTime * sampleRatePoly) / 1000;		// Convert ms to sample count
 	phaseDist.ledState = phaseDist.cfg.polyphonic ? LEDState::Poly : LEDState::Mono;
 	phaseDist.SetSampleRate();
+
+	//TimeInMs = timeInSamples / sampleRatePoly;
+	phaseDist.attackInc = 1.0f / (sampleRatePoly * phaseDist.cfg.envelope.A);
+	phaseDist.decayInc = 1.0f / (sampleRatePoly * phaseDist.cfg.envelope.D);
+	phaseDist.releaseInc = 1.0f / (sampleRatePoly * phaseDist.cfg.envelope.R);
+	phaseDist.fastRelInc = 1.0f / (sampleRatePoly * phaseDist.cfg.envelope.FR);
+
 }
+

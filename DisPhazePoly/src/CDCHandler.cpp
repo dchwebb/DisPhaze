@@ -37,10 +37,10 @@ void CDCHandler::ProcessCommand()
 				"info           -  Display current settings\n"
 				"dfu            -  USB firmware upgrade\n"
 				"poly           -  Switches between polyphonic and monophonic mode\n"
-				"attack:xxxx    -  Set polyphonic attack time in samples\n"
-				"decay:xxxx     -  Set decay time in samples\n"
+				"attack:x.xx    -  Set polyphonic attack time in ms\n"
+				"decay:x.xx     -  Set decay time in ms\n"
 				"sustain:x.xx   -  Set sustain 0.0 - 1.0\n"
-				"release:xxxx   -  Set envelope release time in samples\n"
+				"release:x.xx   -  Set envelope release time in ms\n"
 				"comphold:x.xx  -  Set compressor hold time in ms\n"
 				"comprel:x.xx   -  Set compressor release rate\n"
 				"compthresh:x.xx-  Set compressor threshold\n"
@@ -50,24 +50,24 @@ void CDCHandler::ProcessCommand()
 
 		printf("Build Date: %s %s\r\n"
 				"Polyphonic mode: %s\r\n"
-				"VCA Envelope: A: %lu, D: %lu, S: %.2f, R: %lu\r\n"
+				"VCA Envelope: A: %.2f ms, D: %.2f ms, S: %.2f, R: %.2f ms\r\n"
+				"Compressor: Hold time %.2f ms; Release: %.8f; Threshold: %.2f\r\n"
 				"Calibration base: %.2f, mult: %.2f\r\n"
 				"Config sector: %lu; address: %p\r\n"
-				"Compressor: Hold time %.2f ms; Release: %.8f; Threshold: %.2f\r\n"
 				"\r\n"
 				, __DATE__, __TIME__,
 				(phaseDist.cfg.polyphonic ? "on" : "off"),
-				phaseDist.cfg.envelope.A,
-				phaseDist.cfg.envelope.D,
+				phaseDist.cfg.envelope.A * 1000.0f,
+				phaseDist.cfg.envelope.D * 1000.0f,
 				phaseDist.cfg.envelope.S,
-				phaseDist.cfg.envelope.R,
+				phaseDist.cfg.envelope.R * 1000.0f,
+				phaseDist.cfg.compressor.holdTime,
+				phaseDist.cfg.compressor.release,
+				phaseDist.cfg.compressor.threshold,
 				calib.cfg.pitchBase,
 				-1.0f / calib.cfg.pitchMult,
 				config.currentSector,
-				config.flashConfigAddr + config.currentSettingsOffset / 4,		// pitch multiplier is stored as a negative reciprocal for calculation
-				phaseDist.cfg.compressor.holdTime,
-				phaseDist.cfg.compressor.release,
-				phaseDist.cfg.compressor.threshold
+				config.flashConfigAddr + config.currentSettingsOffset / 4		// pitch multiplier is stored as a negative reciprocal for calculation
 
 		 );
 
@@ -89,23 +89,23 @@ void CDCHandler::ProcessCommand()
 		phaseDist.ChangePoly();
 		printf("Polyphonic mode: %s\r\n", phaseDist.cfg.polyphonic ? "on": "off");
 
-	} else if (cmd.compare(0, 7, "attack:") == 0) {			// Envelope attack time in samples
-		uint32_t val = ParseInt(cmd, ':', 1, UINT32_MAX);
-		if (val > 0) {
-			phaseDist.cfg.envelope.A = val;
-			phaseDist.cfg.envelope.UpdateIncrements();
+	} else if (cmd.compare(0, 7, "attack:") == 0) {			// Envelope attack time in seconds
+		float val = ParseFloat(cmd, ':', 0.0f, 1000.0f);
+		if (val > 0.0f) {
+			phaseDist.cfg.envelope.A = val * 0.001;
+			phaseDist.UpdateConfig();
 			config.ScheduleSave();
 		}
-		printf("Attack set to: %lu samples\r\n", phaseDist.cfg.envelope.A);
+		printf("Attack set to: %.2f ms\r\n", phaseDist.cfg.envelope.A * 1000.0f);
 
-	} else if (cmd.compare(0, 6, "decay:") == 0) {			// Envelope decay time in samples
-		uint32_t val = ParseInt(cmd, ':', 1, UINT32_MAX);
-		if (val > 0) {
-			phaseDist.cfg.envelope.D = val;
-			phaseDist.cfg.envelope.UpdateIncrements();
+	} else if (cmd.compare(0, 6, "decay:") == 0) {			// Envelope decay time in seconds
+		float val = ParseFloat(cmd, ':', 0.0f, 1000.0f);
+		if (val > 0.0f) {
+			phaseDist.cfg.envelope.D = val * 0.001;
+			phaseDist.UpdateConfig();
 			config.ScheduleSave();
 		}
-		printf("Decay set to: %lu samples\r\n", phaseDist.cfg.envelope.D);
+		printf("Decay set to: %.2f ms\r\n", phaseDist.cfg.envelope.D * 1000.0f);
 
 	} else if (cmd.compare(0, 8, "sustain:") == 0) {		// Envelope sustain amount
 		float val = ParseFloat(cmd, ':', 0.0f, 1.0f);
@@ -113,14 +113,14 @@ void CDCHandler::ProcessCommand()
 		config.ScheduleSave();
 		printf("Sustain set to: %.2f\r\n", phaseDist.cfg.envelope.S);
 
-	} else if (cmd.compare(0, 8, "release:") == 0) {		// Envelope release time in samples
-		uint32_t val = ParseInt(cmd, ':', 1, UINT32_MAX);
-		if (val > 0) {
-			phaseDist.cfg.envelope.R = val;
-			phaseDist.cfg.envelope.UpdateIncrements();
+	} else if (cmd.compare(0, 8, "release:") == 0) {		// Envelope release time in seconds
+		float val = ParseFloat(cmd, ':', 0.0f, 1000.0f);
+		if (val > 0.0f) {
+			phaseDist.cfg.envelope.R = val * 0.001;
+			phaseDist.UpdateConfig();
 			config.ScheduleSave();
 		}
-		printf("Release set to: %lu samples\r\n", phaseDist.cfg.envelope.R);
+		printf("Release set to: %.2f ms\r\n", phaseDist.cfg.envelope.R * 1000.0f);
 
 	} else if (cmd.compare(0, 8, "pitchbase:") == 0) {		// Pitch base calib settings
 		float val = ParseFloat(cmd, ':', 0.0f, 1.0f);
