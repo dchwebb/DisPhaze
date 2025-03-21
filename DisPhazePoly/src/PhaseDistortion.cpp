@@ -6,7 +6,8 @@
 
 void PhaseDistortion::CalcNextSamples()
 {
-	debugPin.SetHigh();
+	//debugPin.SetHigh();
+
 	// Sample calculation timing
 	sampleCalcWindow = TIM5->CNT;
 	TIM5->EGR |= TIM_EGR_UG;
@@ -53,11 +54,11 @@ void PhaseDistortion::CalcNextSamples()
 	float tmpPD1Scale = static_cast<float>(std::min((3800 - adc.PD1CV) + adc.PD1Pot, 5000)) / (cfg.polyphonic ? 3000.0f : 1000.0f);
 	pd1Scale = std::max(((pd1Scale * 31) + tmpPD1Scale) / 32, 0.0f);
 
-	float tmpPD2Scale = static_cast<float>(std::min((4090 - adc.PD2CV) + adc.PD2Pot, 5000)) / (cfg.polyphonic ? 3000.0f : 1000.0f);
+	float tmpPD2Scale = static_cast<float>(std::min((4080 - adc.PD2CV) + adc.PD2Pot, 5000)) / (cfg.polyphonic ? 3000.0f : 1000.0f);
 	if (pd2Resonant) {
-		pd2Scale = (pd2Scale * 0.995f) + (tmpPD2Scale * 0.005f);		// Heavily damp PD2 scale if using resonant waves to reduce jitter noise
+		pd2Scale = std::max((pd2Scale * 0.995f) + (tmpPD2Scale * 0.005f), 0.0f);		// Heavily damp PD2 scale if using resonant waves to reduce jitter noise
 	} else {
-		pd2Scale = ((pd2Scale * 31) + tmpPD2Scale) / 32;
+		pd2Scale = std::max(((pd2Scale * 31) + tmpPD2Scale) / 32, 0.0f);
 	}
 
 	OutputSamples output;
@@ -76,7 +77,7 @@ void PhaseDistortion::CalcNextSamples()
 
 	phaseDist.sampleCalcTime = TIM5->CNT;
 
-	debugPin.SetLow();
+	//debugPin.SetLow();
 }
 
 
@@ -300,7 +301,7 @@ float PhaseDistortion::Compress(float level, uint8_t channel)
 	// If current level will result in an output > 1.0f initiate compression to force this to maximum level
 	if (absLevel * cfg.compressor.threshold > 1.0f) {
 		compState[channel] = CompState::hold;
-		compLevel[channel] = 1.0f / absLevel;
+		compLevel[channel] = std::min(1.0f / absLevel, compLevel[channel]);
 		compHoldTimer[channel] = 0.0f;
 	} else {
 		switch (compState[channel]) {
@@ -338,12 +339,13 @@ void PhaseDistortion::DetectEnvelope()
 
 	switch  (envDetect.state) {
 	case envDetectState::waitZero:			// Wait until level settles around 0
-		RedLED = 0;
-		GreenLED = 4095;
+		RedLED = (envDetect.counter & (1 << 14)) ? 0 : 4095;				// Flash red LED until zero level
+		GreenLED = 0;
 
 		if (lvl < 10) {
 			++envDetect.stateCount;
 			if (envDetect.stateCount > 2) {
+				RedLED = 0;
 				envDetect.stateCount = 0;
 				envDetect.state = envDetectState::waitAttack;
 				envDetect.smoothLevel = lvl;
@@ -356,12 +358,7 @@ void PhaseDistortion::DetectEnvelope()
 
 	case envDetectState::waitAttack:
 
-		// Flash red LED until starting
-		if (envDetect.counter & (1 << 14)) {
-			GreenLED = 0;
-		} else {
-			GreenLED = 4095;
-		}
+		GreenLED = (envDetect.counter & (1 << 14)) ? 0 : 4095;				// Flash green LED until starting
 
 		if (envDetect.smoothLevel > 10) {
 			++envDetect.stateCount;
@@ -556,6 +553,13 @@ void PhaseDistortion::SetLED()
 		}
 	} else if (ledState == LEDState::Mono) {
 		GreenLED = (uint32_t)(VCALevel * 4095.0f);
+
+	} else if (detectEnv && ledState != LEDState::DetectEnvelope) {			// Envelope detection manages led directly
+		ledState = LEDState::DetectEnvelope;
+
+	} else if (!detectEnv && ledState == LEDState::DetectEnvelope) {
+		ledState = LEDState::Poly;
+
 	} else if (ledState == LEDState::Poly && !detectEnv) {
 		RedLED = static_cast<uint32_t>((polyLevel * 4095.0f) / usb.midi.polyCount);
 	}

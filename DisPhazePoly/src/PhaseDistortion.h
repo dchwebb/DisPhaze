@@ -116,7 +116,7 @@ private:
 	uint32_t compHoldTimer[2] = {0, 0};						// Compressor hold counter
 
 	// LED settings
-	enum class LEDState {Off, Mono, Poly, SwitchToMono, SwitchToPoly, WaitForEnv, Attack, Decay, Sustain, Release};
+	enum class LEDState {Off, Mono, Poly, SwitchToMono, SwitchToPoly, DetectEnvelope, WaitForEnv, Attack, Decay, Sustain, Release};
 	LEDState ledState = cfg.polyphonic ? LEDState::Poly : LEDState::Mono;
 	LEDState oldLedState = LEDState::Off;
 	uint32_t ledCounter = 0;

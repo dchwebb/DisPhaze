@@ -10346,6 +10346,16 @@
 		)
 		(uuid "dedbb937-4edf-4337-b1ba-820789b77d1f")
 	)
+	(text "HP Input filter cutoff .34Hz"
+		(exclude_from_sim no)
+		(at 265.684 117.602 0)
+		(effects
+			(font
+				(size 1.27 1.27)
+			)
+		)
+		(uuid "e71e9f8e-4e6e-423f-9f1f-055c2c09440c")
+	)
 	(text "MIDI Level Shifter"
 		(exclude_from_sim no)
 		(at 306.07 218.44 0)

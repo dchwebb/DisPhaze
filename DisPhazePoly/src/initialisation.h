@@ -6,7 +6,7 @@
 #include "GpioPIn.h"
 
 static constexpr uint32_t sampleRateMono = 88000;
-static constexpr uint32_t sampleRatePoly = 60000;
+static constexpr uint32_t sampleRatePoly = 66000;
 
 #define PITCH_SPREAD -583.0f
 static constexpr float PITCH_OFFSET = 1129.5f;

@@ -139,7 +139,7 @@ struct Btn {
 	}
 
 	bool LongPress() {
-		if (ButtonDown() && !longPressed && down && SysTickVal > down + 2000) {
+		if (ButtonDown() && !longPressed && down && SysTickVal > down + 1500) {
 			longPressed = true;
 			return true;
 		}

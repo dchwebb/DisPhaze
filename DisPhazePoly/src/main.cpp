@@ -13,7 +13,8 @@
 /* FIXME
  * Colours on Envelope detection (green for sustain phase); possibly envelope detect PD??
  * Button press immediately triggers env detection
-  */
+ * Envelope times to ms
+ */
 
 
 PhaseDistortion phaseDist;

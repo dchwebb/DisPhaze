@@ -63,7 +63,7 @@ void InitHardware()
 void InitSysTick()
 {
 	SysTick_Config(SystemCoreClock / sysTickInterval);		// gives 1ms
-	NVIC_SetPriority(SysTick_IRQn, 0);
+	NVIC_SetPriority(SysTick_IRQn, 1);
 }
 
 
