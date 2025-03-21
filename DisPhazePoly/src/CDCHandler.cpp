@@ -3,6 +3,10 @@
 #include "Calib.h"
 #include "PhaseDistortion.h"
 
+#ifdef FFT_ANALYSIS
+#include "fft.h"
+#endif
+
 void CDCHandler::ProcessCommand()
 {
 	if (!cmdPending) {
@@ -67,6 +71,12 @@ void CDCHandler::ProcessCommand()
 
 		 );
 
+#ifdef FFT_ANALYSIS
+	} else if (cmd.compare("fft") == 0) {					// Perform FFT analysis
+		printf("Running FFT\r\n");
+		extern bool startFFT;
+		startFFT = true;
+#endif
 
 	} else if (cmd.compare("dfu") == 0) {					// USB DFU firmware upgrade
 		printf("Start DFU upgrade mode? Press 'y' to confirm.\r\n");

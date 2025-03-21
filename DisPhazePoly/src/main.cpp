@@ -5,6 +5,10 @@
 #include "CDCHandler.h"
 #include "Calib.h"
 
+#ifdef FFT_ANALYSIS
+#include "fft.h"
+#endif
+
 #if (USB_DEBUG)
 #include "uartHandler.h"
 #endif
@@ -43,6 +47,16 @@ int main(void)
 
 
 	while (1) {
+#ifdef FFT_ANALYSIS
+		extern bool printFFT;
+		if (printFFT) {
+			TIM3->CR1 &= ~TIM_CR1_CEN;
+			printFFT = false;
+			fft.CalcFFT();
+			printf("FFT Done\r\n");
+			TIM3->CR1 |= TIM_CR1_CEN;
+		}
+#endif
 		calib.Calibrate();			// Calibration state machine
 		usb.cdc.ProcessCommand();	// Check for incoming CDC commands
 		config.SaveConfig();		// Save any scheduled changes

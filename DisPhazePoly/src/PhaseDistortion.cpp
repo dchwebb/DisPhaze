@@ -2,7 +2,12 @@
 #include "Calib.h"
 #include "USB.h"
 
-
+#ifdef FFT_ANALYSIS
+#include "fft.h"
+bool startFFT = false;
+bool printFFT = false;
+uint32_t fftCount = 0;
+#endif
 
 void PhaseDistortion::CalcNextSamples()
 {
@@ -72,6 +77,19 @@ void PhaseDistortion::CalcNextSamples()
 	// Set DAC output values for when sample interrupt next fires (NB DAC and channels are reversed: ie DAC1 connects to channel2 and vice versa)
 	DAC->DHR12R2 = static_cast<int32_t>((1.0f + output.out1) * 2047.0f);
 	DAC->DHR12R1 = static_cast<int32_t>((1.0f + output.out2) * 2047.0f);
+
+
+
+#ifdef FFT_ANALYSIS
+		if (startFFT) {
+			fft.sinBuffer[fftCount++] = output.out1;
+			if (fftCount == FFT::fftSamples) {
+				startFFT = false;
+				fftCount = 0;
+				printFFT = true;
+			}
+		}
+#endif
 
 	SetLED();
 
@@ -331,11 +349,12 @@ float PhaseDistortion::Compress(float level, uint8_t channel)
 
 void PhaseDistortion::DetectEnvelope()
 {
+	// LED colours: wait for zero: red flashing; wait for attack: green flashing; attack: green; decay: green; sustain: orange; release: red
+
 	uint32_t lvl = 4096 - adc.VCA;
 	envDetect.smoothLevel = ((15 * envDetect.smoothLevel) + lvl) / 16;
 	VCALevel = envDetect.smoothLevel / 4096.0f;				// While envelope detection is ongoing any output level will be set by incoming envelope
 	++envDetect.counter;
-
 
 	switch  (envDetect.state) {
 	case envDetectState::waitZero:			// Wait until level settles around 0
