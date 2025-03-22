@@ -17,7 +17,7 @@ extern volatile uint32_t SysTickVal;
 static constexpr uint32_t adcMax = 4095;
 #define ADC_BUFFER_LENGTH 10
 
-#define FFT_ANALYSIS true
+#define FFT_ANALYSIS false
 
 struct ADCValues {
 	uint16_t Pitch_CV; 	// PB0 ADC12_IN8   Pin 27

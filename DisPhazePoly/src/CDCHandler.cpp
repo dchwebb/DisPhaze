@@ -3,7 +3,7 @@
 #include "Calib.h"
 #include "PhaseDistortion.h"
 
-#ifdef FFT_ANALYSIS
+#if FFT_ANALYSIS
 #include "fft.h"
 #endif
 
@@ -71,7 +71,7 @@ void CDCHandler::ProcessCommand()
 
 		 );
 
-#ifdef FFT_ANALYSIS
+#if FFT_ANALYSIS
 	} else if (cmd.compare("fft") == 0) {					// Perform FFT analysis
 		printf("Running FFT\r\n");
 		extern bool startFFT;

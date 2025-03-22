@@ -2,12 +2,13 @@
 #include "Calib.h"
 #include "USB.h"
 
-#ifdef FFT_ANALYSIS
+#if FFT_ANALYSIS
 #include "fft.h"
 bool startFFT = false;
 bool printFFT = false;
 uint32_t fftCount = 0;
 #endif
+
 
 void PhaseDistortion::CalcNextSamples()
 {
@@ -75,12 +76,16 @@ void PhaseDistortion::CalcNextSamples()
 	}
 
 	// Set DAC output values for when sample interrupt next fires (NB DAC and channels are reversed: ie DAC1 connects to channel2 and vice versa)
+	if (output.out1 > 0.34) {
+		volatile int i = 1;
+	}
+
 	DAC->DHR12R2 = static_cast<int32_t>((1.0f + output.out1) * 2047.0f);
 	DAC->DHR12R1 = static_cast<int32_t>((1.0f + output.out2) * 2047.0f);
 
 
 
-#ifdef FFT_ANALYSIS
+#if FFT_ANALYSIS
 		if (startFFT) {
 			fft.sinBuffer[fftCount++] = output.out1;
 			if (fftCount == FFT::fftSamples) {
@@ -114,7 +119,6 @@ PhaseDistortion::OutputSamples PhaseDistortion::MonoOutput(float pdLut1, uint8_t
 	// Calculate frequencies
 	pitch = ((3 * pitch) + adc.Pitch_CV) / 4;				// 1V/Oct input with smoothing
 	float freq1 = calib.pitchLUT[(pitch + ((2048 - fineTune) / 32))];
-	//float freq1 = calib.pitchLUT[adc.Pitch_CV];				// For testing
 	float freq2;
 
 	OctaveCalc(freq1, freq2);
@@ -156,7 +160,7 @@ PhaseDistortion::OutputSamples PhaseDistortion::PolyOutput(float pdLut1, uint8_t
 
 	float pb = usb.midi.pitchBendSemiTones * ((usb.midi.pitchBend - 8192) / 8192.0f);		// convert raw pitchbend to midi note number
 	float finetuneAdjust = pb - (2048.0f - fineTune) / 1024.0f;
-//	float finetuneAdjust = 0.0f;			// for testing
+
 	uint32_t pdlut1Int = (uint32_t)std::round(pdLut1);
 
 	for (uint8_t n = 0; n < polyNotes; ++n) {
@@ -632,13 +636,13 @@ float PhaseDistortion::FastTanh(const float x)
 	return a / b;
 }
 
+
 void PhaseDistortion::UpdateConfig()
 {
 	phaseDist.compHoldSamples = (phaseDist.cfg.compressor.holdTime * sampleRatePoly) / 1000;		// Convert ms to sample count
 	phaseDist.ledState = phaseDist.cfg.polyphonic ? LEDState::Poly : LEDState::Mono;
 	phaseDist.SetSampleRate();
 
-	//TimeInMs = timeInSamples / sampleRatePoly;
 	phaseDist.attackInc = 1.0f / (sampleRatePoly * phaseDist.cfg.envelope.A);
 	phaseDist.decayInc = 1.0f / (sampleRatePoly * phaseDist.cfg.envelope.D);
 	phaseDist.releaseInc = 1.0f / (sampleRatePoly * phaseDist.cfg.envelope.R);

@@ -5,18 +5,13 @@
 #include "CDCHandler.h"
 #include "Calib.h"
 
-#ifdef FFT_ANALYSIS
+#if FFT_ANALYSIS
 #include "fft.h"
 #endif
 
 #if (USB_DEBUG)
 #include "uartHandler.h"
 #endif
-
-
-/* FIXME
- * Envelope times to ms
- */
 
 
 PhaseDistortion phaseDist;
@@ -44,7 +39,7 @@ int main(void)
 
 
 	while (1) {
-#ifdef FFT_ANALYSIS
+#if FFT_ANALYSIS
 		extern bool printFFT;
 		if (printFFT) {
 			TIM3->CR1 &= ~TIM_CR1_CEN;

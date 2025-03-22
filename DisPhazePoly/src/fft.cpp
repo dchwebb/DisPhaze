@@ -1,7 +1,7 @@
 #include "fft.h"
 #include <cstdio>
 
-#ifdef FFT_ANALYSIS
+#if FFT_ANALYSIS
 FFT fft;
 #endif
 

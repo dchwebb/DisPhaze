@@ -111,11 +111,11 @@ void MidiHandler::serialHandler(uint32_t data)
 	uint8_t channel = Queue[QueueRead] & 0x0F;
 
 	//NoteOn = 0x9, NoteOff = 0x8, PolyPressure = 0xA, ControlChange = 0xB, ProgramChange = 0xC, ChannelPressure = 0xD, PitchBend = 0xE, System = 0xF
-	while ((QueueSize > 2 && (type == NoteOn || type == NoteOff || type == PolyPressure ||  type == ControlChange ||  type == PitchBend)) ||
+	while ((QueueSize > 2 && (type == NoteOn || type == NoteOff || type == PolyPressure || type == ControlChange || type == PitchBend)) ||
 			(QueueSize > 1 && (type == ProgramChange || type == ChannelPressure))) {
 
 		MidiData event;
-		event.chn = channel;
+		event.chn = Queue[QueueRead] & 0x0F;
 		event.msg = (uint8_t)type;
 
 		QueueInc();
@@ -131,17 +131,17 @@ void MidiHandler::serialHandler(uint32_t data)
 		midiEvent(event.data);
 
 		type = static_cast<MIDIType>(Queue[QueueRead] >> 4);
-		channel = Queue[QueueRead] & 0x0F;
 	}
 
 	// Clock
-	if (QueueSize > 0 && Queue[QueueRead] == 0xF8) {
+	while (QueueSize > 0 && Queue[QueueRead] == 0xF8) {
 		midiEvent(0xF800);
 		QueueInc();
+		type = static_cast<MIDIType>(Queue[QueueRead] >> 4);
 	}
 
 	//	handle unknown data in queue
-	if (QueueSize > 2 && type != 0x9 && type != 0x8 && type != 0xD && type != 0xE) {
+	if (QueueSize > 2 && type != NoteOn && type != NoteOff && type != PolyPressure && type != ControlChange && type != PitchBend) {
 		QueueInc();
 	}
 }

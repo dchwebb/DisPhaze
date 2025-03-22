@@ -77,12 +77,12 @@ void InitDAC()
 	RCC->APB1ENR |= RCC_APB1ENR_DACEN;				// Enable DAC Clock
 
 	DAC->CR |= DAC_CR_EN1;							// Enable DAC using PA4 (DAC_OUT1)
-	DAC->CR |= DAC_CR_BOFF1;						// Enable DAC channel output buffer to reduce the output impedance
+	DAC->CR &= ~DAC_CR_BOFF1;						// Enable DAC channel output buffer to reduce the output impedance
 	DAC->CR |= DAC_CR_TEN1;							// DAC 1 enable trigger - allows samples to be loaded into DAC then sent on interrupt
 	DAC->CR |= DAC_CR_TSEL1;						// Set trigger to software (0b111: Software trigger)
 
 	DAC->CR |= DAC_CR_EN2;							// Enable DAC using PA5 (DAC_OUT2)
-	DAC->CR |= DAC_CR_BOFF2;						// Enable DAC channel output buffer
+	DAC->CR &= ~DAC_CR_BOFF2;						// Enable DAC channel output buffer
 	DAC->CR |= DAC_CR_TEN2;							// DAC 2 enable trigger
 	DAC->CR |= DAC_CR_TSEL2;						// Set trigger to software (0b111: Software trigger)
 }

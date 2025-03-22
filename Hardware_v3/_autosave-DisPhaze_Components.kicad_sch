@@ -10346,7 +10346,7 @@
 		)
 		(uuid "dedbb937-4edf-4337-b1ba-820789b77d1f")
 	)
-	(text "HP Input filter cutoff .34Hz\nLP Feedback filter: 1 / 2πR_{f}C_{f}"
+	(text "HP Input filter cutoff .34Hz\nPost HP filter levels are -1.3V > +1.3V\nLP Feedback filter: 1 / 2πR_{f}C_{f}"
 		(exclude_from_sim no)
 		(at 265.684 117.602 0)
 		(effects
@@ -14593,7 +14593,7 @@
 				)
 			)
 		)
-		(property "Value" "68k"
+		(property "Value" "10k"
 			(at 245.11 79.6036 90)
 			(effects
 				(font
@@ -14926,7 +14926,7 @@
 				)
 			)
 		)
-		(property "Value" "6.8k"
+		(property "Value" "2k"
 			(at 232.41 87.2236 90)
 			(effects
 				(font
@@ -17810,7 +17810,7 @@
 				)
 			)
 		)
-		(property "Value" "22pF"
+		(property "Value" "1nf"
 			(at 245.11 69.5706 90)
 			(effects
 				(font
