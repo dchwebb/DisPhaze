@@ -49,7 +49,7 @@ public:
 	uint32_t midiReceived = 0;
 
 private:
-	void midiEvent(const uint32_t data);
+	void MidiEvent(const uint32_t data);
 	void QueueInc();
 
 	uint32_t xfer_buff[64];									// OUT Data filled in RxLevel Interrupt
@@ -71,10 +71,10 @@ private:
 	};
 
 	static constexpr uint32_t queueSize = 50;
-	uint8_t Queue[queueSize];			// hold incoming serial MIDI bytes
-	uint8_t QueueRead = 0;
-	uint8_t QueueWrite = 0;
-	uint8_t QueueSize = 0;
+	uint8_t queue[queueSize];			// hold incoming serial MIDI bytes
+	uint8_t queueRead = 0;
+	uint8_t queueWrite = 0;
+	uint8_t queueCount = 0;
 
 	uint8_t sysEx[32];
 	uint8_t sysExCount = 0;

@@ -18,7 +18,7 @@ void MidiHandler::DataOut()
 {
 	// Handle incoming midi command here
 	if (outBuffCount == 4) {
-		midiEvent(*outBuff);
+		MidiEvent(*outBuff);
 
 	} else if (outBuff[1] == 0xF0 && outBuffCount > 3) {		// Sysex - Doesn't do anything at present
 		// sysEx will be padded when supplied by usb - add only actual sysEx message bytes to array
@@ -40,7 +40,7 @@ void MidiHandler::DataOut()
 
 
 
-void MidiHandler::midiEvent(const uint32_t data)
+void MidiHandler::MidiEvent(const uint32_t data)
 {
 	auto midiData = MidiData(data);
 	midiReceived = SysTickVal;			// Allows auto switching between midi and CV mode
@@ -103,53 +103,54 @@ void MidiHandler::midiEvent(const uint32_t data)
 
 void MidiHandler::serialHandler(uint32_t data)
 {
-	Queue[QueueWrite] = data;
-	QueueSize++;
-	QueueWrite = (QueueWrite + 1) % queueSize;
+	queue[queueWrite] = data;
+	queueCount++;
+	queueWrite = (queueWrite + 1) % queueSize;
 
-	MIDIType type = static_cast<MIDIType>(Queue[QueueRead] >> 4);
-	uint8_t channel = Queue[QueueRead] & 0x0F;
+	MIDIType type = static_cast<MIDIType>(queue[queueRead] >> 4);
 
 	//NoteOn = 0x9, NoteOff = 0x8, PolyPressure = 0xA, ControlChange = 0xB, ProgramChange = 0xC, ChannelPressure = 0xD, PitchBend = 0xE, System = 0xF
-	while ((QueueSize > 2 && (type == NoteOn || type == NoteOff || type == PolyPressure || type == ControlChange || type == PitchBend)) ||
-			(QueueSize > 1 && (type == ProgramChange || type == ChannelPressure))) {
+	while ((queueCount > 2 && (type == NoteOn || type == NoteOff || type == PolyPressure || type == ControlChange || type == PitchBend)) ||
+			(queueCount > 1 && (type == ProgramChange || type == ChannelPressure))) {
 
 		MidiData event;
-		event.chn = Queue[QueueRead] & 0x0F;
+		event.chn = queue[queueRead] & 0x0F;
 		event.msg = (uint8_t)type;
-
 		QueueInc();
-		event.db1 = Queue[QueueRead];
+
+		event.db1 = queue[queueRead];
 		QueueInc();
 		if (type == ProgramChange || type == ChannelPressure) {
 			event.db2 = 0;
 		} else {
-			event.db2 = Queue[QueueRead];
+			event.db2 = queue[queueRead];
 			QueueInc();
 		}
 
-		midiEvent(event.data);
+		if (!(event.msg == NoteOn && event.db1 == 0xF8)) {		// For reasons not yet ascertained clock data is polluting note on
+			MidiEvent(event.data);
+		}
 
-		type = static_cast<MIDIType>(Queue[QueueRead] >> 4);
+		type = static_cast<MIDIType>(queue[queueRead] >> 4);
 	}
 
 	// Clock
-	while (QueueSize > 0 && Queue[QueueRead] == 0xF8) {
-		midiEvent(0xF800);
+	while (queueCount > 0 && queue[queueRead] == 0xF8) {
+		MidiEvent(0xF800);
 		QueueInc();
-		type = static_cast<MIDIType>(Queue[QueueRead] >> 4);
+		type = static_cast<MIDIType>(queue[queueRead] >> 4);
 	}
 
 	//	handle unknown data in queue
-	if (QueueSize > 2 && type != NoteOn && type != NoteOff && type != PolyPressure && type != ControlChange && type != PitchBend) {
+	if (queueCount > 2 && type != NoteOn && type != NoteOff && type != PolyPressure && type != ControlChange && type != PitchBend) {
 		QueueInc();
 	}
 }
 
 
 inline void MidiHandler::QueueInc() {
-	QueueSize--;
-	QueueRead = (QueueRead + 1) % queueSize;
+	queueCount--;
+	queueRead = (queueRead + 1) % queueSize;
 }
 
 // Called when the release phase of a note has ended to remove from polyphony array
