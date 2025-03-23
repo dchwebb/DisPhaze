@@ -75,11 +75,6 @@ void PhaseDistortion::CalcNextSamples()
 		output = MonoOutput(pdLut1, pdLut2, pd2Resonant);
 	}
 
-	// Set DAC output values for when sample interrupt next fires (NB DAC and channels are reversed: ie DAC1 connects to channel2 and vice versa)
-	if (output.out1 > 0.34) {
-		volatile int i = 1;
-	}
-
 	DAC->DHR12R2 = static_cast<int32_t>((1.0f + output.out1) * 2047.0f);
 	DAC->DHR12R1 = static_cast<int32_t>((1.0f + output.out2) * 2047.0f);
 
@@ -308,7 +303,8 @@ float PhaseDistortion::GetBlendPhaseDist(const float pdBlend, const uint32_t LUT
 
 	// Get the weighted blend of the two PD amounts
 	float blend = pdBlend - (uint8_t)pdBlend;
-	float phaseDist = ((1 - blend) * phaseDistA) + (blend * phaseDistB);
+	constexpr float mult = std::pow(2.0f, 32.0f);
+	float phaseDist = mult * (((1 - blend) * phaseDistA) + (blend * phaseDistB));
 
 	// Add main wave position to phase distortion position and ensure in bounds
 	return SineLUT[(uint32_t)(LUTPosition  + phaseDist) >> 18];

@@ -40,3 +40,8 @@ DisPhazePoly/Debug/makefile
 *.BAK
 Phase_calc/comp.xls
 Phase_calc/compression_test.FXP
+/Hardware_v3.5/DisPhaze_Components-backups
+/Hardware_v3.5/DisPhaze_Panel-backups
+Hardware_v3.5/Gerbers/DisPhaze_Components/DisPhaze_Components.zip
+/Hardware_v3.5/Production_Files
+Hardware_v3.5/Gerbers/DisPhaze_Panel/DisPhaze_Panel.zip

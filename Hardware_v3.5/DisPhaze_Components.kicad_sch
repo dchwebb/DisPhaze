@@ -6461,6 +6461,12 @@
 		(uuid "01024d27-e392-4482-9e67-565b0c294fe8")
 	)
 	(junction
+		(at 144.78 93.98)
+		(diameter 0)
+		(color 0 0 0 0)
+		(uuid "0a8fccfe-ce36-4332-a82c-18566b74d9b6")
+	)
+	(junction
 		(at 160.02 91.44)
 		(diameter 0)
 		(color 0 0 0 0)
@@ -8556,13 +8562,13 @@
 	)
 	(wire
 		(pts
-			(xy 144.78 88.9) (xy 144.78 82.55)
+			(xy 144.78 88.9) (xy 144.78 93.98)
 		)
 		(stroke
 			(width 0)
 			(type default)
 		)
-		(uuid "81b95d0d-8967-4ed1-8d40-39925d015ae8")
+		(uuid "8330cf45-6893-4caf-a2a2-27cd1b0491c4")
 	)
 	(wire
 		(pts
@@ -10237,9 +10243,9 @@
 		)
 		(uuid "017667a9-f5de-49c7-af53-4f9af2f3a311")
 	)
-	(text "v3 Errata\n- CV Incorrectly normalled to V/Oct\n- Change Eurorack connector to 10 pin?\n- Add UART header\n- Problems connecting Action button to 3.3V - change to GND"
+	(text "v3 Errata\n- CV Incorrectly normalled to V/Oct\n- Change Eurorack connector to 10 pin?\n- Add UART header\n- DACs swapped\n- OUtput amplifier values changed (done)"
 		(exclude_from_sim no)
-		(at 309.88 257.81 0)
+		(at 304.8 259.08 0)
 		(effects
 			(font
 				(size 1.27 1.27)
@@ -10346,7 +10352,7 @@
 		)
 		(uuid "dedbb937-4edf-4337-b1ba-820789b77d1f")
 	)
-	(text "HP Input filter cutoff .34Hz"
+	(text "HP Input filter cutoff .34Hz\nPost HP filter levels are -1.3V > +1.3V\nGain = x5 (10k/2k) output -6.5V > 6.5V\nLP Feedback filter cut off: 1 / 2πR_{f}C_{f} = 16KHz"
 		(exclude_from_sim no)
 		(at 265.684 117.602 0)
 		(effects
@@ -10428,16 +10434,6 @@
 			(justify left bottom)
 		)
 		(uuid "082aed28-f9e8-49e7-96ee-b5aa9f0319c7")
-	)
-	(label "CV_IN"
-		(at 144.78 82.55 180)
-		(effects
-			(font
-				(size 1.27 1.27)
-			)
-			(justify right bottom)
-		)
-		(uuid "0cc094e7-c1c0-457d-bd94-3db91c23be55")
 	)
 	(label "PD2_TYPE"
 		(at 90.17 53.34 0)
@@ -14593,7 +14589,7 @@
 				)
 			)
 		)
-		(property "Value" "68k"
+		(property "Value" "10k"
 			(at 245.11 79.6036 90)
 			(effects
 				(font
@@ -14926,7 +14922,7 @@
 				)
 			)
 		)
-		(property "Value" "6.8k"
+		(property "Value" "2k"
 			(at 232.41 87.2236 90)
 			(effects
 				(font
@@ -17342,7 +17338,7 @@
 				)
 			)
 		)
-		(property "Value" "68k"
+		(property "Value" "10k"
 			(at 245.11 31.9786 90)
 			(effects
 				(font
@@ -17675,7 +17671,7 @@
 				)
 			)
 		)
-		(property "Value" "6.8k"
+		(property "Value" "2k"
 			(at 232.41 40.2336 90)
 			(effects
 				(font
@@ -17810,7 +17806,7 @@
 				)
 			)
 		)
-		(property "Value" "22pF"
+		(property "Value" "1nf"
 			(at 245.11 69.5706 90)
 			(effects
 				(font
@@ -17877,7 +17873,7 @@
 				)
 			)
 		)
-		(property "Value" "22pF"
+		(property "Value" "1nF"
 			(at 245.11 21.3106 90)
 			(effects
 				(font
