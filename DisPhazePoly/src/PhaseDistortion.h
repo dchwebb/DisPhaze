@@ -30,7 +30,7 @@ public:
 		struct Compressor {
 			float holdTime = 350.0f;	// Hold time in ms before limiter is released
 			float release = 0.0000001f;	// Larger = faster release, smaller = slower
-			float threshold = 0.35f;	// Default compressor level
+			float threshold = 0.5f;		// Default compressor level
 		} compressor;
 	} cfg;
 

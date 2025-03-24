@@ -79,7 +79,6 @@ void PhaseDistortion::CalcNextSamples()
 	DAC->DHR12R1 = static_cast<int32_t>((1.0f + output.out2) * 2047.0f);
 
 
-
 #if FFT_ANALYSIS
 		if (startFFT) {
 			fft.sinBuffer[fftCount++] = output.out1;
@@ -128,14 +127,18 @@ PhaseDistortion::OutputSamples PhaseDistortion::MonoOutput(float pdLut1, uint8_t
 			GetResonantWave(pdLut2, samplePos2, pd2Scale) :
 			GetPhaseDist(LUTArray[pdLut2], samplePos2, pd2Scale);
 
-	if (ringModSwitch.IsHigh())
+	if (ringModSwitch.IsHigh()) {
 		sample1 *= sample2;
-	if (mixSwitch.IsHigh())
-		sample2 += sample1;
+	}
 
 	OutputSamples output;
 	output.out1 = sample1 * VCALevel;
-	output.out2 = sample2 * VCALevel;
+
+	if (mixSwitch.IsHigh()) {
+		output.out2 = Compress((sample2 + sample1) * VCALevel, 1);
+	} else {
+		output.out2 = sample2 * VCALevel;
+	}
 
 	return output;
 }
